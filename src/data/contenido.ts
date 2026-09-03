@@ -199,7 +199,7 @@ export const espacios = [
     titulo: 'Auditorio',
     cuerpo:
       'Auditorio para 150 a 200 personas, con gradas suaves que garantizan excelente visibilidad y una sensación de cercanía con el expositor. Su configuración busca una experiencia dinámica e inmersiva, inspirada en el formato TED Conference, promoviendo una relación más directa y participativa entre el público y el expositor. Las fachadas laterales vidriadas presentan dos tratamientos: una con vista abierta e inmersiva hacia el parque, integrando el paisaje al salón; y otra con malla metálica microperforada de diseño orgánico, que aporta control solar, identidad arquitectónica y filtrado de luz.',
-    renders: ['esp-auditorio'],
+    renders: ['esp-auditorio-01', 'esp-auditorio-02', 'esp-auditorio-03'],
     alt: 'Render del auditorio con gradas suaves y fachada vidriada hacia el parque',
   },
   {

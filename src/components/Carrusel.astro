@@ -49,7 +49,7 @@ const total = renders.length;
               nombre={nombre}
               alt={i === 0 ? alt : `${alt}, vista ${i + 1}`}
               ratio={ratio}
-              sizes={ancho === 'par' ? '(min-width: 62rem) 48vw, 90vw' : '(min-width: 68rem) 68vw, 90vw'}
+              sizes={ancho === 'par' ? '(min-width: 62rem) 48vw, 90vw' : '(min-width: 62rem) 58rem, 88vw'}
             />
           </div>
         </figure>
@@ -103,7 +103,7 @@ const total = renders.length;
     overscroll-behavior-x: contain;
     scroll-behavior: smooth;
     /* El primer y el último se centran igual que los del medio. */
-    padding-inline: max(var(--borde), calc(50% - min(34rem, 44vw)));
+    padding-inline: max(var(--borde), calc(50% - min(29rem, 43vw)));
     padding-block: 2px;
     scrollbar-width: none;
   }
@@ -117,9 +117,16 @@ const total = renders.length;
     outline-offset: 4px;
   }
 
+  /* Los renders del estudio miden 1537px de ancho. A 68rem (1088px) el marco
+     los mostraba casi a tamaño natural, y en una pantalla retina eso pide
+     2176px de una imagen de 1537: un 42% de agrandado, que en un render se
+     nota. A 58rem (928px) el agrandado en retina baja al 21%, y en pantalla
+     común sigue siendo una reducción, que es donde mejor se ven.
+     Para que no haya agrandado nunca habría que bajar a 768px —demasiado
+     chico— o pedirle al estudio los renders a 3000px. */
   .carrusel__diapo {
     flex: 0 0 auto;
-    width: min(68rem, 88vw);
+    width: min(58rem, 86vw);
     margin: 0;
     scroll-snap-align: center;
   }
