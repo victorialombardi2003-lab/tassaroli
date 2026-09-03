@@ -1,0 +1,252 @@
+---
+import Render from './Render.astro';
+
+/**
+ * Carrusel de renders de un mismo espacio.
+ *
+ * La pista es un contenedor con scroll-snap nativo: se arrastra con el dedo,
+ * se recorre con la rueda y funciona sin JavaScript. Los botones y el
+ * contador son mejoras encima, no el mecanismo.
+ *
+ * Se ve un pedazo de la lámina siguiente a propósito: es lo que le avisa al
+ * visitante que hay más de una, sin necesidad de puntitos.
+ */
+
+interface Props {
+  renders: string[];
+  alt: string;
+  titulo: string;
+  fig: string;
+  ratio?: string;
+}
+
+const { renders, alt, titulo, fig, ratio = '3 / 2' } = Astro.props;
+const total = renders.length;
+---
+
+<div class="carrusel" data-carrusel role="group" aria-roledescription="carrusel" aria-label={`Renders de ${titulo}`}>
+  <div class="carrusel__pista" data-pista tabindex="0">
+    {
+      renders.map((nombre, i) => (
+        <figure
+          class="carrusel__diapo"
+          data-diapo
+          role="group"
+          aria-roledescription="diapositiva"
+          aria-label={`${i + 1} de ${total}`}
+        >
+          <div class="carrusel__marco">
+            <Render
+              nombre={nombre}
+              alt={i === 0 ? alt : `${alt}, vista ${i + 1}`}
+              ratio={ratio}
+              sizes="(min-width: 68rem) 68vw, 90vw"
+            />
+          </div>
+        </figure>
+      ))
+    }
+  </div>
+
+  <div class="carrusel__mando">
+    <p class="carrusel__epigrafe">
+      <span class="dato">Fig. {fig}</span>
+      <span>{titulo}</span>
+    </p>
+
+    <div class="carrusel__derecha">
+      <p class="dato carrusel__cuenta" aria-live="polite">
+        <span data-actual>1</span> / {total}
+      </p>
+
+      <div class="carrusel__botones">
+        <button class="carrusel__boton" type="button" data-anterior aria-label="Lámina anterior">
+          <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true">
+            <path d="M15 5H2M6 1 2 5l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" />
+          </svg>
+        </button>
+        <button class="carrusel__boton" type="button" data-siguiente aria-label="Lámina siguiente">
+          <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true">
+            <path d="M0 5h13M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .carrusel {
+    --hueco: clamp(0.5rem, 1.2vw, 0.85rem);
+  }
+
+  .carrusel__pista {
+    display: flex;
+    gap: var(--hueco);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* El primer y el último se centran igual que los del medio. */
+    padding-inline: max(var(--borde), calc(50% - min(34rem, 44vw)));
+    padding-block: 2px;
+    scrollbar-width: none;
+  }
+
+  .carrusel__pista::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carrusel__pista:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 4px;
+  }
+
+  .carrusel__diapo {
+    flex: 0 0 auto;
+    width: min(68rem, 88vw);
+    margin: 0;
+    scroll-snap-align: center;
+  }
+
+  .carrusel__marco {
+    overflow: hidden;
+    background: var(--papel-4);
+    border: 1px solid var(--linea);
+    border-radius: 3px;
+  }
+
+  .carrusel__mando {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: 0.85rem var(--borde) 0;
+  }
+
+  .carrusel__epigrafe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    align-items: baseline;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--tinta-3);
+  }
+
+  .carrusel__epigrafe .dato {
+    color: var(--acento);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .carrusel__derecha {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-inline-start: auto;
+  }
+
+  .carrusel__cuenta {
+    color: var(--tinta-3);
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .carrusel__cuenta span {
+    color: var(--acento);
+    font-weight: 600;
+  }
+
+  .carrusel__botones {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .carrusel__boton {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.25rem;
+    padding: 0;
+    color: var(--tinta);
+    background: var(--papel);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: color 160ms ease-out, border-color 160ms ease-out, background-color 160ms ease-out;
+  }
+
+  .carrusel__boton:hover:not(:disabled) {
+    color: var(--acento);
+    border-color: var(--acento);
+    background: var(--azul-50);
+  }
+
+  .carrusel__boton:disabled {
+    color: var(--linea-fuerte);
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .carrusel__pista {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carrusel]').forEach((carrusel) => {
+    const pista = carrusel.querySelector<HTMLElement>('[data-pista]');
+    const diapos = Array.from(carrusel.querySelectorAll<HTMLElement>('[data-diapo]'));
+    const actual = carrusel.querySelector<HTMLElement>('[data-actual]');
+    const anterior = carrusel.querySelector<HTMLButtonElement>('[data-anterior]');
+    const siguiente = carrusel.querySelector<HTMLButtonElement>('[data-siguiente]');
+    if (!pista || diapos.length === 0) return;
+
+    let indice = 0;
+
+    function pintar() {
+      if (actual) actual.textContent = String(indice + 1);
+      if (anterior) anterior.disabled = indice === 0;
+      if (siguiente) siguiente.disabled = indice === diapos.length - 1;
+    }
+
+    function ir(i: number) {
+      const destino = diapos[Math.max(0, Math.min(i, diapos.length - 1))];
+      if (!destino || !pista) return;
+      pista.scrollTo({ left: destino.offsetLeft - (pista.clientWidth - destino.clientWidth) / 2 });
+    }
+
+    anterior?.addEventListener('click', () => ir(indice - 1));
+    siguiente?.addEventListener('click', () => ir(indice + 1));
+
+    // La lámina que ocupa el centro es la que manda el contador.
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (e.isIntersecting) {
+            indice = diapos.indexOf(e.target as HTMLElement);
+            pintar();
+          }
+        }
+      },
+      { root: pista, threshold: 0.6 },
+    );
+    diapos.forEach((d) => observador.observe(d));
+
+    pista.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        ir(indice + 1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        ir(indice - 1);
+      }
+    });
+
+    pintar();
+  });
+</script>

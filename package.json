@@ -1,0 +1,22 @@
+{
+  "name": "fundacion-tassaroli",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "^6.5.13",
+    "astro": "^5.16.2",
+    "gsap": "^3.13.0"
+  },
+  "devDependencies": {
+    "@fontsource-variable/archivo": "^5.2.6",
+    "@fontsource/martian-mono": "^5.2.6"
+  }
+}

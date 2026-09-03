@@ -1,0 +1,368 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Nodo from '../components/Nodo.astro';
+import Flecha from '../components/Flecha.astro';
+import isotipo from '../assets/marca-tassaroli.png';
+import { sitio, documentos, planos, acceso } from '../data/contenido';
+---
+
+<Base
+  titulo={`Documentación — ${sitio.fundacion}`}
+  descripcion="Documentación integral del anteproyecto del Centro Tecnológico Carlos José Tassaroli."
+  actual="/documentacion"
+  heroOscuro={true}
+>
+  {/* ------------------------------------------------------------ apertura */}
+  <section class="apertura sangrado" data-hero-oscuro>
+    <div class="apertura__fondo">
+      <Image
+        class="apertura__filigrana"
+        src={isotipo}
+        alt=""
+        width={900}
+        height={900}
+        densities={[1, 1.5]}
+        loading="eager"
+        fetchpriority="high"
+        decoding="sync"
+      />
+      <span class="apertura__velo"></span>
+    </div>
+
+    <div class="calle apertura__texto">
+      <div class="apertura__fila">
+        <i class="marca" style="--carril: 0" aria-hidden="true"></i>
+        <h1 class="apertura__titulo">Documentación</h1>
+      </div>
+    </div>
+  </section>
+
+  {/* --------------------------------------------------------------- acceso */}
+  <section class="seccion banda" data-seccion>
+    <div class="calle">
+      <Nodo texto="Acceso" recorrido="publico" />
+      <div class="acceso revela">
+        <div>
+          <h2 class="subtitulo">{acceso.titulo}</h2>
+          <p class="cuerpo acceso__cuerpo">{acceso.cuerpo}</p>
+        </div>
+        <a class="accion" href={planos.carpeta} target="_blank" rel="noopener">
+          Abrir la carpeta en Drive <Flecha />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------- índice */}
+  <section class="seccion" data-seccion>
+    <div class="calle">
+      <Nodo texto="Informes" recorrido="investigacion" />
+      <h2 class="titulo revela">Documentación integral del proyecto</h2>
+
+      <ol class="legajo revela-linea">
+        {
+          documentos.map((d, i) => (
+            <li class="legajo__fila">
+              <span class="dato legajo__n">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <p class="legajo__lema">{d.lema}</p>
+                <h3 class="legajo__titulo">
+                  <a class="legajo__enlace" href={d.drive} target="_blank" rel="noopener">
+                    {d.titulo}
+                  </a>
+                </h3>
+                <p class="legajo__bajada">{d.bajada}</p>
+              </div>
+              <div class="legajo__accion">
+                <a class="descarga" href={d.drive} target="_blank" rel="noopener" tabindex="-1">
+                  <span class="rotulo">Abrir</span>
+                  <span class="dato descarga__peso">PDF · Drive</span>
+                </a>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* -------------------------------------------------------------- planos */}
+  <section class="seccion banda planos" data-seccion>
+    <div class="calle">
+      <Nodo texto="Anteproyecto" recorrido="investigacion" />
+      <h2 class="titulo revela">{planos.titulo}</h2>
+      <p class="cuerpo revela bloque__cuerpo">{planos.bajada}</p>
+
+      <ul class="laminas revela-linea">
+        {planos.laminas.map((l) => <li class="lamina-fila">{l}</li>)}
+      </ul>
+
+      <div class="planos__accion revela">
+        <a class="accion" href={planos.carpeta} target="_blank" rel="noopener">
+          Acceder a los planos <Flecha />
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ------------------------------------------------------------ apertura */
+  .apertura {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 100svh;
+    overflow: hidden;
+    /* El mismo degradé de la placa, en CSS. Sirve de respaldo mientras el
+       archivo no esté cargado y evita el destello blanco del primer frame. */
+    background:
+      radial-gradient(
+        78% 74% at 104% 108%,
+        rgba(242, 146, 28, 0.96) 0%,
+        rgba(240, 150, 35, 0.72) 26%,
+        rgba(238, 160, 60, 0.28) 46%,
+        rgba(240, 160, 60, 0) 66%
+      ),
+      linear-gradient(
+        118deg,
+        #1f56dd 0%,
+        #2f7fe4 34%,
+        #3f9fea 56%,
+        #5ab6ee 72%,
+        #8ab0c9 84%,
+        #e79a33 95%,
+        #f2921c 100%
+      );
+  }
+
+  .apertura__fondo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  /* Marca de agua del isotipo del Centro sobre el degradé. El archivo es
+     azul y monocromo, así que se pasa a blanco con un filtro. */
+  .apertura__filigrana {
+    position: absolute;
+    inset-inline-end: -6vw;
+    inset-block-start: 50%;
+    width: min(46rem, 58vw);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+    translate: 0 -50%;
+    opacity: 0.16;
+    filter: brightness(0) invert(1);
+    pointer-events: none;
+  }
+
+  /* Un solo velo, y sólo abajo: el lockup de la placa tiene que verse
+     limpio en la mitad superior. */
+  .apertura__velo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 58%,
+      rgba(20, 33, 61, 0.22) 80%,
+      rgba(20, 33, 61, 0.45) 100%
+    );
+  }
+
+  .apertura__texto {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding-block-end: 3.5rem;
+  }
+
+  .apertura__fila {
+    position: relative;
+    padding-inline-start: var(--rail);
+    margin-inline-start: calc(-1 * var(--rail));
+  }
+
+  .apertura__fila .marca {
+    position: absolute;
+    inset-block-start: 0.52em;
+    margin-block-start: 0;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+  }
+
+  .apertura__titulo {
+    color: #ffffff;
+    font-size: clamp(2.25rem, 1.3rem + 3.2vw, 3.875rem);
+    font-weight: 630;
+    font-stretch: 104%;
+    line-height: 1;
+    letter-spacing: -0.034em;
+  }
+
+  @media (max-width: 48rem) {
+    .apertura__filigrana {
+      inset-inline-end: -22vw;
+      width: min(30rem, 92vw);
+      opacity: 0.13;
+    }
+
+    .apertura__texto {
+      padding-block-end: 2.5rem;
+    }
+  }
+
+  /* -------------------------------------------------------------- acceso */
+  .acceso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem 2.5rem;
+    padding: clamp(1.25rem, 3vw, 1.85rem);
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 3px;
+  }
+
+  .acceso__cuerpo {
+    margin-block-start: 0.75rem;
+    max-width: 58ch;
+  }
+
+  /* -------------------------------------------------------------- índice */
+  .legajo {
+    list-style: none;
+    padding: 0;
+    margin: clamp(1.75rem, 3.5vw, 2.75rem) 0 0;
+    border-block-start: 2px solid var(--tinta);
+  }
+
+  .legajo__fila {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+    padding-block: clamp(1.25rem, 2.6vw, 1.75rem);
+    border-block-end: 1px solid var(--linea);
+  }
+
+  @media (min-width: 54rem) {
+    .legajo__fila {
+      grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 10rem);
+      align-items: start;
+      gap: 1.5rem;
+    }
+  }
+
+  .legajo__n {
+    color: var(--tinta-3);
+    padding-block-start: 0.3rem;
+  }
+
+  .legajo__lema {
+    font-stretch: 82%;
+    font-weight: 620;
+    font-size: 0.6875rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--acento);
+  }
+
+  .legajo__titulo {
+    margin-block-start: 0.4rem;
+    font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.1875rem);
+    font-weight: 620;
+    letter-spacing: -0.016em;
+    line-height: 1.26;
+  }
+
+  .legajo__enlace {
+    color: var(--tinta);
+    text-decoration: none;
+    transition: color 160ms ease-out;
+  }
+
+  .legajo__enlace:hover {
+    color: var(--acento);
+  }
+
+  /* El título es el enlace real; toda la fila responde al hover. */
+  .legajo__fila:hover .legajo__enlace {
+    color: var(--acento);
+  }
+
+  .legajo__bajada {
+    margin-block-start: 0.55rem;
+    max-width: 62ch;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--tinta-2);
+    text-wrap: pretty;
+  }
+
+  .legajo__accion {
+    grid-column: 2 / -1;
+  }
+
+  @media (min-width: 54rem) {
+    .legajo__accion {
+      grid-column: auto;
+      justify-self: end;
+      text-align: right;
+    }
+  }
+
+  .descarga {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    padding: 0.55rem 0.8rem;
+    text-decoration: none;
+    color: var(--tinta);
+    background: var(--papel);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    transition: border-color 160ms ease-out, color 160ms ease-out, background-color 160ms ease-out;
+  }
+
+  .legajo__fila:hover .descarga {
+    color: var(--acento);
+    border-color: var(--acento);
+    background: var(--azul-50);
+  }
+
+  .descarga__peso {
+    color: var(--tinta-3);
+  }
+
+  /* -------------------------------------------------------------- planos */
+  .laminas {
+    list-style: none;
+    padding: 0;
+    margin: clamp(1.75rem, 3.5vw, 2.75rem) 0 0;
+    border-block-start: 2px solid var(--tinta);
+  }
+
+  .lamina-fila {
+    padding-block: 1.05rem;
+    border-block-end: 1px solid var(--linea);
+    font-weight: 560;
+    color: var(--tinta);
+  }
+
+  .planos__accion {
+    margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
+  }
+</style>
+
+<style is:global>
+  /* Sobre la placa el recorrido va en blanco; a partir de la sección
+     siguiente el degradé lo devuelve al azul de siempre. */
+  :root {
+    --red-alto: rgba(255, 255, 255, 0.55);
+  }
+</style>

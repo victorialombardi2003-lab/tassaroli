@@ -1,0 +1,631 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Nodo from '../components/Nodo.astro';
+import Render from '../components/Render.astro';
+import Flecha from '../components/Flecha.astro';
+// El fondo del hero usa el isotipo del hexágono; la barra superior usa el
+// lockup de la Fundación. Son dos marcas distintas y cada una va donde
+// corresponde.
+import signo from '../assets/marca-tassaroli.png';
+import {
+  sitio,
+  antecedentes,
+  porQue,
+  activo,
+  estado,
+  areas,
+  arquitectura,
+  implantacion,
+  cierre,
+} from '../data/contenido';
+---
+
+<Base titulo={`${sitio.fundacion} — ${sitio.proyecto}`} actual="/">
+  {/* ------------------------------------------------------------ portada */}
+  <section class="portada">
+    <div class="portada__fondo" aria-hidden="true">
+      <Image class="portada__signo" src={signo} alt="" width={1020} height={1020} densities={[1, 1.5]} loading="eager" />
+      <span class="portada__velo"></span>
+    </div>
+
+    <div class="calle portada__texto">
+      <p class="portada__ante">
+        <span class="portada__regla"></span>
+        <span>Anteproyecto</span>
+      </p>
+
+      <h1 class="portada__titulo">
+        <span class="portada__previo">Proyecto Construcción</span>
+        Centro Tecnológico
+        <span class="portada__nombre">Carlos José Tassaroli</span>
+      </h1>
+
+      <p class="portada__ubicacion">San Rafael, Mendoza</p>
+
+      <div class="portada__acceso">
+        <i class="marca" style="--carril: 0" aria-hidden="true"></i>
+        <div class="portada__acciones">
+          <a class="accion" href="/proyecto">Conocé nuestro proyecto <Flecha /></a>
+          <a class="accion accion--linea" href="/documentacion">Documentación <Flecha /></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------- antecedentes */}
+  <section class="seccion banda" data-seccion>
+    <div class="calle">
+      <Nodo texto="Antecedentes" recorrido="publico" />
+      <div class="revela-linea">
+        <h2 class="titulo">{antecedentes.titulo}</h2>
+        <p class="cuerpo bloque__cuerpo">{antecedentes.cuerpo}</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------------------------------------------------- territorio */}
+  <section class="seccion" data-seccion>
+    <div class="calle">
+      <Nodo texto="Territorio" recorrido="parque" />
+      <div class="revela-linea">
+        <h2 class="titulo">{porQue.titulo}</h2>
+        <p class="cuerpo bloque__cuerpo">{porQue.cuerpo}</p>
+
+        <ul class="sectores" aria-label="Sectores productivos">
+          {porQue.sectores.map((s) => <li class="rotulo sectores__item">{s}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------- activo estratégico */}
+  <section class="seccion banda" data-seccion>
+    <div class="calle">
+      <Nodo texto="Activo estratégico" recorrido="parque" />
+      <div class="activo revela-linea">
+        <div>
+          <h2 class="titulo">{activo.titulo}</h2>
+          <p class="cuerpo bloque__cuerpo">{activo.cuerpo}</p>
+        </div>
+
+        <dl class="ficha">
+          {
+            activo.datos.map((d) => (
+              <div class="ficha__fila">
+                <dt class="ficha__valor cifra">{d.valor}</dt>
+                <dd class="ficha__detalle">
+                  <span class="rotulo ficha__unidad">{d.unidad}</span>
+                  <span class="ficha__nota">{d.detalle}</span>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------------------------------------------------------- estado */}
+  <section class="seccion" data-seccion>
+    <div class="calle">
+      <Nodo texto="Estado del proyecto" recorrido="publico" />
+      <h2 class="titulo revela">Dónde está hoy</h2>
+      <ol class="hiladas revela-linea">
+        {
+          estado.map((h) => (
+            <li class="hilada">
+              <div class="hilada__marca">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                  <defs>
+                    <pattern
+                      id={`trama-${h.marca}`}
+                      width="4.5"
+                      height="4.5"
+                      patternUnits="userSpaceOnUse"
+                      patternTransform="rotate(45)"
+                    >
+                      <line x1="0" y1="0" x2="0" y2="4.5" stroke="currentColor" stroke-width="1.5" />
+                    </pattern>
+                  </defs>
+                  {h.marca === 'Construido' && <rect x="1" y="1" width="16" height="16" fill="currentColor" />}
+                  {h.marca === 'Dibujado' && (
+                    <rect
+                      x="1.75"
+                      y="1.75"
+                      width="14.5"
+                      height="14.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-dasharray="3 2.5"
+                    />
+                  )}
+                  {h.marca === 'Comprometido' && (
+                    <>
+                      <rect x="1.75" y="1.75" width="14.5" height="14.5" fill={`url(#trama-${h.marca})`} />
+                      <rect
+                        x="1.75"
+                        y="1.75"
+                        width="14.5"
+                        height="14.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
+                    </>
+                  )}
+                </svg>
+                <span class="rotulo">{h.marca}</span>
+              </div>
+              <div>
+                <h3 class="subtitulo">{h.titulo}</h3>
+                <p class="cuerpo hilada__cuerpo">{h.cuerpo}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* --------------------------------------------------------------- programa */}
+  <section class="seccion banda programa" data-seccion>
+    <div class="calle">
+      <Nodo texto="Programa" recorrido="formacion" />
+      <h2 class="titulo revela">Alcances del Centro Tecnológico</h2>
+      <p class="cuerpo revela bloque__cuerpo">
+        Tres áreas que funcionan juntas: se forma con la industria, se investiga para ella y se
+        prototipa con ella.
+      </p>
+    </div>
+
+    <div class="calle areas">
+      {
+        areas.map((area, i) => (
+          <article class="area revela">
+            <figure class="area__lamina">
+              <div class="marco-imagen" data-paralaje>
+                <Render
+                  nombre={area.render}
+                  alt={area.alt}
+                  ratio="3 / 2"
+                  sizes="(min-width: 68rem) 32vw, (min-width: 44rem) 46vw, 100vw"
+                />
+              </div>
+              <figcaption class="epigrafe">
+                <span class="dato">Fig. 0{i + 2}</span>
+                <span>{area.n}</span>
+              </figcaption>
+            </figure>
+            <h3 class="subtitulo area__titulo">{area.titulo}</h3>
+            <p class="cuerpo area__cuerpo">{area.cuerpo}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  {/* ----------------------------------------------------------- arquitectura */}
+  <section class="seccion" data-seccion>
+    <div class="calle">
+      <Nodo texto="Arquitectura" recorrido="investigacion" />
+      <h2 class="titulo revela">Criterios del anteproyecto</h2>
+    </div>
+
+    <div class="calle criterios">
+      {
+        arquitectura.map((c, i) => (
+          <article class={`criterio ${i % 2 === 1 ? 'criterio--invertido' : ''} revela`}>
+            <div class="criterio__imagen">
+              <div class="marco-imagen" data-paralaje>
+                <Render nombre={c.render} alt={c.alt} ratio="4 / 3" sizes="(min-width: 60rem) 45vw, 100vw" />
+              </div>
+            </div>
+            <div class="criterio__texto">
+              <h3 class="subtitulo">{c.titulo}</h3>
+              <p class="cuerpo criterio__cuerpo">{c.cuerpo}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  {/* ----------------------------------------------------------- implantación */}
+  <section class="seccion banda-fuerte" data-seccion>
+    <div class="calle">
+      <Nodo texto="Implantación" recorrido="parque" />
+      <div class="revela-linea">
+        <h2 class="titulo">{implantacion.titulo}</h2>
+        <p class="dato implantacion__lugar">{implantacion.lugar}</p>
+      </div>
+    </div>
+    <figure class="calle implantacion__plano revela">
+      <div class="marco-imagen" data-paralaje>
+        <Render nombre={implantacion.render} alt={implantacion.alt} ratio="12001 / 5766" sizes="100vw" />
+      </div>
+      <figcaption class="epigrafe">
+        <span class="dato">Fig. 05</span>
+        <span>Implantación en el Parque Norte, sobre las nueve hectáreas destinadas por la Fundación.</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  {/* ---------------------------------------------------------------- cierre */}
+  <section class="seccion cierre" data-seccion>
+    <div class="calle">
+      <Nodo texto="Documentación" recorrido="publico" />
+      <p class="display cierre__lema revela">{cierre.lema}</p>
+      <div class="cierre__acciones revela">
+        <a class="accion" href="/documentacion">Ver la documentación <Flecha /></a>
+        <a class="accion accion--linea" href="/proyecto">Recorrer el proyecto <Flecha /></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ------------------------------------------------------------- portada */
+  .portada {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: 88svh;
+    padding-block: clamp(7rem, 15vh, 9.5rem) clamp(3rem, 7vw, 5rem);
+  }
+
+  /* Tres capas detrás del texto: el halo, el signo de la marca, y el velo
+     que le devuelve contraste al título. */
+  .portada__fondo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(120% 90% at 88% 50%, var(--azul-50) 0%, transparent 62%);
+  }
+
+  .portada__signo {
+    position: absolute;
+    inset-inline-end: -20vw;
+    inset-block-start: 50%;
+    width: min(1020px, 80vw);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+    translate: 0 -50%;
+    opacity: 0.13;
+    pointer-events: none;
+  }
+
+  .portada__velo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      var(--papel) 26%,
+      color-mix(in srgb, var(--papel) 50%, transparent) 56%,
+      transparent 80%
+    );
+  }
+
+  .portada__texto {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+  }
+
+  .portada__ante {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--acento);
+  }
+
+  .portada__regla {
+    flex: none;
+    display: block;
+    width: 36px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .portada__titulo {
+    margin-block-start: clamp(1.1rem, 2.4vw, 1.6rem);
+    max-width: 15ch;
+    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5.5rem);
+    font-weight: 630;
+    font-stretch: 104%;
+    line-height: 0.98;
+    letter-spacing: -0.034em;
+    color: var(--tinta);
+    text-wrap: balance;
+  }
+
+  .portada__previo {
+    display: block;
+    margin-block-end: 0.34em;
+    font-size: 0.46em;
+    font-weight: 600;
+    font-stretch: 88%;
+    line-height: 1.1;
+    letter-spacing: -0.012em;
+    color: var(--tinta-2);
+  }
+
+  .portada__nombre {
+    display: block;
+    color: var(--acento);
+  }
+
+  .portada__ubicacion {
+    margin-block-start: 40px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--tinta);
+  }
+
+  .portada__acceso {
+    position: relative;
+    margin-block-start: 44px;
+    padding-inline-start: var(--rail);
+    margin-inline-start: calc(-1 * var(--rail));
+  }
+
+  .portada__acceso .marca {
+    inset-block-start: 1.2rem;
+  }
+
+  .portada__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* En pantallas chicas el signo se corre y baja, y el velo cubre todo el
+     ancho: el título nunca compite con la marca de fondo. */
+  @media (max-width: 48rem) {
+    .portada {
+      min-height: 84svh;
+    }
+
+    .portada__signo {
+      inset-inline-end: -32vw;
+      width: min(780px, 108vw);
+      opacity: 0.08;
+    }
+
+    .portada__velo {
+      background: linear-gradient(
+        90deg,
+        var(--papel) 30%,
+        color-mix(in srgb, var(--papel) 74%, transparent) 100%
+      );
+    }
+
+    .portada__ubicacion {
+      margin-block-start: 32px;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+    }
+
+    .portada__acceso {
+      margin-block-start: 36px;
+    }
+  }
+
+  /* ---------------------------------------------------------- bloques ---- */
+  .sectores {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin-block-start: clamp(1.75rem, 3.5vw, 2.75rem);
+    border-block-start: 1px solid var(--linea-fuerte);
+  }
+
+  .sectores__item {
+    flex: 1 1 11rem;
+    padding: 1.05rem 1.05rem 1.05rem 0;
+    color: var(--tinta);
+    border-block-end: 1px solid var(--linea);
+  }
+
+  .sectores__item + .sectores__item {
+    padding-inline-start: 1.05rem;
+    border-inline-start: 1px solid var(--linea);
+  }
+
+  /* -------------------------------------------------------------- activo */
+  .activo {
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  @media (min-width: 62rem) {
+    .activo {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  .ficha {
+    margin: 0;
+    border-block-start: 2px solid var(--tinta);
+  }
+
+  .ficha__fila {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(0.9rem, 2.2vw, 1.5rem);
+    padding-block: 1.05rem;
+    border-block-end: 1px solid var(--linea);
+  }
+
+  .ficha__valor {
+    margin: 0;
+    flex: none;
+    min-width: 4.5ch;
+    font-size: clamp(1.75rem, 1.35rem + 1.5vw, 2.5rem);
+    color: var(--acento);
+  }
+
+  .ficha__detalle {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .ficha__unidad {
+    color: var(--tinta);
+  }
+
+  .ficha__nota {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--tinta-3);
+    text-wrap: pretty;
+  }
+
+  /* -------------------------------------------------------------- estado */
+  .hiladas {
+    list-style: none;
+    padding: 0;
+    margin: clamp(1.75rem, 3.5vw, 2.75rem) 0 0;
+    border-block-start: 2px solid var(--tinta);
+  }
+
+  .hilada {
+    display: grid;
+    gap: 0.85rem clamp(1.25rem, 3.5vw, 3rem);
+    padding-block: clamp(1.5rem, 3vw, 2.5rem);
+    border-block-end: 1px solid var(--linea);
+  }
+
+  @media (min-width: 52rem) {
+    .hilada {
+      grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  .hilada__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--acento);
+  }
+
+  .hilada__marca .rotulo {
+    color: var(--tinta);
+  }
+
+  .hilada__cuerpo {
+    margin-block-start: 0.6rem;
+  }
+
+  /* ------------------------------------------------------------ programa */
+  .areas {
+    display: grid;
+    gap: clamp(2.25rem, 5vw, 3.5rem);
+    margin-block-start: clamp(2.25rem, 5vw, 3.5rem);
+  }
+
+  @media (min-width: 44rem) {
+    .areas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .areas {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .area__titulo {
+    margin-block-start: clamp(1rem, 2vw, 1.4rem);
+    text-wrap: balance;
+  }
+
+  .area__cuerpo {
+    margin-block-start: 0.7rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  .area__lamina {
+    margin: 0;
+  }
+
+  /* --------------------------------------------------------- arquitectura */
+  .criterios {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.75rem, 6vw, 5rem);
+    margin-block-start: clamp(2.25rem, 4.5vw, 3.5rem);
+  }
+
+  .criterio {
+    display: grid;
+    gap: clamp(1.35rem, 3vw, 2.5rem);
+    align-items: center;
+  }
+
+  @media (min-width: 60rem) {
+    .criterio {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .criterio--invertido .criterio__imagen {
+      order: 2;
+    }
+  }
+
+  .criterio__cuerpo {
+    margin-block-start: 0.85rem;
+    max-width: 46ch;
+  }
+
+  /* --------------------------------------------------------- implantación */
+  .implantacion__lugar {
+    margin-block-start: 0.85rem;
+    color: var(--tinta-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .implantacion__plano {
+    margin: clamp(2rem, 4.5vw, 3.5rem) auto 0;
+  }
+
+  /* -------------------------------------------------------------- cierre */
+  .cierre {
+    background: var(--azul-50);
+    border-block-start: 1px solid var(--linea);
+  }
+
+  .cierre__lema {
+    max-width: 15ch;
+    color: var(--tinta);
+    margin-block-start: 0.25rem;
+  }
+
+  .cierre__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: clamp(1.75rem, 4vw, 2.75rem);
+  }
+</style>

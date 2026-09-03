@@ -1,0 +1,65 @@
+---
+import { Image } from 'astro:assets';
+import isotipo from '../assets/isotipo-fundacion.png';
+
+/**
+ * La marca de la Fundación.
+ *
+ * El archivo del cliente es sólo el isotipo —el infinito formado por dos
+ * figuras—, así que el nombre va escrito al lado, en Archivo con un peso
+ * liviano y caja de oración: es lo más parecido al logotipo original que se
+ * puede armar con la tipografía del sitio, sin cargar una fuente extra.
+ *
+ * El color lo hereda del contenedor (`currentColor`), para que sobre el hero
+ * oscuro toda la marca pase a blanco de una sola vez.
+ */
+---
+
+<span class="marca-lockup">
+  <Image
+    class="marca-lockup__signo"
+    src={isotipo}
+    alt=""
+    width={120}
+    height={120}
+    densities={[1, 2]}
+    loading="eager"
+  />
+  <span class="marca-lockup__nombre">Fundación Tassaroli</span>
+</span>
+
+<style>
+  .marca-lockup {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .marca-lockup__signo {
+    flex: none;
+    width: auto;
+    height: clamp(1.5rem, 3.2vw, 1.95rem);
+    object-fit: contain;
+  }
+
+  .marca-lockup__nombre {
+    font-family: var(--sans);
+    font-size: clamp(0.9375rem, 2.1vw, 1.1875rem);
+    font-weight: 430;
+    font-stretch: 100%;
+    letter-spacing: 0.002em;
+    line-height: 1;
+    white-space: nowrap;
+    color: currentColor;
+  }
+
+  @media (max-width: 22rem) {
+    .marca-lockup {
+      gap: 0.45rem;
+    }
+
+    .marca-lockup__nombre {
+      font-size: 0.875rem;
+    }
+  }
+</style>

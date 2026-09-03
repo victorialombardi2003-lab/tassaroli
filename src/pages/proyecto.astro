@@ -1,0 +1,465 @@
+---
+import Base from '../layouts/Base.astro';
+import Nodo from '../components/Nodo.astro';
+import Render from '../components/Render.astro';
+import Carrusel from '../components/Carrusel.astro';
+import Flecha from '../components/Flecha.astro';
+import { sitio, carta, espacios, proposito } from '../data/contenido';
+
+/**
+ * El ritmo del recorrido: los espacios grandes ocupan el ancho completo,
+ * los chicos van pareados con su texto. La escala de la lámina responde al
+ * tamaño real del espacio, no a una decisión gráfica arbitraria.
+ */
+type Recorrido = 'publico' | 'parque' | 'formacion' | 'investigacion';
+
+const puesta: Record<string, { ratio: string; ancho: 'lleno' | 'par'; recorrido: Recorrido }> = {
+  'Espacios comunes': { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
+  'Sala de reuniones': { ratio: '21 / 9', ancho: 'lleno', recorrido: 'publico' },
+  'Salas de encuentro': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
+  Auditorio: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'publico' },
+  Circulaciones: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'parque' },
+  Laboratorios: { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
+  Aulas: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
+  'HUB IDI': { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
+  Coworking: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
+  'Baño y vestuarios': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
+  Taller: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'formacion' },
+  Exteriores: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'parque' },
+};
+
+const lista = espacios.map((e, i) => ({
+  ...e,
+  ...(puesta[e.nodo] ?? { ratio: '16 / 9', ancho: 'lleno' as const, recorrido: 'publico' as const }),
+  fig: String(i + 1).padStart(2, '0'),
+}));
+---
+
+<Base
+  titulo={`Nuestro proyecto — ${sitio.fundacion}`}
+  descripcion="El anteproyecto del Centro Tecnológico Carlos José Tassaroli, espacio por espacio."
+  actual="/proyecto"
+  heroOscuro={true}
+>
+  {/* ------------------------------------------------------------ apertura */}
+  <section class="apertura sangrado" data-hero-oscuro>
+    <div class="apertura__fondo">
+      <Render
+        nombre="hero-proyecto"
+        alt="Vista general del Centro Tecnológico Carlos José Tassaroli"
+        ratio="16 / 9"
+        prioridad={true}
+        sizes="100vw"
+        clase="apertura__render"
+      />
+      <span class="apertura__velo apertura__velo--vertical"></span>
+      <span class="apertura__velo apertura__velo--horizontal"></span>
+    </div>
+
+    <div class="calle apertura__texto">
+      <p class="apertura__ante">
+        <span class="apertura__regla"></span>
+        <span>Anteproyecto · Estudio Lucchesi</span>
+      </p>
+
+      <h1 class="display apertura__titulo">
+        Nuestro proyecto
+        <span class="apertura__nombre">Centro Tecnológico Carlos José Tassaroli</span>
+      </h1>
+
+      <div class="apertura__pie">
+        <a class="apertura__bajar" href="#recorrido">
+          <span>Bajar al recorrido</span>
+          <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true">
+            <path d="M0 5h13M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* --------------------------------------------------------------- carta */}
+  <section class="seccion banda" id="recorrido" data-seccion>
+    <div class="calle">
+      <Nodo texto="Carta de la presidenta" recorrido="publico" />
+      <blockquote class="carta__epigrafe revela">
+        <p>{carta.epigrafe}</p>
+      </blockquote>
+      <div class="carta revela-linea">
+        {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
+        <div class="firma">
+          <p class="firma__nombre">{carta.firma}</p>
+          <p class="rotulo firma__cargo">{carta.cargo}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------ espacios */}
+  <section class="seccion espacios" data-seccion>
+    <div class="calle">
+      <Nodo texto="El recorrido" recorrido="parque" />
+      <h2 class="titulo revela">Espacio por espacio</h2>
+      <p class="cuerpo revela espacios__bajada">
+        Doce ambientes definidos en el anteproyecto, en el orden en que se recorren.
+      </p>
+    </div>
+
+    {
+      lista.map((e) =>
+        e.ancho === 'lleno' ? (
+          <article class="espacio" data-seccion>
+            {e.renders.length > 1 ? (
+              <div class="espacio__carrusel sangrado">
+                <Carrusel
+                  renders={e.renders}
+                  alt={e.alt}
+                  titulo={e.titulo}
+                  fig={e.fig}
+                  ratio={e.ratio}
+                />
+              </div>
+            ) : (
+              <figure class="espacio__lamina sangrado">
+                <div class="marco-imagen" data-paralaje>
+                  <Render nombre={e.renders[0]} alt={e.alt} ratio={e.ratio} sizes="100vw" />
+                </div>
+                <figcaption class="epigrafe">
+                  <span class="dato">Fig. {e.fig}</span>
+                  <span>{e.titulo}</span>
+                </figcaption>
+              </figure>
+            )}
+            <div class="calle espacio__texto">
+              <Nodo texto={e.nodo} recorrido={e.recorrido} />
+              <div class="revela-linea">
+                <h3 class="subtitulo">{e.titulo}</h3>
+                <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
+              </div>
+            </div>
+          </article>
+        ) : (
+          <article class="espacio" data-seccion>
+            <div class="calle espacio__par">
+              <div>
+                <Nodo texto={e.nodo} recorrido={e.recorrido} />
+                <div class="revela-linea">
+                  <h3 class="subtitulo">{e.titulo}</h3>
+                  <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
+                </div>
+              </div>
+              <figure class="espacio__lamina revela">
+                <div class="marco-imagen" data-paralaje>
+                  <Render
+                    nombre={e.renders[0]}
+                    alt={e.alt}
+                    ratio={e.ratio}
+                    sizes="(min-width: 62rem) 48vw, 100vw"
+                  />
+                </div>
+                <figcaption class="epigrafe">
+                  <span class="dato">Fig. {e.fig}</span>
+                  <span>{e.titulo}</span>
+                </figcaption>
+              </figure>
+            </div>
+          </article>
+        ),
+      )
+    }
+  </section>
+
+  {/* ------------------------------------------------------------ propósito */}
+  <section class="seccion proposito" data-seccion>
+    <div class="calle">
+      <Nodo texto="Propósito" recorrido="publico" />
+      <blockquote class="proposito__cita revela">
+        <p>{proposito.cita}</p>
+        <cite class="rotulo proposito__fuente">Fundación Tassaroli</cite>
+      </blockquote>
+
+      <div class="proposito__texto revela-linea">
+        <h2 class="titulo">{proposito.titulo}</h2>
+        <p class="cuerpo bloque__cuerpo">{proposito.cuerpo}</p>
+      </div>
+
+      <div class="proposito__accion revela">
+        <a class="accion" href="/documentacion">Ver la documentación <Flecha /></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ------------------------------------------------------------ apertura */
+  .apertura {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 100svh;
+    overflow: hidden;
+  }
+
+  .apertura__fondo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .apertura__fondo :global(.apertura__render),
+  .apertura__fondo :global(.lamina) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto !important;
+  }
+
+  .apertura__fondo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .apertura__velo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* El render entregado es claro (luminancia media 153/255), así que la
+     rampa inferior sube antes y más fuerte que en la especificación: con los
+     valores originales el antetítulo quedaba en 3.4:1, por debajo del mínimo
+     AA. Con esta rampa llega a 5.4:1. */
+  .apertura__velo--vertical {
+    background: linear-gradient(
+      180deg,
+      rgba(20, 33, 61, 0.72) 0%,
+      rgba(20, 33, 61, 0.3) 32%,
+      rgba(20, 33, 61, 0.26) 52%,
+      rgba(20, 33, 61, 0.6) 70%,
+      rgba(20, 33, 61, 0.82) 86%,
+      rgba(20, 33, 61, 0.92) 100%
+    );
+  }
+
+  .apertura__velo--horizontal {
+    background: linear-gradient(
+      90deg,
+      rgba(20, 33, 61, 0.62) 0%,
+      rgba(20, 33, 61, 0.12) 48%,
+      transparent 72%
+    );
+  }
+
+  .apertura__texto {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding-block-end: 3.5rem;
+  }
+
+  .apertura__ante {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    /* Un escalón más claro que el #9dc0ff de la especificación, para que a
+       11px llegue a 5.4:1 sobre el render. */
+    color: #b8d4ff;
+  }
+
+  .apertura__regla {
+    flex: none;
+    display: block;
+    width: 36px;
+    height: 1px;
+    background: var(--azul-400);
+  }
+
+  .apertura__titulo {
+    margin-block-start: clamp(1rem, 2.2vw, 1.5rem);
+    max-width: 18ch;
+    line-height: 0.99;
+    color: #ffffff;
+  }
+
+  .apertura__nombre {
+    display: block;
+    margin-block-start: 0.16em;
+    font-size: 0.58em;
+    font-weight: 600;
+    font-stretch: 96%;
+    line-height: 1.06;
+    letter-spacing: -0.026em;
+    color: #f2f5fb;
+  }
+
+  .apertura__pie {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-start: 52px;
+    padding-block-start: 1.1rem;
+    border-block-start: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .apertura__bajar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    transition: color 180ms ease-out;
+  }
+
+  .apertura__bajar svg {
+    rotate: 90deg;
+    transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .apertura__bajar:hover {
+    color: #ffffff;
+  }
+
+  .apertura__bajar:hover svg {
+    transform: translateX(4px);
+  }
+
+  .apertura :global(:focus-visible) {
+    outline-color: var(--azul-400);
+  }
+
+  @media (max-width: 48rem) {
+    .apertura__texto {
+      padding-block-end: 2.5rem;
+    }
+
+    .apertura__pie {
+      margin-block-start: 34px;
+    }
+
+    .apertura__velo--horizontal {
+      background: linear-gradient(90deg, rgba(20, 33, 61, 0.6) 0%, rgba(20, 33, 61, 0.25) 100%);
+    }
+  }
+
+  /* --------------------------------------------------------------- carta */
+  .carta__epigrafe {
+    margin: 0 0 clamp(1.75rem, 3.5vw, 2.75rem);
+    max-width: 32ch;
+    border-inline-start: 2px solid var(--acento);
+    padding-inline-start: clamp(1.1rem, 2.5vw, 1.75rem);
+  }
+
+  .carta__epigrafe p {
+    font-size: clamp(1.25rem, 1rem + 1.6vw, 2rem);
+    font-weight: 520;
+    line-height: 1.25;
+    letter-spacing: -0.024em;
+    color: var(--tinta);
+    text-wrap: pretty;
+  }
+
+  .carta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.3rem;
+    max-width: var(--medida);
+  }
+
+  .carta .cuerpo:first-child {
+    font-size: clamp(1.125rem, 1.05rem + 0.55vw, 1.3125rem);
+    color: var(--tinta);
+  }
+
+  .firma {
+    margin-block-start: clamp(1.5rem, 3vw, 2.25rem);
+    padding-block-start: 1.35rem;
+    border-block-start: 1px solid var(--linea-fuerte);
+  }
+
+  .firma__nombre {
+    font-stretch: 102%;
+    font-weight: 640;
+    font-size: 1.1875rem;
+    letter-spacing: -0.02em;
+    color: var(--tinta);
+  }
+
+  .firma__cargo {
+    margin-block-start: 0.35rem;
+    color: var(--tinta-3);
+  }
+
+  /* ------------------------------------------------------------ espacios */
+  .espacios__bajada {
+    margin-block-start: 0.85rem;
+  }
+
+  .espacio {
+    padding-block-start: clamp(3rem, 7vw, 5.5rem);
+  }
+
+  .espacio__lamina {
+    margin: 0;
+  }
+
+  .espacio__texto {
+    padding-block-start: clamp(1.35rem, 3vw, 2rem);
+  }
+
+  .espacio__cuerpo {
+    margin-block-start: 0.85rem;
+  }
+
+  .espacio__par {
+    display: grid;
+    gap: clamp(1.5rem, 3.5vw, 3rem);
+    align-items: center;
+  }
+
+  @media (min-width: 62rem) {
+    .espacio__par {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    }
+  }
+
+  /* ----------------------------------------------------------- propósito */
+  .proposito {
+    background: var(--azul-50);
+    border-block-start: 1px solid var(--linea);
+    margin-block-start: clamp(4rem, 9vw, 7rem);
+  }
+
+  .proposito__cita {
+    margin: 0 0 clamp(2rem, 4.5vw, 3.25rem);
+    max-width: 24ch;
+  }
+
+  .proposito__cita p {
+    font-size: clamp(1.625rem, 1.1rem + 2.3vw, 3rem);
+    font-weight: 650;
+    font-stretch: 102%;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--acento-fuerte);
+    text-wrap: balance;
+  }
+
+  .proposito__fuente {
+    display: block;
+    margin-block-start: 0.9rem;
+    font-style: normal;
+    color: var(--tinta-3);
+  }
+
+  .proposito__accion {
+    margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+/**
+ * Un destino de la red.
+ *
+ * La marca es el punto por donde pasa la línea; el rótulo lo nombra. El
+ * carril dice a qué recorrido pertenece, y es lo que hace que la línea
+ * cambie de calle: institucional, territorio, programa, arquitectura.
+ */
+
+/**
+ * Los cuatro recorridos son la zonificación real del edificio:
+ * área institucional y pública, parque y circulaciones, capacitación,
+ * investigación. Cada uno tiene su carril, y la línea cambia de calle
+ * cuando el visitante cambia de recorrido.
+ */
+const carriles = {
+  publico: 0,
+  parque: 1,
+  formacion: 2,
+  investigacion: 3,
+} as const;
+
+interface Props {
+  texto: string;
+  recorrido?: keyof typeof carriles;
+}
+
+const { texto, recorrido = 'publico' } = Astro.props;
+const carril = carriles[recorrido];
+---
+
+<p class="nodo rotulo">
+  <i class="marca" style={`--carril: ${carril}`} aria-hidden="true"></i>
+  <span>{texto}</span>
+</p>

@@ -1,0 +1,358 @@
+---
+/**
+ * La red de recorridos y el motor de movimiento del sitio.
+ *
+ * Una sola línea continua atraviesa la página y pasa exactamente por la
+ * marca de cada destino. Cuando cambia el recorrido (público, parque,
+ * formación, investigación) cambia de carril con un quiebre a 45°, igual
+ * que una línea embutida en el piso.
+ *
+ * La geometría se calcula desde el DOM real: si el contenido crece, la
+ * línea sigue pasando por donde tiene que pasar.
+ */
+---
+
+<svg class="red" aria-hidden="true" focusable="false" width="0" height="0">
+  <defs>
+    <!-- Sobre un hero oscuro el trazo tiene que aclararse; el degradé cambia
+         de color exactamente donde termina el hero. -->
+    <linearGradient id="red-degrade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
+      <stop class="red__alto" offset="0" />
+      <stop class="red__alto" offset="0" />
+      <stop class="red__bajo" offset="0" />
+      <stop class="red__bajo" offset="1" />
+    </linearGradient>
+  </defs>
+  <path class="red__trazo" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke" />
+</svg>
+
+<style>
+  .red {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Por encima de los fondos de sección: si queda debajo, cada banda la
+       tapa y el recorrido se corta. */
+    z-index: 1;
+    color: color-mix(in srgb, var(--acento) 45%, transparent);
+    overflow: visible;
+  }
+
+  .red__trazo {
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+  }
+
+  /* Cada página puede fijar el color del tramo que cruza su hero. */
+  .red__alto {
+    stop-color: var(--red-alto, var(--azul-400));
+  }
+
+  .red__bajo {
+    stop-color: color-mix(in srgb, var(--acento) 45%, transparent);
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  type Punto = { x: number; y: number };
+
+  function centro(el: Element, origenX: number, origenY: number): Punto {
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.left + window.scrollX - origenX + r.width / 2,
+      y: r.top + window.scrollY - origenY + r.height / 2,
+    };
+  }
+
+  /** Traza vertical con quiebres a 45° donde cambia de carril. */
+  function trazar(puntos: Punto[]): string {
+    if (puntos.length === 0) return '';
+    let d = `M ${puntos[0].x.toFixed(2)} ${puntos[0].y.toFixed(2)}`;
+    for (let i = 1; i < puntos.length; i++) {
+      const a = puntos[i - 1];
+      const b = puntos[i];
+      const dx = b.x - a.x;
+      if (Math.abs(dx) < 0.5) {
+        d += ` L ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
+        continue;
+      }
+      const salto = Math.min(Math.abs(dx), Math.max(0, (b.y - a.y) * 0.6));
+      d += ` L ${a.x.toFixed(2)} ${(b.y - salto).toFixed(2)} L ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  /** Red de seguridad: nada queda invisible, pase lo que pase. */
+  function mostrarTodo() {
+    document.querySelectorAll<HTMLElement>('.revela, .revela-linea > *').forEach((el) => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+    });
+    document.querySelectorAll('.marca').forEach((m) => m.classList.add('encendida'));
+  }
+
+  function construir() {
+    const pagina = document.querySelector<HTMLElement>('[data-pagina]');
+    const svg = document.querySelector<SVGSVGElement>('.red');
+    const trazo = document.querySelector<SVGPathElement>('.red__trazo');
+    if (!pagina || !svg || !trazo) return null;
+
+    const marcas = Array.from(document.querySelectorAll<HTMLElement>('.marca'));
+    if (marcas.length === 0) return null;
+
+    const caja = pagina.getBoundingClientRect();
+    const origenX = caja.left + window.scrollX;
+    const origenY = caja.top + window.scrollY;
+    const ancho = pagina.offsetWidth;
+    const alto = pagina.offsetHeight;
+
+    const nodos = marcas.map((m) => centro(m, origenX, origenY));
+    const puntos: Punto[] = [
+      { x: nodos[0].x, y: 0 },
+      ...nodos,
+      { x: nodos[nodos.length - 1].x, y: alto },
+    ];
+
+    svg.setAttribute('viewBox', `0 0 ${ancho} ${alto}`);
+    svg.setAttribute('width', String(ancho));
+    svg.setAttribute('height', String(alto));
+    trazo.setAttribute('d', trazar(puntos));
+
+    // Si la página abre con un hero oscuro, el trazo va aclarado hasta donde
+    // el hero termina, y ahí vuelve al azul de siempre.
+    const hero = document.querySelector<HTMLElement>('[data-hero-oscuro]');
+    const degrade = svg.querySelector<SVGLinearGradientElement>('#red-degrade');
+    if (hero && degrade && alto > 0) {
+      const corte = (hero.getBoundingClientRect().bottom + window.scrollY - origenY) / alto;
+      const paradas = degrade.querySelectorAll('stop');
+      degrade.setAttribute('y2', String(alto));
+      paradas[1]?.setAttribute('offset', String(Math.max(0, Math.min(1, corte))));
+      paradas[2]?.setAttribute('offset', String(Math.max(0, Math.min(1, corte))));
+      trazo.setAttribute('stroke', 'url(#red-degrade)');
+    } else {
+      trazo.setAttribute('stroke', 'currentColor');
+    }
+
+    return { trazo, marcas, largo: trazo.getTotalLength() };
+  }
+
+  let disparadores: ScrollTrigger[] = [];
+
+  function montar() {
+    disparadores.forEach((d) => d.kill());
+    disparadores = [];
+
+    const red = construir();
+
+    if (reduce.matches) {
+      if (red) {
+        red.trazo.style.strokeDasharray = 'none';
+        red.trazo.style.strokeDashoffset = '0';
+      }
+      mostrarTodo();
+      return;
+    }
+
+    // --- El momento de autor: una sola pasada continua de arriba abajo ---
+    if (red) {
+      const { trazo, marcas, largo } = red;
+      trazo.style.strokeDasharray = `${largo}`;
+      trazo.style.strokeDashoffset = `${largo}`;
+
+      disparadores.push(
+        ScrollTrigger.create({
+          trigger: document.documentElement,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.6,
+          onUpdate: (self) => {
+            trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
+          },
+        }),
+      );
+
+      marcas.forEach((marca) => {
+        disparadores.push(
+          ScrollTrigger.create({
+            trigger: marca,
+            start: 'top 85%',
+            once: true,
+            onEnter: () => marca.classList.add('encendida'),
+          }),
+        );
+      });
+    }
+
+    // --- Las secciones aparecen cuando entran en pantalla -----------------
+    document.querySelectorAll<HTMLElement>('[data-seccion]').forEach((seccion) => {
+      const partes = Array.from(seccion.querySelectorAll<HTMLElement>('.revela, .revela-linea > *'));
+      if (partes.length === 0) return;
+
+      disparadores.push(
+        ScrollTrigger.create({
+          trigger: seccion,
+          start: 'top 82%',
+          once: true,
+          onEnter: () =>
+            gsap.to(partes, {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              ease: 'expo.out',
+              stagger: 0.055,
+              overwrite: true,
+            }),
+        }),
+      );
+    });
+
+    // --- Paralaje de las láminas -----------------------------------------
+    // La imagen está escalada 1.06 dentro del marco, así que un corrimiento
+    // de ±3% nunca descubre el borde.
+    document.querySelectorAll<HTMLElement>('[data-paralaje]').forEach((marco) => {
+      const imagen = marco.querySelector<HTMLElement>('img');
+      if (!imagen) return;
+      const tween = gsap.fromTo(
+        imagen,
+        { yPercent: -3 },
+        {
+          yPercent: 3,
+          ease: 'none',
+          scrollTrigger: { trigger: marco, start: 'top bottom', end: 'bottom top', scrub: true },
+        },
+      );
+      if (tween.scrollTrigger) disparadores.push(tween.scrollTrigger);
+    });
+  }
+
+  /**
+   * Entrada de la portada. Corre apenas hay DOM, no en `load`: si esperara
+   * a que carguen los renders, el título aparecería, se apagaría y volvería
+   * a aparecer — un parpadeo peor que no animar nada.
+   */
+  let entro = false;
+  function entrada() {
+    if (entro || reduce.matches) return;
+    entro = true;
+
+    // La placa de Documentación tiene su propio tiempo: la imagen entra
+    // sola y el título la sigue.
+    const placa = document.querySelector<HTMLElement>('.apertura__placa');
+    if (placa) {
+      gsap.from(placa, { opacity: 0, duration: 0.6, ease: 'power2.out' });
+      gsap.from('.apertura__fila', {
+        opacity: 0,
+        y: 18,
+        duration: 0.9,
+        delay: 0.2,
+        ease: 'expo.out',
+        clearProps: 'all',
+      });
+    } else {
+      const partes = document.querySelectorAll(
+        '.portada__ante, .portada__titulo, .portada__ubicacion, .portada__acceso,' +
+          '.apertura__ante, .apertura__titulo, .apertura__pie',
+      );
+      if (partes.length) {
+        gsap.from(partes, {
+          opacity: 0,
+          y: 18,
+          duration: 0.9,
+          ease: 'expo.out',
+          stagger: 0.07,
+          clearProps: 'all',
+        });
+      }
+    }
+
+    // El render del hero de proyecto lleva el mismo paralaje que las láminas.
+    const fondoHero = document.querySelector<HTMLElement>('.apertura__fondo img');
+    if (fondoHero) {
+      gsap.fromTo(
+        fondoHero,
+        { yPercent: -2.5, scale: 1.06 },
+        {
+          yPercent: 2.5,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '[data-hero-oscuro]',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true,
+          },
+        },
+      );
+    }
+
+    // El signo de la marca entra más lento y después queda flotando: es el
+    // fondo, no puede competir con la lectura.
+    const signo = document.querySelector<HTMLElement>('.portada__signo');
+    if (signo) {
+      gsap.from(signo, {
+        opacity: 0,
+        y: 28,
+        scale: 0.965,
+        duration: 1.5,
+        ease: 'expo.out',
+        onComplete: () => {
+          gsap.to(signo, {
+            y: -18,
+            duration: 7,
+            ease: 'sine.inOut',
+            repeat: -1,
+            yoyo: true,
+          });
+        },
+      });
+    }
+  }
+
+  function arrancar() {
+    document.documentElement.dataset.motion = reduce.matches ? 'off' : 'on';
+    montar();
+    ScrollTrigger.refresh();
+    // Si algo falla —una imagen que nunca carga, un trigger mal medido—,
+    // el contenido igual aparece.
+    window.setTimeout(mostrarTodo, 4000);
+  }
+
+  let pendiente: number | undefined;
+  const recalcular = () => {
+    window.clearTimeout(pendiente);
+    pendiente = window.setTimeout(() => {
+      montar();
+      ScrollTrigger.refresh();
+    }, 160);
+  };
+
+  // La entrada no espera a las imágenes; la geometría de la línea sí, porque
+  // necesita la altura definitiva del documento.
+  document.documentElement.dataset.motion = reduce.matches ? 'off' : 'on';
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', entrada, { once: true });
+  } else {
+    entrada();
+  }
+
+  if (document.readyState === 'complete') arrancar();
+  else window.addEventListener('load', arrancar, { once: true });
+
+  document.addEventListener('astro:page-load', () => {
+    entro = false;
+    entrada();
+    arrancar();
+  });
+  window.addEventListener('resize', recalcular);
+  reduce.addEventListener('change', arrancar);
+  if (document.fonts?.ready) document.fonts.ready.then(recalcular);
+</script>
