@@ -155,20 +155,33 @@ const lista = espacios.map((e, i) => ({
                   <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
                 </div>
               </div>
-              <figure class="espacio__lamina revela">
-                <div class="marco-imagen" data-paralaje>
-                  <Render
-                    nombre={e.renders[0]}
+              {e.renders.length > 1 ? (
+                <div class="espacio__carrusel revela">
+                  <Carrusel
+                    renders={e.renders}
                     alt={e.alt}
+                    titulo={e.titulo}
+                    fig={e.fig}
                     ratio={e.ratio}
-                    sizes="(min-width: 62rem) 48vw, 100vw"
+                    ancho="par"
                   />
                 </div>
-                <figcaption class="epigrafe">
-                  <span class="dato">Fig. {e.fig}</span>
-                  <span>{e.titulo}</span>
-                </figcaption>
-              </figure>
+              ) : (
+                <figure class="espacio__lamina revela">
+                  <div class="marco-imagen" data-paralaje>
+                    <Render
+                      nombre={e.renders[0]}
+                      alt={e.alt}
+                      ratio={e.ratio}
+                      sizes="(min-width: 62rem) 48vw, 100vw"
+                    />
+                  </div>
+                  <figcaption class="epigrafe">
+                    <span class="dato">Fig. {e.fig}</span>
+                    <span>{e.titulo}</span>
+                  </figcaption>
+                </figure>
+              )}
             </div>
           </article>
         ),

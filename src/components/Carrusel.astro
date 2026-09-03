@@ -18,13 +18,22 @@ interface Props {
   titulo: string;
   fig: string;
   ratio?: string;
+  /** `lleno` va a sangre; `par` vive dentro de una columna, al lado del texto. */
+  ancho?: 'lleno' | 'par';
 }
 
-const { renders, alt, titulo, fig, ratio = '3 / 2' } = Astro.props;
+const { renders, alt, titulo, fig, ratio = '3 / 2', ancho = 'lleno' } = Astro.props;
 const total = renders.length;
 ---
 
-<div class="carrusel" data-carrusel role="group" aria-roledescription="carrusel" aria-label={`Renders de ${titulo}`}>
+<div
+  class:list={['carrusel', ancho === 'par' && 'carrusel--par']}
+  data-carrusel
+  data-ancho={ancho}
+  role="group"
+  aria-roledescription="carrusel"
+  aria-label={`Renders de ${titulo}`}
+>
   <div class="carrusel__pista" data-pista tabindex="0">
     {
       renders.map((nombre, i) => (
@@ -40,7 +49,7 @@ const total = renders.length;
               nombre={nombre}
               alt={i === 0 ? alt : `${alt}, vista ${i + 1}`}
               ratio={ratio}
-              sizes="(min-width: 68rem) 68vw, 90vw"
+              sizes={ancho === 'par' ? '(min-width: 62rem) 48vw, 90vw' : '(min-width: 68rem) 68vw, 90vw'}
             />
           </div>
         </figure>
@@ -197,6 +206,23 @@ const total = renders.length;
     cursor: not-allowed;
   }
 
+  /* Dentro de una columna la pista no se centra en la ventana: ocupa el
+     ancho de su caja, con una rebanada de la lámina siguiente asomando para
+     que se entienda que hay más. */
+  .carrusel--par .carrusel__pista {
+    padding-inline: 0;
+  }
+
+  .carrusel--par .carrusel__diapo {
+    width: calc(100% - 2.25rem);
+    scroll-snap-align: start;
+  }
+
+  .carrusel--par .carrusel__mando {
+    max-width: none;
+    padding-inline: 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .carrusel__pista {
       scroll-behavior: auto;
@@ -221,10 +247,16 @@ const total = renders.length;
       if (siguiente) siguiente.disabled = indice === diapos.length - 1;
     }
 
+    // A sangre las láminas se encastran centradas; dentro de una columna, al
+    // ras de la izquierda. El destino del scroll tiene que respetar cada caso
+    // o el encastre pelea con el botón.
+    const centrado = carrusel.dataset.ancho !== 'par';
+
     function ir(i: number) {
       const destino = diapos[Math.max(0, Math.min(i, diapos.length - 1))];
       if (!destino || !pista) return;
-      pista.scrollTo({ left: destino.offsetLeft - (pista.clientWidth - destino.clientWidth) / 2 });
+      const hueco = centrado ? (pista.clientWidth - destino.clientWidth) / 2 : 0;
+      pista.scrollTo({ left: destino.offsetLeft - hueco });
     }
 
     anterior?.addEventListener('click', () => ir(indice - 1));

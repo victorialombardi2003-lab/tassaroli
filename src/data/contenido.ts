@@ -191,7 +191,7 @@ export const espacios = [
     titulo: 'Salas de encuentro',
     cuerpo:
       'Pequeños espacios de reunión distribuidos estratégicamente en el recorrido entre la cocina, el cowork y el área de IDI, diseñados para acompañar la dinámica cotidiana del proyecto. Estas cápsulas ofrecen un entorno flexible para reuniones rápidas, conversaciones privadas, definiciones operativas, videoconferencias y cierre de acuerdos, optimizando el uso de los espacios formales y favoreciendo una cultura de trabajo ágil, colaborativa y conectada.',
-    renders: ['esp-salas-encuentro'],
+    renders: ['esp-salas-encuentro-01', 'esp-salas-encuentro-02'],
     alt: 'Render de las cápsulas de reunión distribuidas en el recorrido',
   },
   {
