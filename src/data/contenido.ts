@@ -207,7 +207,14 @@ export const espacios = [
     titulo: 'Circulaciones',
     cuerpo:
       'La circulación del edificio se organiza como una red de recorridos que conecta los principales nodos de actividad: Talleres, Aulas, Laboratorios, Cowork e IDI. Se propone un sistema de orientación integrado a la arquitectura mediante líneas, texturas o iluminación, inspirado en circuitos tecnológicos y ondas sonoras. Cada recorrido tendrá una identidad propia, guiando intuitivamente a las personas y reforzando la idea de una red de conocimiento en movimiento, sin competir visualmente con el espacio ni interferir con la conexión hacia el parque. La señalización se integra al lenguaje arquitectónico como parte de la experiencia, evitando la percepción de una señalética tradicional.',
-    renders: ['esp-circulaciones'],
+    renders: [
+      'esp-circulaciones-01',
+      'esp-circulaciones-02',
+      'esp-circulaciones-03',
+      'esp-circulaciones-04',
+      'esp-circulaciones-05',
+      'esp-circulaciones-06',
+    ],
     alt: 'Render de las circulaciones con el sistema de orientación integrado a la arquitectura',
   },
   {
@@ -215,7 +222,15 @@ export const espacios = [
     titulo: 'Laboratorios',
     cuerpo:
       'Un espacio especializado para la investigación, el desarrollo y la innovación aplicada, equipado con áreas destinadas al análisis y estudio de materiales. El laboratorio integra sala de corrosión, análisis químicos, muestras y metalografía, complementadas por espacios de trabajo ubicados en el acceso a cada área. Una propuesta que articula conocimiento, experimentación y tecnología para impulsar soluciones y nuevos desarrollos industriales.',
-    renders: ['esp-laboratorios'],
+    renders: [
+      'esp-laboratorios-01',
+      'esp-laboratorios-02',
+      'esp-laboratorios-03',
+      'esp-laboratorios-05',
+      'esp-laboratorios-06',
+      'esp-laboratorios-07',
+      'esp-laboratorios-08',
+    ],
     alt: 'Render del laboratorio de ensayos y análisis de materiales',
   },
   {
@@ -223,7 +238,18 @@ export const espacios = [
     titulo: 'Aulas',
     cuerpo:
       'El proyecto incorpora un sistema educativo innovador, con aulas especializadas diseñadas para responder a las nuevas demandas de la formación tecnológica e industrial. En planta baja se ubican espacios destinados a laboratorio, neumática, sensores, programación y simulación de robots, junto con aulas taller. En planta alta, cuatro aulas complementan el programa educativo, conformando un entorno flexible y contemporáneo. La conexión visual con el taller a través de la doble altura y la estructura metálica liviana refuerzan la integración entre aprendizaje, tecnología y práctica.',
-    renders: ['esp-aulas'],
+    renders: [
+      'esp-aulas-01',
+      'esp-aulas-02',
+      'esp-aulas-03',
+      'esp-aulas-04',
+      'esp-aulas-05',
+      'esp-aulas-06',
+      'esp-aulas-07',
+      'esp-aulas-08',
+      'esp-aulas-09',
+      'esp-aulas-10',
+    ],
     alt: 'Render de las aulas con conexión visual al taller a través de la doble altura',
   },
   {
@@ -231,7 +257,12 @@ export const espacios = [
     titulo: 'HUB IDI',
     cuerpo:
       'El espacio de IDI se concibe como un laboratorio de innovación y desarrollo orientado a transformar desafíos industriales en soluciones concretas. Bajo el concepto “Del Problema al Prototipo”, el área integra diseño, experimentación y validación, manteniendo una conexión visual directa con el taller. Esta relación permite seguir el recorrido completo de una idea: desde su concepción y desarrollo hasta su materialización, generando un entorno donde la innovación se transforma en tecnología aplicada.',
-    renders: ['esp-hub-idi'],
+    renders: [
+      'esp-hub-idi-01',
+      'esp-hub-idi-02',
+      'esp-hub-idi-03',
+      'esp-hub-idi-04',
+    ],
     alt: 'Render del HUB de innovación y desarrollo con conexión visual al taller',
   },
   {
@@ -239,7 +270,13 @@ export const espacios = [
     titulo: 'Coworking',
     cuerpo:
       'Un espacio concebido como una extensión natural de la creatividad y la innovación del Centro Tecnológico. Un entorno flexible y colaborativo donde las ideas se desarrollan tanto en el trabajo individual como en los encuentros espontáneos y alrededor de una mesa de café. La tecnología acompaña y potencia la experiencia, pero las personas son el centro, favoreciendo el intercambio, la conexión y la generación de nuevas ideas. Un ecosistema vivo donde conocimiento, creatividad, colaboración e innovación conviven de manera natural.',
-    renders: ['esp-coworking'],
+    renders: [
+      'esp-coworking-01',
+      'esp-coworking-02',
+      'esp-coworking-03',
+      'esp-coworking-04',
+      'esp-coworking-05',
+    ],
     alt: 'Render del espacio de coworking',
   },
   {

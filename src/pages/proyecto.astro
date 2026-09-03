@@ -14,27 +14,37 @@ import { sitio, carta, espacios, proposito } from '../data/contenido';
  */
 type Recorrido = 'publico' | 'parque' | 'formacion' | 'investigacion';
 
-// Los renders del estudio vienen en 3:2 y 4:3. Un marco 21:9 sobre un 3:2
-// recorta un tercio de la altura, así que el más ancho que se usa es 16:9
-// —un 16% de recorte, que la composición tolera.
-const puesta: Record<string, { ratio: string; ancho: 'lleno' | 'par'; recorrido: Recorrido }> = {
-  'Espacios comunes': { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
-  'Sala de reuniones': { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
-  'Salas de encuentro': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
-  Auditorio: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
-  Circulaciones: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'parque' },
-  Laboratorios: { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
-  Aulas: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
-  'HUB IDI': { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
-  Coworking: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
-  'Baño y vestuarios': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
-  Taller: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
-  Exteriores: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'parque' },
+/**
+ * Cada espacio se lee con el texto a la izquierda y la imagen a la derecha.
+ * Antes los espacios grandes iban a sangre con el texto debajo; leerlo así
+ * obliga a bajar la vista para saber qué se está mirando.
+ *
+ * Y hay un efecto de calidad: en esta disposición la imagen ocupa unos 650px
+ * y no los 928 del carrusel a sangre. Como los renders del estudio miden
+ * 1537px de ancho, a 650 no se agrandan ni siquiera en una pantalla retina,
+ * que pide el doble. Es el único lugar del sitio donde eso se cumple.
+ *
+ * Lo único que varía por espacio es a qué recorrido pertenece, que es lo que
+ * hace cambiar de carril a la línea.
+ */
+const recorridos: Record<string, Recorrido> = {
+  'Espacios comunes': 'publico',
+  'Sala de reuniones': 'publico',
+  'Salas de encuentro': 'publico',
+  Auditorio: 'publico',
+  Circulaciones: 'parque',
+  Laboratorios: 'investigacion',
+  Aulas: 'formacion',
+  'HUB IDI': 'investigacion',
+  Coworking: 'formacion',
+  'Baño y vestuarios': 'publico',
+  Taller: 'formacion',
+  Exteriores: 'parque',
 };
 
 const lista = espacios.map((e, i) => ({
   ...e,
-  ...(puesta[e.nodo] ?? { ratio: '16 / 9', ancho: 'lleno' as const, recorrido: 'publico' as const }),
+  recorrido: recorridos[e.nodo] ?? 'publico',
   fig: String(i + 1).padStart(2, '0'),
 }));
 ---
@@ -113,23 +123,37 @@ const lista = espacios.map((e, i) => ({
     </div>
 
     {
-      lista.map((e) =>
-        e.ancho === 'lleno' ? (
-          <article class="espacio" data-seccion>
+      lista.map((e) => (
+        <article class="espacio" data-seccion>
+          <div class="calle espacio__par">
+            <div class="espacio__texto">
+              <Nodo texto={e.nodo} recorrido={e.recorrido} />
+              <div class="revela-linea">
+                <h3 class="subtitulo">{e.titulo}</h3>
+                <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
+              </div>
+            </div>
+
             {e.renders.length > 1 ? (
-              <div class="espacio__carrusel sangrado">
+              <div class="espacio__carrusel revela">
                 <Carrusel
                   renders={e.renders}
                   alt={e.alt}
                   titulo={e.titulo}
                   fig={e.fig}
-                  ratio={e.ratio}
+                  ratio="3 / 2"
+                  ancho="par"
                 />
               </div>
             ) : (
-              <figure class="espacio__lamina sangrado">
+              <figure class="espacio__lamina revela">
                 <div class="marco-imagen" data-paralaje>
-                  <Render nombre={e.renders[0]} alt={e.alt} ratio={e.ratio} sizes="100vw" />
+                  <Render
+                    nombre={e.renders[0]}
+                    alt={e.alt}
+                    ratio="3 / 2"
+                    sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+                  />
                 </div>
                 <figcaption class="epigrafe">
                   <span class="dato">Fig. {e.fig}</span>
@@ -137,55 +161,9 @@ const lista = espacios.map((e, i) => ({
                 </figcaption>
               </figure>
             )}
-            <div class="calle espacio__texto">
-              <Nodo texto={e.nodo} recorrido={e.recorrido} />
-              <div class="revela-linea">
-                <h3 class="subtitulo">{e.titulo}</h3>
-                <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
-              </div>
-            </div>
-          </article>
-        ) : (
-          <article class="espacio" data-seccion>
-            <div class="calle espacio__par">
-              <div>
-                <Nodo texto={e.nodo} recorrido={e.recorrido} />
-                <div class="revela-linea">
-                  <h3 class="subtitulo">{e.titulo}</h3>
-                  <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
-                </div>
-              </div>
-              {e.renders.length > 1 ? (
-                <div class="espacio__carrusel revela">
-                  <Carrusel
-                    renders={e.renders}
-                    alt={e.alt}
-                    titulo={e.titulo}
-                    fig={e.fig}
-                    ratio={e.ratio}
-                    ancho="par"
-                  />
-                </div>
-              ) : (
-                <figure class="espacio__lamina revela">
-                  <div class="marco-imagen" data-paralaje>
-                    <Render
-                      nombre={e.renders[0]}
-                      alt={e.alt}
-                      ratio={e.ratio}
-                      sizes="(min-width: 62rem) 48vw, 100vw"
-                    />
-                  </div>
-                  <figcaption class="epigrafe">
-                    <span class="dato">Fig. {e.fig}</span>
-                    <span>{e.titulo}</span>
-                  </figcaption>
-                </figure>
-              )}
-            </div>
-          </article>
-        ),
-      )
+          </div>
+        </article>
+      ))
     }
   </section>
 
@@ -512,6 +490,14 @@ const lista = espacios.map((e, i) => ({
   @media (min-width: 62rem) {
     .espacio__par {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      /* Tope de ancho, y no es una decisión estética.
+         La imagen mide (contenido - hueco) / 2.05 * 1.05. Con el contenido
+         topado en 92rem eso da 729px, y una pantalla retina pide el doble:
+         1458px. Los renders del estudio miden 1537. O sea que acá, a
+         cualquier tamaño de ventana, la imagen se achica o queda igual;
+         nunca se agranda. Sin el tope, un monitor de 2560 pediría 2310px de
+         una imagen de 1537 y se vería blanda. */
+      max-width: calc(92rem + var(--rail) + 2 * var(--borde));
     }
   }
 
