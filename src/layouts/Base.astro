@@ -37,6 +37,20 @@ const anio = new Date().getFullYear();
     <meta property="og:site_name" content={sitio.fundacion} />
     <meta property="og:title" content={titulo} />
     <meta property="og:description" content={descripcion} />
+    <script is:inline>
+      // Tiene que correr antes del primer pintado, y por eso va acá adentro
+      // y sin diferir. El atributo `data-motion` activa el estado previo de
+      // las animaciones —las láminas arrancan tapadas—: si lo pusiera el
+      // script de la página, que es un módulo y corre después de pintar, se
+      // vería un instante la lámina entera, después taparse, y recién ahí el
+      // barrido. Ese parpadeo es lo que esto evita.
+      document.documentElement.dataset.motion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches
+        ? 'off'
+        : 'on';
+    </script>
+
     <noscript>
       <style>
         /* Salida 3: sin JavaScript la pantalla de carga no llega a
@@ -143,7 +157,9 @@ const anio = new Date().getFullYear();
          más especificidad y ya viene sin desenfoque. */
       @media (max-width: 47.99rem) {
         .encabezado {
-          background: color-mix(in srgb, var(--papel) 97%, transparent);
+          /* Opaco, no 97%: sin desenfoque detrás esa transparencia no aporta
+             nada y deja pasar un fantasma del texto que va debajo. */
+          background: var(--papel);
           backdrop-filter: none;
         }
       }

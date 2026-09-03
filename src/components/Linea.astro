@@ -141,13 +141,11 @@
         },
       );
 
-      // Antes la imagen entraba al 116% y se asentaba en 106%: durante segundo
-      // y medio se veía agrandada un 16%, que en un render se nota. El barrido
-      // del marco ya da la sensación de que la lámina se revela; no hace falta
-      // deformarla además.
-      if (imagen) {
-        gsap.fromTo(imagen, { opacity: 0.55 }, { opacity: 1, duration: 1.2, ease: 'power2.out' });
-      }
+      // Acá antes la imagen entraba al 116% y se asentaba en 106% —un render
+      // agrandado un 16% durante segundo y medio se nota—, y después subía de
+      // un velo a su densidad plena. Las dos cosas sobran: el barrido del
+      // marco ya dice que la lámina se revela, y cualquier cambio encima
+      // suma un cambio de estado más donde puede aparecer un parpadeo.
     };
 
     // Las láminas son `loading="lazy"`: bajando rápido en el teléfono, el
