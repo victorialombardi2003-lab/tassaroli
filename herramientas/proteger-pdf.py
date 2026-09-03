@@ -12,7 +12,11 @@ se bajan gratis; por eso acá está forzado y no es configurable.
 
 Cómo se usa:
 
-  1. Poné los PDF originales en `documentos-a-proteger/`
+  1. Bajá las carpetas de Drive (botón derecho sobre la carpeta →
+     Descargar) y descomprimí los zip dentro de `documentos-a-proteger/`.
+     No hace falta sacar los PDF de sus carpetas: se buscan también en las
+     subcarpetas y la salida conserva la misma estructura, así que después
+     cada archivo vuelve a Drive a donde estaba.
   2. python herramientas/proteger-pdf.py
   3. Escribí la clave (no se va a ver mientras la tipeás) y confirmala
   4. Subí a Drive lo que quedó en `documentos-protegidos/`
@@ -26,6 +30,12 @@ from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
 from pypdf.errors import FileNotDecryptedError
+
+# La consola de Windows no siempre arranca en UTF-8, y ahí un acento no sólo
+# se ve mal: puede cortar el script a mitad de camino con un error de
+# codificación, dejando algunos archivos protegidos y otros no. Con esto la
+# salida nunca falla por un carácter.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ENTRADA = Path("documentos-a-proteger")
 SALIDA = Path("documentos-protegidos")
@@ -92,9 +102,12 @@ def main() -> None:
         print(f"Creé la carpeta {ENTRADA}/. Poné ahí los PDF y volvé a correr esto.")
         return
 
-    archivos = sorted(p for p in ENTRADA.iterdir() if p.suffix.lower() == ".pdf")
+    # rglob y no iterdir: las carpetas bajadas de Drive vienen dentro de un
+    # zip que al descomprimirse deja su propia carpeta. Buscar en profundidad
+    # evita tener que desarmar eso a mano, que es donde se traspapela uno.
+    archivos = sorted(p for p in ENTRADA.rglob("*") if p.suffix.lower() == ".pdf")
     if not archivos:
-        print(f"No hay PDF en {ENTRADA}/.")
+        print(f"No hay PDF en {ENTRADA}/ ni en sus subcarpetas.")
         return
 
     print(f"{len(archivos)} archivo{'' if len(archivos) == 1 else 's'} para proteger.\n")
@@ -104,15 +117,20 @@ def main() -> None:
     print()
     fallados = []
     for origen in archivos:
-        destino = SALIDA / origen.name
+        # La salida repite la estructura de la entrada, así que cada archivo
+        # vuelve a Drive a la carpeta de la que salió.
+        relativo = origen.relative_to(ENTRADA)
+        destino = SALIDA / relativo
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        rotulo = str(relativo)
         try:
             paginas = proteger(origen, destino, clave)
             kb = destino.stat().st_size // 1024
-            print(f"  {origen.name[:52]:<54}{paginas:>4} pág   {kb:>6} KB")
+            print(f"  {rotulo[:60]:<62}{paginas:>4} pág   {kb:>6} KB")
         except Exception as e:  # noqa: BLE001 — se informa y se sigue con el resto
-            fallados.append((origen.name, e))
+            fallados.append((rotulo, e))
             destino.unlink(missing_ok=True)
-            print(f"  {origen.name[:52]:<54}  FALLÓ")
+            print(f"  {rotulo[:60]:<62}  FALLÓ")
 
     print()
     if fallados:
