@@ -11,6 +11,11 @@ node_modules/
 .env.production
 .env.local
 
+# PDF de la documentacion: los originales que se van a proteger y las
+# copias ya encriptadas. Ninguno de los dos entra al repositorio.
+documentos-a-proteger/
+documentos-protegidos/
+
 # Restricted documentation. These files are served only through the
 # authenticated endpoint; they must never end up in the public build.
 documentos/*

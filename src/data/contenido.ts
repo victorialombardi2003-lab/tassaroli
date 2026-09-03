@@ -354,12 +354,15 @@ export const proposito = {
 
 
 /**
- * El acceso lo gestiona Google Drive, no el sitio.
+ * La proteccion viaja con el archivo, no con el link.
  *
- * La Fundación restringe la carpeta desde Drive; quien no tenga permiso ve
- * la pantalla de «Solicitar acceso» de Google y la Fundación aprueba o no.
- * Es más seguro que una contraseña en el sitio —no hay clave que circule ni
- * que se filtre— y no necesita servidor.
+ * Cada PDF esta encriptado con AES-256 y no abre sin la clave. Se eligio
+ * asi, y no una contrasena en el sitio, porque una contrasena en el sitio
+ * solo cuida el camino hasta la descarga: una vez bajado, el archivo queda
+ * suelto. Encriptado sigue cerrado aunque alguien lo reenvie.
+ *
+ * Los links de Drive pueden entonces quedar como estan; lo que se controla
+ * es a quien se le da la clave. Se generan con herramientas/proteger-pdf.py.
  */
 
 const DRIVE_ARCHIVO = 'https://drive.google.com/file/d/';
@@ -456,7 +459,7 @@ export const planos = {
 };
 
 export const acceso = {
-  titulo: 'El acceso lo gestiona la Fundación',
+  titulo: 'La documentación está protegida',
   cuerpo:
-    'La documentación técnica está alojada en Google Drive con acceso restringido. Al abrir cualquier documento, si tu cuenta todavía no tiene permiso, Google te va a ofrecer solicitarlo y la Fundación lo aprueba.',
+    'Los documentos se descargan desde Google Drive, pero están protegidos con contraseña: para abrirlos hace falta una clave que entrega la Fundación a quien la solicite.',
 };
