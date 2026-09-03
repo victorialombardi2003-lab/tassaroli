@@ -64,6 +64,19 @@
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  /**
+   * Los dos efectos atados al scroll —dibujar la línea y el paralaje— hacen
+   * trabajo en cada cuadro. El trazo es un SVG tan alto como el documento
+   * entero (más de 10.000px), y cambiarle el `dashoffset` lo manda a repintar;
+   * el paralaje mantiene una capa de composición por lámina. En un teléfono
+   * eso es lo que traba el scroll, y son justo los dos efectos que menos se
+   * notan mientras se pasa la página con el dedo.
+   *
+   * Del resto no se saca nada: revelados, contadores y entradas corren una
+   * sola vez y no cuestan nada mientras se scrollea.
+   */
+  const anchura = window.matchMedia('(min-width: 48rem)');
+
   type Punto = { x: number; y: number };
 
   function centro(el: Element, origenX: number, origenY: number): Punto {
@@ -249,17 +262,24 @@
       // termina completo igual.
       const ADELANTO = 0.85;
 
-      disparadores.push(
-        ScrollTrigger.create({
-          start: () => -window.innerHeight * ADELANTO,
-          end: () => ScrollTrigger.maxScroll(window),
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
-          },
-        }),
-      );
+      if (anchura.matches) {
+        disparadores.push(
+          ScrollTrigger.create({
+            start: () => -window.innerHeight * ADELANTO,
+            end: () => ScrollTrigger.maxScroll(window),
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
+            },
+          }),
+        );
+      } else {
+        // En pantalla chica la línea está desde el arranque: sigue hilvanando
+        // la página, pero sin repintarse en cada cuadro.
+        trazo.style.strokeDasharray = 'none';
+        trazo.style.strokeDashoffset = '0';
+      }
 
       marcas.forEach((marca) => {
         disparadores.push(
@@ -316,8 +336,9 @@
         );
       }
 
-      // El paralaje sólo aplica si hay imagen: los marcos con el render
-      // pendiente son una trama, no se mueven.
+      // El paralaje sólo aplica si hay imagen —los marcos con el render
+      // pendiente son una trama, no se mueven— y sólo donde hay ancho.
+      if (!anchura.matches) return;
       const imagen = marco.querySelector<HTMLElement>('img');
       if (!imagen) return;
       const tween = gsap.fromTo(
@@ -390,8 +411,11 @@
       }
     }
 
-    // El render del hero de proyecto lleva el mismo paralaje que las láminas.
-    const fondoHero = document.querySelector<HTMLElement>('.apertura__fondo img');
+    // El render del hero de proyecto lleva el mismo paralaje que las láminas,
+    // y por lo mismo se queda quieto en pantalla chica.
+    const fondoHero = anchura.matches
+      ? document.querySelector<HTMLElement>('.apertura__fondo img')
+      : null;
     if (fondoHero) {
       gsap.fromTo(
         fondoHero,
@@ -419,7 +443,12 @@
         scale: 0.965,
         duration: 1.5,
         ease: 'expo.out',
+        // El flotado no termina nunca, así que deja el ticker de GSAP
+        // corriendo en cada cuadro por el resto de la visita —incluso con la
+        // portada fuera de pantalla—, compitiendo con el scroll. En pantalla
+        // chica la entrada queda y el flotado no.
         onComplete: () => {
+          if (!anchura.matches) return;
           gsap.to(signo, {
             y: -18,
             duration: 7,
@@ -469,5 +498,8 @@
   });
   window.addEventListener('resize', recalcular);
   reduce.addEventListener('change', arrancar);
+  // Girar el teléfono puede cruzar el umbral en cualquiera de las dos
+  // direcciones; hay que rearmar lo que corresponda.
+  anchura.addEventListener('change', arrancar);
   if (document.fonts?.ready) document.fonts.ready.then(recalcular);
 </script>

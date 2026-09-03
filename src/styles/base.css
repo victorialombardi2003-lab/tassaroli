@@ -63,7 +63,10 @@
   --mono: 'Martian Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
   /* --- Medidas -------------------------------------------------------- */
-  --rail: clamp(2rem, 5.5vw, 5.5rem);
+  /* El rail tiene que alojar dos cosas: los cuatro carriles por donde baja la
+     línea y el rótulo vertical del nodo, uno al lado del otro. Con 5.5vw no
+     entraban y la línea del carril 0 pasaba justo por encima del texto. */
+  --rail: clamp(2rem, 7vw, 6.5rem);
   --borde: clamp(1.25rem, 4vw, 4.5rem);
   --medida: 68ch;
   /* El sitio ocupa todo el ancho de la pantalla, por pedido del cliente: no
@@ -307,7 +310,16 @@ a:hover {
 .marco-imagen img {
   width: 100%;
   transform: scale(1.06);
-  will-change: transform;
+}
+
+/* `will-change` deja la imagen en su propia capa de composición, y eso sólo
+   vale la pena donde el paralaje corre de verdad. En mobile no corre, y
+   reservar una capa por lámina —van a ser dieciséis— es memoria de GPU
+   regalada. */
+@media (min-width: 48rem) {
+  .marco-imagen img {
+    will-change: transform;
+  }
 }
 
 /* Al pasar por encima, la lámina se acerca apenas. El que se mueve es el
@@ -388,6 +400,7 @@ a:hover {
   position: absolute;
   inset-block-start: 0.5rem;
   inset-inline-start: var(--borde);
+  width: var(--rail);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -398,6 +411,15 @@ a:hover {
 }
 
 .nodo span {
+  /* Contra el borde derecho del rail: los cuatro carriles quedan a su
+     izquierda y ninguna línea le pasa por encima. `margin-inline-start: auto`
+     mueve sólo el rótulo — el punto se queda donde está, porque es por donde
+     pasa la línea y correrlo cambiaría el trazo. */
+  /* Físicas a propósito: el span es `vertical-rl`, así que su eje inline es
+     el vertical y un `margin-inline-start` se iría para arriba, no a la
+     derecha. */
+  margin-left: auto;
+  margin-right: 0.4rem;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-size: 0.625rem;

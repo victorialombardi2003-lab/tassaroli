@@ -125,6 +125,19 @@ const anio = new Date().getFullYear();
         transition: border-color 260ms ease-out, box-shadow 260ms ease-out;
       }
 
+      /* El desenfoque obliga a re-muestrear y difuminar todo lo que pasa por
+         detrás, en cada cuadro de scroll. El encabezado es fijo, así que eso
+         pasa siempre, y en un teléfono es de lo más caro que se puede pedir.
+         Abajo de 48rem se cambia por un fondo casi opaco: se ve prácticamente
+         igual y no cuesta nada. El estado sobre hero oscuro no se toca —tiene
+         más especificidad y ya viene sin desenfoque. */
+      @media (max-width: 47.99rem) {
+        .encabezado {
+          background: color-mix(in srgb, var(--papel) 97%, transparent);
+          backdrop-filter: none;
+        }
+      }
+
       /* Marca a la izquierda y navegación centrada. La tercera columna queda
          vacía a propósito: sin ella el centro se correría hacia la derecha. */
       .encabezado__interior {
