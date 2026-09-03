@@ -384,6 +384,32 @@ const lista = espacios.map((e, i) => ({
     border-block-start: 1px solid var(--linea-fuerte);
   }
 
+  /* La carta es el texto más largo del sitio. En una sola columna la mancha
+     queda tan alta que se lee como un trámite; en dos entra de un vistazo.
+     Sólo donde hay ancho real: más angosto, cada columna baja de los 40
+     caracteres y el renglón se corta a cada rato. */
+  @media (min-width: 60rem) {
+    .carta {
+      display: block;
+      max-width: min(100%, 106ch);
+      columns: 2;
+      column-gap: clamp(2.25rem, 4vw, 4.5rem);
+    }
+
+    /* Un párrafo partido al medio por el salto de columna obliga a subir la
+       vista para seguir leyendo. Enteros, se reparten tres y tres. Además el
+       `gap` del flex ya no aplica, así que la separación vuelve al margen. */
+    .carta > .cuerpo {
+      break-inside: avoid;
+      margin-block-end: 1.3rem;
+    }
+
+    /* La firma cierra la carta, no una de las dos columnas. */
+    .firma {
+      column-span: all;
+    }
+  }
+
   .firma__nombre {
     font-stretch: 102%;
     font-weight: 640;

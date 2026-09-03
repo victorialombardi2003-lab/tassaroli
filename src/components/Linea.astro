@@ -23,7 +23,7 @@
       <stop class="red__bajo" offset="1" />
     </linearGradient>
   </defs>
-  <path class="red__trazo" fill="none" stroke="currentColor" stroke-width="1.25" vector-effect="non-scaling-stroke" />
+  <path class="red__trazo" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" />
 </svg>
 
 <style>
@@ -37,7 +37,7 @@
     /* Por encima de los fondos de sección: si queda debajo, cada banda la
        tapa y el recorrido se corta. */
     z-index: 1;
-    color: color-mix(in srgb, var(--acento) 45%, transparent);
+    color: color-mix(in srgb, var(--acento) 72%, transparent);
     overflow: visible;
   }
 
@@ -52,7 +52,7 @@
   }
 
   .red__bajo {
-    stop-color: color-mix(in srgb, var(--acento) 45%, transparent);
+    stop-color: color-mix(in srgb, var(--acento) 72%, transparent);
   }
 </style>
 
@@ -98,7 +98,79 @@
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
+    document.querySelectorAll<HTMLElement>('[data-paralaje]').forEach((marco) => {
+      marco.style.clipPath = 'none';
+    });
     document.querySelectorAll('.marca').forEach((m) => m.classList.add('encendida'));
+  }
+
+  /**
+   * Descubre una lámina: el marco se abre de arriba abajo, como un plotter
+   * imprimiéndola, y la imagen entra un punto más grande y se asienta en su
+   * escala de reposo. Son dos tweens y no uno porque duran distinto: el
+   * barrido termina antes y la imagen sigue acomodándose.
+   */
+  function descubrir(marco: HTMLElement) {
+    gsap.fromTo(
+      marco,
+      { clipPath: 'inset(0% 0% 100% 0%)' },
+      {
+        clipPath: 'inset(0% 0% 0% 0%)',
+        duration: 1.05,
+        ease: 'expo.out',
+        // Sin esto el marco vuelve al estado tapado que fija el CSS.
+        onComplete: () => {
+          marco.style.clipPath = 'none';
+        },
+      },
+    );
+
+    const imagen = marco.querySelector<HTMLElement>('img');
+    if (imagen) {
+      gsap.fromTo(imagen, { scale: 1.16 }, { scale: 1.06, duration: 1.5, ease: 'expo.out' });
+    }
+  }
+
+  /**
+   * Carga un número: cuenta desde cero hasta el valor que ya está escrito en
+   * el HTML. El texto final vive en el marcado —así se lee sin JavaScript y
+   * lo indexa el buscador—; el motor sólo lo pisa mientras dura la cuenta y
+   * al terminar lo devuelve tal cual estaba.
+   */
+  function contar(el: HTMLElement) {
+    const original = (el.textContent ?? '').trim();
+    // Un prefijo opcional («+»), el número, y lo que venga después.
+    const partes = original.match(/^(\D*)([\d.,]+)(.*)$/);
+    if (!partes) return;
+
+    const [, antes, escrito, despues] = partes;
+    // «10.000» son diez mil: acá el punto es separador de miles y la coma,
+    // decimal. Al revés que en JavaScript, así que hay que traducirlo.
+    const destino = Number(escrito.replace(/\./g, '').replace(',', '.'));
+    if (!Number.isFinite(destino)) return;
+
+    const decimales = (escrito.split(',')[1] ?? '').length;
+    const formato = new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: decimales,
+      maximumFractionDigits: decimales,
+    });
+
+    // La cuenta arranca en un dígito y termina en seis. Sin fijar el ancho
+    // que ya ocupa el valor final, la fila entera se sacude mientras corre.
+    el.style.minWidth = `${el.getBoundingClientRect().width}px`;
+
+    const cuenta = { n: 0 };
+    gsap.to(cuenta, {
+      n: destino,
+      duration: 1.6,
+      ease: 'power2.out',
+      onUpdate: () => {
+        el.textContent = `${antes}${formato.format(cuenta.n)}${despues}`;
+      },
+      onComplete: () => {
+        el.textContent = original;
+      },
+    });
   }
 
   function construir() {
@@ -169,12 +241,20 @@
       trazo.style.strokeDasharray = `${largo}`;
       trazo.style.strokeDashoffset = `${largo}`;
 
+      // La punta del trazo acompaña al scroll cerca del borde inferior de la
+      // pantalla, no en la mitad de arriba. Eso se consigue arrancando el
+      // recorrido casi una pantalla «antes» del scroll cero: a scroll 0 la
+      // línea ya bajó ese tanto, y de ahí en más viaja junto con la lectura.
+      // El final sigue siendo el fondo del documento, así que el trazo
+      // termina completo igual.
+      const ADELANTO = 0.85;
+
       disparadores.push(
         ScrollTrigger.create({
-          trigger: document.documentElement,
-          start: 'top top',
-          end: 'bottom bottom',
+          start: () => -window.innerHeight * ADELANTO,
+          end: () => ScrollTrigger.maxScroll(window),
           scrub: 0.6,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
           },
@@ -216,10 +296,28 @@
       );
     });
 
-    // --- Paralaje de las láminas -----------------------------------------
+    // --- Entrada y paralaje de las láminas --------------------------------
     // La imagen está escalada 1.06 dentro del marco, así que un corrimiento
     // de ±3% nunca descubre el borde.
     document.querySelectorAll<HTMLElement>('[data-paralaje]').forEach((marco) => {
+      // `montar()` vuelve a correr en cada resize. Sin esta marca, redimensionar
+      // la ventana rebobina el revelado de cada lámina que ya se vio.
+      if (marco.dataset.descubierta === undefined) {
+        disparadores.push(
+          ScrollTrigger.create({
+            trigger: marco,
+            start: 'top 88%',
+            once: true,
+            onEnter: () => {
+              marco.dataset.descubierta = '';
+              descubrir(marco);
+            },
+          }),
+        );
+      }
+
+      // El paralaje sólo aplica si hay imagen: los marcos con el render
+      // pendiente son una trama, no se mueven.
       const imagen = marco.querySelector<HTMLElement>('img');
       if (!imagen) return;
       const tween = gsap.fromTo(
@@ -232,6 +330,23 @@
         },
       );
       if (tween.scrollTrigger) disparadores.push(tween.scrollTrigger);
+    });
+
+    // --- Los números se cargan al entrar ----------------------------------
+    document.querySelectorAll<HTMLElement>('[data-contador]').forEach((valor) => {
+      // Igual que el revelado: una vez cargado, no se vuelve a contar.
+      if (valor.dataset.contado !== undefined) return;
+      disparadores.push(
+        ScrollTrigger.create({
+          trigger: valor,
+          start: 'top 88%',
+          once: true,
+          onEnter: () => {
+            valor.dataset.contado = '';
+            contar(valor);
+          },
+        }),
+      );
     });
   }
 

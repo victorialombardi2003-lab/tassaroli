@@ -6,7 +6,6 @@ import '../styles/base.css';
 
 import Linea from '../components/Linea.astro';
 import Marca from '../components/Marca.astro';
-import Flecha from '../components/Flecha.astro';
 import { sitio, navegacion } from '../data/contenido';
 
 interface Props {
@@ -70,13 +69,7 @@ const anio = new Date().getFullYear();
           {
             navegacion.map((item) => (
               <a
-                class:list={[
-                  'encabezado__enlace',
-                  'rotulo',
-                  // Documentación también es el botón de la derecha: en
-                  // escritorio se muestra una sola vez.
-                  item.href === '/documentacion' && 'encabezado__enlace--duplicado',
-                ]}
+                class="encabezado__enlace rotulo"
                 href={item.href}
                 aria-current={actual === item.href ? 'page' : undefined}
               >
@@ -85,14 +78,6 @@ const anio = new Date().getFullYear();
             ))
           }
         </nav>
-
-        <a
-          class="accion encabezado__accion"
-          href="/documentacion"
-          aria-current={actual === '/documentacion' ? 'page' : undefined}
-        >
-          Documentación <Flecha />
-        </a>
       </div>
     </header>
 
@@ -140,10 +125,11 @@ const anio = new Date().getFullYear();
         transition: border-color 260ms ease-out, box-shadow 260ms ease-out;
       }
 
-      /* Tres columnas: marca, navegación centrada, acción. */
+      /* Marca a la izquierda y navegación centrada. La tercera columna queda
+         vacía a propósito: sin ella el centro se correría hacia la derecha. */
       .encabezado__interior {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
         gap: 2.5rem;
         max-width: var(--max);
@@ -173,14 +159,6 @@ const anio = new Date().getFullYear();
         transition: color 200ms ease-out, border-color 280ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      /* Mientras el botón de la derecha esté a la vista, el enlace repetido
-         se oculta; cuando el botón desaparece en móvil, vuelve. */
-      @media (min-width: 44.01rem) {
-        .encabezado__enlace--duplicado {
-          display: none;
-        }
-      }
-
       .encabezado__enlace:hover {
         color: var(--tinta);
         border-block-end-color: var(--linea-fuerte);
@@ -189,30 +167,6 @@ const anio = new Date().getFullYear();
       .encabezado__enlace[aria-current='page'] {
         color: var(--acento-fuerte);
         border-block-end-color: var(--acento);
-      }
-
-      .encabezado__accion {
-        padding: 0.7rem 1.125rem;
-        font-size: 0.75rem;
-      }
-
-      /* Estando en Documentación el enlace del centro está oculto, así que
-         el «estás acá» lo tiene que dar el botón. */
-      .encabezado__accion[aria-current='page'] {
-        --fondo-accion: var(--azul-700);
-        box-shadow: inset 0 0 0 2px var(--azul-200);
-      }
-
-      .encabezado[data-sobre-oscuro]:not(.apoyado) .encabezado__accion[aria-current='page'] {
-        background: #ffffff;
-        color: var(--azul-900);
-        box-shadow: none;
-      }
-
-      .encabezado[data-sobre-oscuro]:not(.apoyado) .encabezado__accion[aria-current='page']:hover {
-        background: #ffffff;
-        color: var(--azul-900);
-        box-shadow: none;
       }
 
       .encabezado.apoyado {
@@ -253,20 +207,8 @@ const anio = new Date().getFullYear();
         border-block-end-color: #ffffff;
       }
 
-      .encabezado[data-sobre-oscuro]:not(.apoyado) .encabezado__accion {
-        background: transparent;
-        color: #ffffff;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
-      }
-
-      .encabezado[data-sobre-oscuro]:not(.apoyado) .encabezado__accion:hover {
-        background: rgba(255, 255, 255, 0.12);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
-        transform: none;
-      }
-
-      /* En pantallas chicas la grilla colapsa a dos filas y el botón se va:
-         Documentación ya está en la navegación. */
+      /* En pantallas chicas la grilla colapsa a dos filas: marca arriba,
+         navegación abajo y alineada a la izquierda. */
       @media (max-width: 44rem) {
         .encabezado__interior {
           grid-template-columns: 1fr;
@@ -277,10 +219,6 @@ const anio = new Date().getFullYear();
         .encabezado__nav {
           justify-content: flex-start;
           gap: 1.25rem;
-        }
-
-        .encabezado__accion {
-          display: none;
         }
 
         .encabezado__enlace {
