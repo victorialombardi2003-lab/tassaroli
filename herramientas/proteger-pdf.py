@@ -37,8 +37,13 @@ from pypdf.errors import FileNotDecryptedError
 # salida nunca falla por un carácter.
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-ENTRADA = Path("documentos-a-proteger")
-SALIDA = Path("documentos-protegidos")
+# Las carpetas se buscan al lado de este script, no donde esté parada la
+# terminal. Si dependieran del directorio actual, correrlo desde adentro de
+# `documentos-a-proteger` —que es lo natural, porque es donde uno acaba de
+# dejar los archivos— no encontraría nada y no quedaría claro por qué.
+RAIZ = Path(__file__).resolve().parent.parent
+ENTRADA = RAIZ / "documentos-a-proteger"
+SALIDA = RAIZ / "documentos-protegidos"
 
 # Una clave corta se rompe probando combinaciones, y un PDF encriptado se
 # puede atacar sin límite de intentos porque el atacante lo tiene en su
