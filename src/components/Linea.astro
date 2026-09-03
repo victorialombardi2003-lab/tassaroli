@@ -14,8 +14,9 @@
 
 <svg class="red" aria-hidden="true" focusable="false" width="0" height="0">
   <defs>
-    <!-- Sobre un hero oscuro el trazo tiene que aclararse; el degradé cambia
-         de color exactamente donde termina el hero. -->
+    <!-- El trazo se aclara donde cruza un fondo oscuro o de color. Las
+         paradas las arma el script a partir de las zonas marcadas en el
+         HTML; estas cuatro son sólo el punto de partida. -->
     <linearGradient id="red-degrade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
       <stop class="red__alto" offset="0" />
       <stop class="red__alto" offset="0" />
@@ -39,6 +40,15 @@
     z-index: 1;
     color: color-mix(in srgb, var(--acento) 72%, transparent);
     overflow: visible;
+
+    /* Los tonos van en variables y no sólo en clases porque las paradas del
+       degradé las crea el script, y a un elemento creado en JS no le llega el
+       atributo de alcance con que Astro marca los estilos del componente: las
+       clases no le aplicarían y el trazo saldría negro. Las variables, en
+       cambio, se heredan. */
+    --tono-bajo: color-mix(in srgb, var(--acento) 72%, transparent);
+    --tono-alto: var(--red-alto, var(--azul-400));
+    --tono-oscuro: var(--tinta);
   }
 
   .red__trazo {
@@ -53,6 +63,11 @@
 
   .red__bajo {
     stop-color: color-mix(in srgb, var(--acento) 72%, transparent);
+  }
+
+  /* Sobre un fondo de color claro el azul del trazo se pierde: ahí va oscuro. */
+  .red__oscuro {
+    stop-color: var(--tinta);
   }
 </style>
 
@@ -238,16 +253,50 @@
     svg.setAttribute('height', String(alto));
     trazo.setAttribute('d', trazar(puntos));
 
-    // Si la página abre con un hero oscuro, el trazo va aclarado hasta donde
-    // el hero termina, y ahí vuelve al azul de siempre.
-    const hero = document.querySelector<HTMLElement>('[data-hero-oscuro]');
+    // El trazo se aclara donde cruza un fondo oscuro o de color, y vuelve al
+    // azul de siempre sobre el papel. Las zonas se marcan en el HTML
+    // —`data-hero-oscuro` o `data-linea-clara`— y de ahí sale un degradé con
+    // cortes duros en los bordes de cada una. Empezó siendo sólo el hero;
+    // generalizarlo cuesta lo mismo y evita que la línea desaparezca cada vez
+    // que aparece una sección de color.
     const degrade = svg.querySelector<SVGLinearGradientElement>('#red-degrade');
-    if (hero && degrade && alto > 0) {
-      const corte = (hero.getBoundingClientRect().bottom + window.scrollY - origenY) / alto;
-      const paradas = degrade.querySelectorAll('stop');
+    // Cada zona dice de qué tono quiere el trazo: `claro` sobre un fondo
+    // oscuro —un hero con foto—, `oscuro` sobre un fondo de color claro,
+    // donde el azul del trazo se perdería contra el azul del fondo.
+    const zonas = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-hero-oscuro], [data-linea-tono]'),
+    )
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          desde: Math.max(0, Math.min(1, (r.top + window.scrollY - origenY) / alto)),
+          hasta: Math.max(0, Math.min(1, (r.bottom + window.scrollY - origenY) / alto)),
+          tono: el.dataset.lineaTono === 'oscuro' ? 'oscuro' : 'alto',
+        };
+      })
+      .filter((z) => z.hasta > z.desde)
+      .sort((a, b) => a.desde - b.desde);
+
+    if (degrade && alto > 0 && zonas.length > 0) {
       degrade.setAttribute('y2', String(alto));
-      paradas[1]?.setAttribute('offset', String(Math.max(0, Math.min(1, corte))));
-      paradas[2]?.setAttribute('offset', String(Math.max(0, Math.min(1, corte))));
+      degrade.textContent = '';
+
+      const parada = (offset: number, tono: string) => {
+        const s = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s.setAttribute('offset', String(offset));
+        s.style.stopColor = `var(--tono-${tono})`;
+        degrade.appendChild(s);
+      };
+
+      parada(0, 'bajo');
+      for (const z of zonas) {
+        parada(z.desde, 'bajo');
+        parada(z.desde, z.tono);
+        parada(z.hasta, z.tono);
+        parada(z.hasta, 'bajo');
+      }
+      parada(1, 'bajo');
+
       trazo.setAttribute('stroke', 'url(#red-degrade)');
     } else {
       trazo.setAttribute('stroke', 'currentColor');

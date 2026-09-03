@@ -4,6 +4,7 @@ import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
 import Flecha from '../components/Flecha.astro';
+import placa from '../assets/placa-instituciones.webp';
 import { sitio, carta, espacios, proposito } from '../data/contenido';
 
 /**
@@ -82,7 +83,7 @@ const lista = espacios.map((e, i) => ({
   </section>
 
   {/* --------------------------------------------------------------- carta */}
-  <section class="seccion banda" id="recorrido" data-seccion>
+  <section class="seccion banda carta-seccion" id="recorrido" data-seccion>
     <div class="calle">
       <Nodo texto="Carta de la presidenta" recorrido="publico" />
       <blockquote class="carta__epigrafe revela">
@@ -90,10 +91,13 @@ const lista = espacios.map((e, i) => ({
       </blockquote>
       <div class="carta revela-linea">
         {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
-        <div class="firma">
-          <p class="firma__nombre">{carta.firma}</p>
-          <p class="rotulo firma__cargo">{carta.cargo}</p>
-        </div>
+      </div>
+    </div>
+
+    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}>
+      <div class="calle solapa__firma revela">
+        <p class="firma__nombre">{carta.firma}</p>
+        <p class="rotulo firma__cargo">{carta.cargo}</p>
       </div>
     </div>
   </section>
@@ -388,12 +392,6 @@ const lista = espacios.map((e, i) => ({
     color: var(--tinta);
   }
 
-  .firma {
-    margin-block-start: clamp(1.5rem, 3vw, 2.25rem);
-    padding-block-start: 1.35rem;
-    border-block-start: 1px solid var(--linea-fuerte);
-  }
-
   /* La carta es el texto más largo del sitio. En una sola columna la mancha
      queda tan alta que se lee como un trámite; en dos entra de un vistazo.
      Sólo donde hay ancho real: más angosto, cada columna baja de los 40
@@ -420,17 +418,55 @@ const lista = espacios.map((e, i) => ({
     }
   }
 
-  .firma__nombre {
+  /* La solapa institucional cierra la carta: la firma y, debajo, la placa
+     del cliente con la ola y los logos de quienes acompañan el proyecto.
+
+     El azul empieza acá y no antes: el cuerpo de la carta son seis párrafos
+     largos, y leerlos sobre color cuesta más que sobre papel. La solapa es
+     corta, así que ahí el color suma sin costar lectura.
+
+     La placa se ancla abajo y a ancho completo (`100% auto`), nunca en
+     `cover`: con `cover`, una solapa más alta estira la imagen y recorta los
+     logos por los costados. Así la ola y los logos quedan siempre enteros, y
+     el azul plano de arriba se continúa con `background-color`, que es el
+     mismo color exacto, así que la unión no se ve.
+
+     El espacio inferior va en `vw` porque la altura de la placa depende del
+     ancho: los logos viven en el último cuarto de la imagen, y ese reservado
+     es lo que impide que la firma los pise en cualquier pantalla. */
+  .solapa {
+    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    margin-block-end: calc(-1 * var(--seccion));
+    padding-block: clamp(2rem, 4.5vw, 3.25rem) calc(17vw + 2rem);
+    background-color: #2869e8;
+    background-image: var(--placa);
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
+    color: #ffffff;
+  }
+
+  .solapa__firma {
+    padding-block-start: 1.35rem;
+    border-block-start: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  .solapa .firma__nombre {
     font-stretch: 102%;
     font-weight: 640;
     font-size: 1.1875rem;
     letter-spacing: -0.02em;
-    color: var(--tinta);
+    color: #ffffff;
   }
 
-  .firma__cargo {
+  .solapa .firma__cargo {
     margin-block-start: 0.35rem;
-    color: var(--tinta-3);
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .solapa :global(.marca) {
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
   }
 
   /* ------------------------------------------------------------ espacios */
