@@ -411,15 +411,16 @@ a:hover {
 }
 
 .nodo span {
-  /* Contra el borde derecho del rail: los cuatro carriles quedan a su
-     izquierda y ninguna línea le pasa por encima. `margin-inline-start: auto`
-     mueve sólo el rótulo — el punto se queda donde está, porque es por donde
-     pasa la línea y correrlo cambiaría el trazo. */
-  /* Físicas a propósito: el span es `vertical-rl`, así que su eje inline es
-     el vertical y un `margin-inline-start` se iría para arriba, no a la
-     derecha. */
-  margin-left: auto;
-  margin-right: 0.4rem;
+  /* Justo a la derecha del carril más ancho: los cuatro carriles quedan de
+     este lado y ninguna línea le pasa por encima, pero el rótulo sigue cerca
+     del trazo que nombra. Pegarlo al borde del rail lo dejaba a setenta
+     píxeles de la línea en pantallas grandes, y ahí ya no se leen como una
+     sola cosa. El `7px` es el ancho del punto; el resto, la separación.
+
+     Márgenes físicos a propósito: el span es `vertical-rl`, así que su eje
+     inline es el vertical y un `margin-inline-start` se iría para arriba.
+     El punto no se toca — es por donde pasa la línea. */
+  margin-left: calc(3 * var(--carril-paso) + 7px + 0.4rem);
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-size: 0.625rem;

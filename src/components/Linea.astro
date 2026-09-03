@@ -262,24 +262,21 @@
       // termina completo igual.
       const ADELANTO = 0.85;
 
-      if (anchura.matches) {
-        disparadores.push(
-          ScrollTrigger.create({
-            start: () => -window.innerHeight * ADELANTO,
-            end: () => ScrollTrigger.maxScroll(window),
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
-            },
-          }),
-        );
-      } else {
-        // En pantalla chica la línea está desde el arranque: sigue hilvanando
-        // la página, pero sin repintarse en cada cuadro.
-        trazo.style.strokeDasharray = 'none';
-        trazo.style.strokeDashoffset = '0';
-      }
+      disparadores.push(
+        ScrollTrigger.create({
+          start: () => -window.innerHeight * ADELANTO,
+          end: () => ScrollTrigger.maxScroll(window),
+          // El suavizado de 0.6s deja el trazo tweeneando —y repintando un SVG
+          // tan alto como el documento— medio segundo después de soltar el
+          // dedo. En pantalla chica va directo: se actualiza sólo mientras el
+          // scroll se mueve, que es cuando se nota.
+          scrub: anchura.matches ? 0.6 : true,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            trazo.style.strokeDashoffset = `${largo * (1 - self.progress)}`;
+          },
+        }),
+      );
 
       marcas.forEach((marca) => {
         disparadores.push(
