@@ -520,9 +520,14 @@ const lista = espacios.map((e, i) => ({
     margin-block-start: clamp(4rem, 9vw, 7rem);
   }
 
+  /* En rem y no en ch: la unidad ch se mide contra el tamaño de letra del
+     elemento donde se declara, y acá ese elemento es el blockquote, que
+     hereda los 17px del cuerpo. Las "24ch" daban 204px y partían la frase
+     en seis renglones de dos palabras. La frase entra en dos líneas, que es
+     como se lee una afirmación de este tipo. */
   .proposito__cita {
     margin: 0 0 clamp(2rem, 4.5vw, 3.25rem);
-    max-width: 24ch;
+    max-width: min(100%, 50rem);
   }
 
   .proposito__cita p {
