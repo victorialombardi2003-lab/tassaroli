@@ -42,9 +42,21 @@ const recorridos: Record<string, Recorrido> = {
   Exteriores: 'parque',
 };
 
+/**
+ * Casi todos los renders del estudio vienen en 3:2, y el marco los toma tal
+ * cual. Los de exteriores llegaron en 4:3 —y alguno más alto todavía—: con
+ * un marco de 3:2 el recorte se les come el 11% del alto, que en una vista
+ * de parque es justo el cielo y las copas de los arboles. Cada espacio
+ * declara entonces su proporcion cuando no es la de siempre.
+ */
+const proporciones: Record<string, string> = {
+  Exteriores: '4 / 3',
+};
+
 const lista = espacios.map((e, i) => ({
   ...e,
   recorrido: recorridos[e.nodo] ?? 'publico',
+  ratio: proporciones[e.nodo] ?? '3 / 2',
   fig: String(i + 1).padStart(2, '0'),
 }));
 ---
@@ -141,7 +153,7 @@ const lista = espacios.map((e, i) => ({
                   alt={e.alt}
                   titulo={e.titulo}
                   fig={e.fig}
-                  ratio="3 / 2"
+                  ratio={e.ratio}
                   ancho="par"
                 />
               </div>
@@ -151,7 +163,7 @@ const lista = espacios.map((e, i) => ({
                   <Render
                     nombre={e.renders[0]}
                     alt={e.alt}
-                    ratio="3 / 2"
+                    ratio={e.ratio}
                     sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
                   />
                 </div>
