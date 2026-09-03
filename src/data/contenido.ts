@@ -284,7 +284,13 @@ export const espacios = [
     titulo: 'Baño y vestuarios',
     cuerpo:
       'Espacios de alta calidad y uso flexible, preparados para alumnos, docentes, empresas, visitantes, actividades industriales y eventos de público masivo. Integran sanitarios, lockers y duchas, con una estética contemporánea que evoluciona hacia un lenguaje más minimalista, luminoso y tecnológico, en sintonía con el ecosistema de innovación y la identidad del Centro Tecnológico.',
-    renders: ['esp-banos-vestuarios'],
+    renders: [
+      'esp-banos-vestuarios-01',
+      'esp-banos-vestuarios-02',
+      'esp-banos-vestuarios-03',
+      'esp-banos-vestuarios-04',
+      'esp-banos-vestuarios-05',
+    ],
     alt: 'Render de los baños y vestuarios con sanitarios, lockers y duchas',
   },
   {
@@ -292,7 +298,19 @@ export const espacios = [
     titulo: 'Taller',
     cuerpo:
       'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnología de fabricación avanzada y áreas de ensayo, articuladas en un espacio de doble altura que conecta aulas y áreas prácticas. Su resolución en estructura metálica liviana refuerza una arquitectura flexible, contemporánea y preparada para acompañar el crecimiento y la evolución tecnológica.',
-    renders: ['esp-taller'],
+    renders: [
+      'esp-taller-01',
+      'esp-taller-02',
+      'esp-taller-03',
+      'esp-taller-04',
+      'esp-taller-05',
+      'esp-taller-06',
+      'esp-taller-07',
+      'esp-taller-08',
+      'esp-taller-09',
+      'esp-taller-10',
+      'esp-taller-11',
+    ],
     alt: 'Render del taller de doble altura con estructura metálica liviana',
   },
   {
