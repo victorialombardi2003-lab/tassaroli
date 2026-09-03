@@ -18,9 +18,14 @@ import Marca from './Marca.astro';
  *   3. Sin JavaScript no llega a mostrarse: el `<noscript>` del layout la
  *      oculta de entrada.
  *
- * Y no agrega espera: si la página ya está lista, se va enseguida. Los
- * mínimos artificiales de dos segundos son el error clásico de estas
- * pantallas.
+ * Tiene un mínimo en pantalla, pero no es un número arbitrario: es lo que
+ * tarda la línea en completarse. En local la página carga tan rápido que el
+ * velo aparecía y se iba en un destello, que se lee como un parpadeo roto y
+ * no como una apertura. El mínimo dura lo que dura el trazo, y el retiro
+ * arranca justo cuando la línea llega al final.
+ *
+ * Con movimiento reducido no hay mínimo: no hay trazo que apreciar, y hacer
+ * esperar a alguien que pidió menos animación sería al revés de lo que pidió.
  */
 ---
 
@@ -101,7 +106,9 @@ import Marca from './Marca.astro';
     background: var(--acento);
     transform: scaleX(0);
     transform-origin: left center;
-    animation: carga-avance 1.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    /* Si cambia esta duración, cambiar también `TRAZO` en el script: el
+       retiro arranca cuando la línea termina. */
+    animation: carga-avance 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .carga.se-va .carga__linea::after {
@@ -141,6 +148,11 @@ import Marca from './Marca.astro';
   const velo = document.querySelector<HTMLElement>('[data-carga]');
 
   if (velo) {
+    /** Lo que tarda la línea en dibujarse. Tiene que coincidir con el CSS. */
+    const TRAZO = 1500;
+    const arranque = performance.now();
+    const sinEspera = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     let retirado = false;
 
     const retirar = () => {
@@ -154,8 +166,16 @@ import Marca from './Marca.astro';
       window.setTimeout(() => velo.remove(), 1400);
     };
 
-    if (document.readyState === 'complete') retirar();
-    else window.addEventListener('load', retirar, { once: true });
+    /** Se va cuando la página está lista y el trazo llegó al final. */
+    const retirarConTrazo = () => {
+      if (sinEspera) return retirar();
+      const falta = TRAZO - (performance.now() - arranque);
+      if (falta <= 0) retirar();
+      else window.setTimeout(retirar, falta);
+    };
+
+    if (document.readyState === 'complete') retirarConTrazo();
+    else window.addEventListener('load', retirarConTrazo, { once: true });
 
     // Por si `load` no llega nunca —una imagen que no resuelve, una fuente
     // colgada—, la página igual se muestra.
