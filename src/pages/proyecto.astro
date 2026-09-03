@@ -353,15 +353,22 @@ const lista = espacios.map((e, i) => ({
   }
 
   /* --------------------------------------------------------------- carta */
+  /* La cita abre la carta y tiene que leerse como una frase, no como una
+     columna angosta apilada en seis renglones contra el margen izquierdo con
+     media página vacía al lado.
+     La medida va en `rem` y no en `ch` a propósito: `ch` se resuelve con el
+     tamaño de fuente del elemento donde se declara —el del cuerpo, no el de
+     la cita, que es el doble—, así que daba una caja mucho más angosta de lo
+     que parecía. */
   .carta__epigrafe {
     margin: 0 0 clamp(1.75rem, 3.5vw, 2.75rem);
-    max-width: 32ch;
+    max-width: min(60rem, 100%);
     border-inline-start: 2px solid var(--acento);
     padding-inline-start: clamp(1.1rem, 2.5vw, 1.75rem);
   }
 
   .carta__epigrafe p {
-    font-size: clamp(1.25rem, 1rem + 1.6vw, 2rem);
+    font-size: clamp(1.25rem, 1rem + 1.9vw, 2.375rem);
     font-weight: 520;
     line-height: 1.25;
     letter-spacing: -0.024em;
