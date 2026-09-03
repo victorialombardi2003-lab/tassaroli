@@ -6,6 +6,7 @@ import '../styles/base.css';
 
 import Linea from '../components/Linea.astro';
 import Marca from '../components/Marca.astro';
+import Carga from '../components/Carga.astro';
 import { sitio, navegacion } from '../data/contenido';
 
 interface Props {
@@ -36,6 +37,13 @@ const anio = new Date().getFullYear();
     <meta property="og:site_name" content={sitio.fundacion} />
     <meta property="og:title" content={titulo} />
     <meta property="og:description" content={descripcion} />
+    <noscript>
+      <style>
+        /* Salida 3: sin JavaScript la pantalla de carga no llega a
+           mostrarse, porque no habría nada que la retire. */
+        .carga { display: none !important; }
+      </style>
+    </noscript>
   </head>
 
   <body>
@@ -57,6 +65,8 @@ const anio = new Date().getFullYear();
       FINISH: unreviewed and undocumented is unfinished; this build ends with
       the finish review, the verdict, and DESIGN.md
     -->
+    <Carga />
+
     <a class="saltar" href="#contenido">Ir al contenido</a>
 
     <header class="encabezado" data-encabezado data-sobre-oscuro={heroOscuro ? '' : undefined}>

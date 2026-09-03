@@ -1,0 +1,164 @@
+---
+import Marca from './Marca.astro';
+
+/**
+ * Pantalla de carga.
+ *
+ * No es un spinner: es el primer trazo del recorrido. Una línea se dibuja de
+ * izquierda a derecha bajo la marca, y al terminar el velo se retira hacia
+ * arriba con el mismo barrido con que después se descubre cada lámina. La
+ * apertura del sitio y la de sus imágenes son el mismo gesto.
+ *
+ * Tapa la página entera, así que lo que más importa es que se vaya siempre.
+ * Tiene tres salidas independientes:
+ *
+ *   1. El JavaScript la retira cuando la página terminó de cargar.
+ *   2. Si eso no ocurre, una animación CSS la retira sola a los 4 segundos
+ *      —no depende de que corra ningún script.
+ *   3. Sin JavaScript no llega a mostrarse: el `<noscript>` del layout la
+ *      oculta de entrada.
+ *
+ * Y no agrega espera: si la página ya está lista, se va enseguida. Los
+ * mínimos artificiales de dos segundos son el error clásico de estas
+ * pantallas.
+ */
+---
+
+<div class="carga" data-carga aria-hidden="true">
+  <div class="carga__centro">
+    <Marca />
+    <div class="carga__linea"></div>
+  </div>
+</div>
+
+<style>
+  .carga {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: var(--papel);
+    clip-path: inset(0 0 0 0);
+    /* Salida 2: si el script nunca la retira, se va sola. */
+    animation: carga-rescate 900ms cubic-bezier(0.16, 1, 0.3, 1) 4s forwards;
+  }
+
+  /* Salida 1: la que corre casi siempre. */
+  .carga.se-va {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes carga-rescate {
+    to {
+      clip-path: inset(0 0 100% 0);
+    }
+  }
+
+  .carga__centro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6rem;
+    /* La marca acompaña el retiro un poco antes que el fondo: sin esto
+       parece pegada al velo. */
+    transition: opacity 420ms ease-out, transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .carga.se-va .carga__centro {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  /* La marca acá manda la pantalla entera, no una barra: va más grande que
+     en el encabezado. */
+  .carga__centro :global(.marca-lockup) {
+    gap: 0.85rem;
+  }
+
+  .carga__centro :global(.marca-lockup__signo) {
+    height: clamp(2.4rem, 6.5vw, 3.4rem);
+  }
+
+  .carga__centro :global(.marca-lockup__nombre) {
+    font-size: clamp(1.25rem, 3.6vw, 1.7rem);
+  }
+
+  /* La línea del recorrido, dibujándose por primera vez. */
+  .carga__linea {
+    position: relative;
+    width: clamp(9rem, 28vw, 13rem);
+    height: 2px;
+    background: var(--linea);
+    overflow: hidden;
+  }
+
+  .carga__linea::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--acento);
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: carga-avance 1.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .carga.se-va .carga__linea::after {
+    /* Al irse, completa el trazo en vez de dejarlo cortado a la mitad. */
+    animation: none;
+    transform: scaleX(1);
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes carga-avance {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Con movimiento reducido no se dibuja nada: la línea ya está completa y
+     el velo se va de una. */
+  @media (prefers-reduced-motion: reduce) {
+    .carga {
+      animation-duration: 1ms;
+      animation-delay: 2s;
+    }
+
+    .carga.se-va,
+    .carga.se-va .carga__centro {
+      transition: none;
+    }
+
+    .carga__linea::after {
+      animation: none;
+      transform: scaleX(1);
+    }
+  }
+</style>
+
+<script>
+  const velo = document.querySelector<HTMLElement>('[data-carga]');
+
+  if (velo) {
+    let retirado = false;
+
+    const retirar = () => {
+      if (retirado) return;
+      retirado = true;
+      velo.style.animation = 'none';
+      velo.classList.add('se-va');
+      // Se saca del DOM: un elemento fijo a pantalla completa, aunque esté
+      // recortado a cero, sigue siendo una capa que el navegador compone.
+      velo.addEventListener('transitionend', () => velo.remove(), { once: true });
+      window.setTimeout(() => velo.remove(), 1400);
+    };
+
+    if (document.readyState === 'complete') retirar();
+    else window.addEventListener('load', retirar, { once: true });
+
+    // Por si `load` no llega nunca —una imagen que no resuelve, una fuente
+    // colgada—, la página igual se muestra.
+    window.setTimeout(retirar, 3500);
+  }
+</script>
