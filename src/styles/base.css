@@ -307,9 +307,13 @@ a:hover {
   border-radius: 3px;
 }
 
+/* El paralaje necesita que la imagen sobre un poco del marco para poder
+   correrse sin descubrir el borde. Ese sobrante se paga agrandando, y
+   agrandar un render lo ablanda: por eso es 3% y no más, que es lo justo
+   para un corrimiento de ±1,5%. */
 .marco-imagen img {
   width: 100%;
-  transform: scale(1.06);
+  transform: scale(1.03);
 }
 
 /* `will-change` deja la imagen en su propia capa de composición, y eso sólo

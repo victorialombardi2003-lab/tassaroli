@@ -38,6 +38,17 @@ for (const [ruta, modulo] of Object.entries(modulos)) {
 }
 
 const imagen = catalogo.get(nombre);
+
+/**
+ * Los anchos del `srcset` se cortan en el ancho real del archivo. Pedir más
+ * que eso no agrega detalle: agranda, y un render agrandado se ve blando.
+ * El último escalón es siempre la medida nativa, para que en una pantalla
+ * retina se entregue todo lo que la imagen tiene.
+ */
+const escalones = [480, 640, 960, 1280, 1600, 2000, 2400, 3200];
+const anchos = imagen
+  ? [...escalones.filter((a) => a < imagen.width), imagen.width]
+  : undefined;
 ---
 
 {
@@ -46,8 +57,9 @@ const imagen = catalogo.get(nombre);
       <Image
         src={imagen}
         alt={alt}
-        widths={[640, 960, 1280, 1600, 2000]}
+        widths={anchos}
         sizes={sizes}
+        quality={90}
         loading={prioridad ? 'eager' : 'lazy'}
         decoding={prioridad ? 'sync' : 'async'}
       />

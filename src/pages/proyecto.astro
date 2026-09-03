@@ -13,19 +13,22 @@ import { sitio, carta, espacios, proposito } from '../data/contenido';
  */
 type Recorrido = 'publico' | 'parque' | 'formacion' | 'investigacion';
 
+// Los renders del estudio vienen en 3:2 y 4:3. Un marco 21:9 sobre un 3:2
+// recorta un tercio de la altura, así que el más ancho que se usa es 16:9
+// —un 16% de recorte, que la composición tolera.
 const puesta: Record<string, { ratio: string; ancho: 'lleno' | 'par'; recorrido: Recorrido }> = {
   'Espacios comunes': { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
-  'Sala de reuniones': { ratio: '21 / 9', ancho: 'lleno', recorrido: 'publico' },
+  'Sala de reuniones': { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
   'Salas de encuentro': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
-  Auditorio: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'publico' },
+  Auditorio: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'publico' },
   Circulaciones: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'parque' },
   Laboratorios: { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
   Aulas: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
   'HUB IDI': { ratio: '3 / 2', ancho: 'par', recorrido: 'investigacion' },
   Coworking: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
   'Baño y vestuarios': { ratio: '3 / 2', ancho: 'par', recorrido: 'publico' },
-  Taller: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'formacion' },
-  Exteriores: { ratio: '21 / 9', ancho: 'lleno', recorrido: 'parque' },
+  Taller: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'formacion' },
+  Exteriores: { ratio: '16 / 9', ancho: 'lleno', recorrido: 'parque' },
 };
 
 const lista = espacios.map((e, i) => ({

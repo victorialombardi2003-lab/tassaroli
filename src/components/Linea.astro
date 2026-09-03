@@ -119,9 +119,9 @@
 
   /**
    * Descubre una lámina: el marco se abre de arriba abajo, como un plotter
-   * imprimiéndola, y la imagen entra un punto más grande y se asienta en su
-   * escala de reposo. Son dos tweens y no uno porque duran distinto: el
-   * barrido termina antes y la imagen sigue acomodándose.
+   * imprimiéndola, y la imagen sube de un velo a su densidad plena. Son dos
+   * tweens y no uno porque duran distinto: el barrido termina antes y la
+   * imagen sigue asentándose.
    */
   function descubrir(marco: HTMLElement) {
     gsap.fromTo(
@@ -138,9 +138,13 @@
       },
     );
 
+    // Antes la imagen entraba al 116% y se asentaba en 106%: durante segundo
+    // y medio se veía agrandada un 16%, que en un render se nota. El barrido
+    // del marco ya da la sensación de que la lámina se revela; no hace falta
+    // deformarla además.
     const imagen = marco.querySelector<HTMLElement>('img');
     if (imagen) {
-      gsap.fromTo(imagen, { scale: 1.16 }, { scale: 1.06, duration: 1.5, ease: 'expo.out' });
+      gsap.fromTo(imagen, { opacity: 0.55 }, { opacity: 1, duration: 1.2, ease: 'power2.out' });
     }
   }
 
@@ -340,9 +344,9 @@
       if (!imagen) return;
       const tween = gsap.fromTo(
         imagen,
-        { yPercent: -3 },
+        { yPercent: -1.5 },
         {
-          yPercent: 3,
+          yPercent: 1.5,
           ease: 'none',
           scrollTrigger: { trigger: marco, start: 'top bottom', end: 'bottom top', scrub: true },
         },
@@ -416,9 +420,9 @@
     if (fondoHero) {
       gsap.fromTo(
         fondoHero,
-        { yPercent: -2.5, scale: 1.06 },
+        { yPercent: -1.5, scale: 1.03 },
         {
-          yPercent: 2.5,
+          yPercent: 1.5,
           ease: 'none',
           scrollTrigger: {
             trigger: '[data-hero-oscuro]',
