@@ -376,39 +376,65 @@
    * Entrada de la portada. Corre apenas hay DOM, no en `load`: si esperara
    * a que carguen los renders, el título aparecería, se apagaría y volvería
    * a aparecer — un parpadeo peor que no animar nada.
+   *
    */
+  /**
+   * Todo lo que la entrada arranca queda anotado acá. `gsap.from` pone el
+   * elemento en su estado inicial —invisible— apenas se crea el tween, y lo
+   * saca de ahí recién cuando el ticker avanza. Si el ticker no avanza (una
+   * pestaña que el navegador dejó sin cuadros, una carga desde la caché de
+   * atrás-adelante, un motor que se traba), el hero se queda en blanco: el
+   * contenido pasa a depender de que una animación termine, que es
+   * exactamente lo que no puede pasar.
+   *
+   * Por eso hay un plazo: a los 2,5 segundos cualquier tween que siga a mitad
+   * de camino se lleva a su estado final de una. Si todo anduvo bien ya
+   * terminaron y esto no hace nada.
+   */
+  const tweensEntrada: gsap.core.Tween[] = [];
+
+  function cerrarEntrada() {
+    for (const t of tweensEntrada) {
+      if (t.progress() < 1) t.progress(1);
+    }
+  }
+
   let entro = false;
   function entrada() {
     if (entro || reduce.matches) return;
     entro = true;
 
-    // La placa de Documentación tiene su propio tiempo: la imagen entra
-    // sola y el título la sigue.
-    const placa = document.querySelector<HTMLElement>('.apertura__placa');
-    if (placa) {
-      gsap.from(placa, { opacity: 0, duration: 0.6, ease: 'power2.out' });
-      gsap.from('.apertura__fila', {
-        opacity: 0,
-        y: 18,
-        duration: 0.9,
-        delay: 0.2,
-        ease: 'expo.out',
-        clearProps: 'all',
-      });
+    // Documentación tiene su propio tiempo: la filigrana de la marca entra
+    // sola sobre el degradé y el título la sigue.
+    const filigrana = document.querySelector<HTMLElement>('.apertura__filigrana');
+    if (filigrana) {
+      tweensEntrada.push(
+        gsap.from(filigrana, { opacity: 0, duration: 0.6, ease: 'power2.out' }),
+        gsap.from('.apertura__fila', {
+          opacity: 0,
+          y: 18,
+          duration: 0.9,
+          delay: 0.2,
+          ease: 'expo.out',
+          clearProps: 'all',
+        }),
+      );
     } else {
       const partes = document.querySelectorAll(
         '.portada__ante, .portada__titulo, .portada__ubicacion, .portada__acceso,' +
           '.apertura__ante, .apertura__titulo, .apertura__pie',
       );
       if (partes.length) {
-        gsap.from(partes, {
-          opacity: 0,
-          y: 18,
-          duration: 0.9,
-          ease: 'expo.out',
-          stagger: 0.07,
-          clearProps: 'all',
-        });
+        tweensEntrada.push(
+          gsap.from(partes, {
+            opacity: 0,
+            y: 18,
+            duration: 0.9,
+            ease: 'expo.out',
+            stagger: 0.07,
+            clearProps: 'all',
+          }),
+        );
       }
     }
 
@@ -438,6 +464,7 @@
     // fondo, no puede competir con la lectura.
     const signo = document.querySelector<HTMLElement>('.portada__signo');
     if (signo) {
+      tweensEntrada.push(
       gsap.from(signo, {
         opacity: 0,
         y: 28,
@@ -458,7 +485,8 @@
             yoyo: true,
           });
         },
-      });
+      }),
+      );
     }
   }
 
@@ -483,10 +511,17 @@
   // La entrada no espera a las imágenes; la geometría de la línea sí, porque
   // necesita la altura definitiva del documento.
   document.documentElement.dataset.motion = reduce.matches ? 'off' : 'on';
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', entrada, { once: true });
-  } else {
+
+  function arrancarEntrada() {
     entrada();
+    // El plazo por si el ticker nunca avanza: ver `cerrarEntrada`.
+    window.setTimeout(cerrarEntrada, 2500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', arrancarEntrada, { once: true });
+  } else {
+    arrancarEntrada();
   }
 
   if (document.readyState === 'complete') arrancar();
@@ -494,8 +529,16 @@
 
   document.addEventListener('astro:page-load', () => {
     entro = false;
-    entrada();
+    tweensEntrada.length = 0;
+    arrancarEntrada();
     arrancar();
+  });
+
+  // Al volver con el botón «atrás», el navegador puede restaurar la página
+  // desde su caché sin ejecutar nada de nuevo: los tweens vuelven congelados
+  // donde estaban. Acá se cierran, que es lo único que hace falta.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) cerrarEntrada();
   });
   window.addEventListener('resize', recalcular);
   reduce.addEventListener('change', arrancar);
