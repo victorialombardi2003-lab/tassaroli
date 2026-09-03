@@ -85,6 +85,13 @@ const total = renders.length;
     gap: var(--hueco);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    /* La pista declara que sólo maneja gestos horizontales. Sin esto, al
+       pasar el dedo verticalmente por encima el navegador tiene que decidir
+       entre mover la pista o la página, y esa duda es la que traba el scroll
+       en el teléfono. */
+    touch-action: pan-x pinch-zoom;
+    /* Y que al llegar al final no arrastre a la página detrás. */
+    overscroll-behavior-x: contain;
     scroll-behavior: smooth;
     /* El primer y el último se centran igual que los del medio. */
     padding-inline: max(var(--borde), calc(50% - min(34rem, 44vw)));

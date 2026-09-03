@@ -124,28 +124,51 @@
    * imagen sigue asentándose.
    */
   function descubrir(marco: HTMLElement) {
-    gsap.fromTo(
-      marco,
-      { clipPath: 'inset(0% 0% 100% 0%)' },
-      {
-        clipPath: 'inset(0% 0% 0% 0%)',
-        duration: 1.05,
-        ease: 'expo.out',
-        // Sin esto el marco vuelve al estado tapado que fija el CSS.
-        onComplete: () => {
-          marco.style.clipPath = 'none';
-        },
-      },
-    );
+    const imagen = marco.querySelector<HTMLImageElement>('img');
 
-    // Antes la imagen entraba al 116% y se asentaba en 106%: durante segundo
-    // y medio se veía agrandada un 16%, que en un render se nota. El barrido
-    // del marco ya da la sensación de que la lámina se revela; no hace falta
-    // deformarla además.
-    const imagen = marco.querySelector<HTMLElement>('img');
-    if (imagen) {
-      gsap.fromTo(imagen, { opacity: 0.55 }, { opacity: 1, duration: 1.2, ease: 'power2.out' });
+    const correr = () => {
+      gsap.fromTo(
+        marco,
+        { clipPath: 'inset(0% 0% 100% 0%)' },
+        {
+          clipPath: 'inset(0% 0% 0% 0%)',
+          duration: 1.05,
+          ease: 'expo.out',
+          // Sin esto el marco vuelve al estado tapado que fija el CSS.
+          onComplete: () => {
+            marco.style.clipPath = 'none';
+          },
+        },
+      );
+
+      // Antes la imagen entraba al 116% y se asentaba en 106%: durante segundo
+      // y medio se veía agrandada un 16%, que en un render se nota. El barrido
+      // del marco ya da la sensación de que la lámina se revela; no hace falta
+      // deformarla además.
+      if (imagen) {
+        gsap.fromTo(imagen, { opacity: 0.55 }, { opacity: 1, duration: 1.2, ease: 'power2.out' });
+      }
+    };
+
+    // Las láminas son `loading="lazy"`: bajando rápido en el teléfono, el
+    // disparador llega mucho antes que el archivo. Si el barrido corre igual,
+    // se abre sobre un recuadro vacío y la imagen aparece de golpe después.
+    // Por eso el revelado espera a que la imagen esté; y si tarda demasiado o
+    // falla, corre igual, para que nunca quede una lámina sin descubrir.
+    if (!imagen || imagen.complete) {
+      correr();
+      return;
     }
+
+    let arrancado = false;
+    const unaVez = () => {
+      if (arrancado) return;
+      arrancado = true;
+      correr();
+    };
+    imagen.addEventListener('load', unaVez, { once: true });
+    imagen.addEventListener('error', unaVez, { once: true });
+    window.setTimeout(unaVez, 1500);
   }
 
   /**
