@@ -34,3 +34,7 @@ renders-originales/
 
 # Artefactos del skill de diseño
 .impeccable/
+
+# Cache de Python
+__pycache__/
+*.pyc
