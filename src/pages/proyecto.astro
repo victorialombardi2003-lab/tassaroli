@@ -1,10 +1,11 @@
 ---
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
 import Flecha from '../components/Flecha.astro';
-import placa from '../assets/placa-instituciones.webp';
+import placaCarta from '../assets/placa-carta.webp';
 import { sitio, carta, espacios, proposito } from '../data/contenido';
 
 /**
@@ -121,7 +122,17 @@ const lista = espacios.map((e, i) => ({
       </div>
     </div>
 
-    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}></div>
+    <div class="calle solapa">
+      <figure class="solapa__placa revela">
+        <Image
+          src={placaCarta}
+          alt="Desarrolla e impulsa: Fundación Tassaroli. Patrocinan y acompañan: Gobierno de Mendoza y Municipalidad de San Rafael."
+          widths={[640, 960, 1280, 1488]}
+          sizes="(min-width: 58rem) 52rem, 92vw"
+          loading="lazy"
+        />
+      </figure>
+    </div>
   </section>
 
   {/* ------------------------------------------------------------ espacios */}
@@ -421,36 +432,32 @@ const lista = espacios.map((e, i) => ({
     }
   }
 
-  /* La solapa institucional cierra la carta: la firma y, debajo, la placa
-     del cliente con la ola y los logos de quienes acompañan el proyecto.
+  /* La solapa institucional cierra la carta.
 
-     El azul empieza acá y no antes: el cuerpo de la carta son seis párrafos
-     largos, y leerlos sobre color cuesta más que sobre papel. La solapa es
-     corta, así que ahí el color suma sin costar lectura.
+     Va entera y contenida, no a sangre. La lámina del cliente es una
+     contratapa de presentación: el logo de la Fundación está arriba a la
+     izquierda y los patrocinadores abajo a la derecha, y entre las dos
+     puntas hay un 93% del alto. A sangre habría que recortarla, y cualquier
+     recorte pierde una de las dos. Contenida entra completa, que es lo que
+     esa lámina tiene para decir.
 
-     La placa se ancla abajo y a ancho completo (`100% auto`), nunca en
-     `cover`: con `cover`, una solapa más alta estira la imagen y recorta los
-     logos por los costados. Así la ola y los logos quedan siempre enteros, y
-     el azul plano de arriba se continúa con `background-color`, que es el
-     mismo color exacto, así que la unión no se ve.
-
-     El espacio inferior va en `vw` porque la altura de la placa depende del
-     ancho: los logos viven en el último cuarto de la imagen, y ese reservado
-     es lo que impide que la firma los pise en cualquier pantalla. */
+     El tope de 52rem no es sólo de composición: el archivo mide 1488px de
+     ancho, así que a 832px no se agranda ni en una pantalla retina, que
+     pide el doble. */
   .solapa {
     margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
-    margin-block-end: calc(-1 * var(--seccion));
-    /* La banda ya no lleva nada adentro, asi que su alto es sólo el que
-       necesita la placa. La ola y los logos viven en el ultimo cuarto de una
-       imagen de 2600x1726: a ancho completo ese cuarto mide 17vw. El resto
-       es un respiro de azul plano por encima. */
-    min-block-size: calc(17vw + 2.75rem);
-    background-color: #2869e8;
-    background-image: var(--placa);
-    background-repeat: no-repeat;
-    background-position: center bottom;
-    background-size: 100% auto;
-    color: #ffffff;
+  }
+
+  .solapa__placa {
+    max-width: min(100%, 52rem);
+    margin: 0 auto;
+  }
+
+  .solapa__placa :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 3px;
   }
 
   /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega
