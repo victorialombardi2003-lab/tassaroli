@@ -45,13 +45,28 @@ import {
       <p class="portada__ante">
         <span class="portada__regla"></span>
         <span>Anteproyecto</span>
+        <span class="portada__regla"></span>
       </p>
 
-      <h1 class="portada__titulo">
-        <span class="portada__previo">Proyecto Construcción</span>
-        Centro Tecnológico
-        <span class="portada__nombre">Carlos José Tassaroli</span>
-      </h1>
+      <p class="portada__previo">Proyecto Construcción</p>
+
+      <div class="portada__lockup">
+        <Image
+          class="portada__signo"
+          src={isotipoCentro}
+          alt=""
+          width={340}
+          height={340}
+          densities={[1, 2]}
+          loading="eager"
+          fetchpriority="high"
+        />
+
+        <h1 class="portada__titulo">
+          Centro Tecnológico
+          <span class="portada__nombre">Carlos José Tassaroli</span>
+        </h1>
+      </div>
 
       <p class="portada__ubicacion">San Rafael, Mendoza</p>
 
@@ -61,19 +76,6 @@ import {
           <a class="accion" href="/proyecto">Conocé nuestro proyecto <Flecha /></a>
           <a class="accion accion--linea" href="/documentacion">Documentación <Flecha /></a>
         </div>
-
-        <p class="portada__centro">
-          <Image
-            class="portada__centro-signo"
-            src={isotipoCentro}
-            alt=""
-            width={140}
-            height={140}
-            densities={[1, 2]}
-            loading="eager"
-            aria-hidden="true"
-          />
-        </p>
       </div>
     </div>
   </section>
@@ -371,34 +373,49 @@ import {
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--azul-900) 74%, transparent) 0%,
-        color-mix(in srgb, var(--azul-900) 66%, transparent) 34%,
-        color-mix(in srgb, var(--azul-900) 57%, transparent) 60%,
-        color-mix(in srgb, var(--azul-900) 14%, transparent) 76%,
-        transparent 90%
+      /* El velo dejó de ser lateral cuando el texto se centró: antes protegía
+         la mitad izquierda y se desvanecía hacia la derecha, que es justo
+         donde el texto pasó a estar. Ahora es un óvalo centrado.
+
+         El 62% del centro no es una elección de gusto. Medido sobre el
+         percentil 99 de brillo de la franja del texto, el punto más exigente
+         está en x=62% —el techo blanco del edificio— y pide 51% para que el
+         blanco llegue a 4,5:1. El 62% deja margen; hacia los bordes baja al
+         34%, donde no hay texto que proteger y la foto puede respirar. */
+      radial-gradient(
+        86% 78% at 50% 46%,
+        color-mix(in srgb, var(--azul-900) 62%, transparent) 0%,
+        color-mix(in srgb, var(--azul-900) 58%, transparent) 46%,
+        color-mix(in srgb, var(--azul-900) 44%, transparent) 74%,
+        color-mix(in srgb, var(--azul-900) 34%, transparent) 100%
       ),
       /* Un segundo velo vertical, mucho más suave: asienta el título y
          despega las acciones del pasto del pie. */
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--azul-900) 34%, transparent) 0%,
-        transparent 38%,
-        transparent 66%,
-        color-mix(in srgb, var(--azul-900) 32%, transparent) 100%
+        color-mix(in srgb, var(--azul-900) 30%, transparent) 0%,
+        transparent 34%,
+        transparent 70%,
+        color-mix(in srgb, var(--azul-900) 30%, transparent) 100%
       );
   }
 
+  /* El texto va centrado. La calle deja libre el carril de la izquierda por
+     donde baja la línea, así que sin compensar, "centrado" quedaría corrido
+     unos 50px a la derecha. El padding de la derecha iguala al de la
+     izquierda y el centro vuelve a ser el centro de la ventana. */
   .portada__texto {
     position: relative;
     z-index: 1;
     width: 100%;
+    padding-inline-end: calc(var(--rail) + var(--borde));
+    text-align: center;
   }
 
   .portada__ante {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 16px;
     font-family: var(--mono);
     font-size: 11px;
@@ -416,13 +433,36 @@ import {
     background: currentColor;
   }
 
+  /* El isotipo y el nombre del edificio forman una sola pieza: el signo a la
+     izquierda y el nombre al lado, y el par centrado en la ventana. Es el
+     armado de un escudo, no el de un titular con un icono encima.
+
+     El conjunto se centra, pero el nombre se alinea a la izquierda dentro
+     del par: sus dos renglones tienen largos distintos, y centrados uno
+     respecto del otro romperían el borde contra el que apoya el signo. */
+  .portada__lockup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 2.6vw, 2rem);
+    margin-block: clamp(1.25rem, 2.8vw, 2rem) 0;
+  }
+
+  .portada__signo {
+    flex: none;
+    width: auto;
+    height: clamp(4.5rem, 10vw, 8rem);
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+
   .portada__titulo {
-    margin-block-start: clamp(1.1rem, 2.4vw, 1.6rem);
-    /* 13ch y no 15: acorta el titulo y con él la franja que el velo tiene
-       que cubrir. Medido en pantalla, el texto del hero llega hasta el 59%
-       del ancho, y hasta ahí llega el velo fuerte. */
-    max-width: 13ch;
-    font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5.5rem);
+    margin-block-start: 0;
+    /* Ancho suficiente para que "Centro Tecnológico" no se parta: al lado del
+       signo, una palabra sola en un renglón se lee como un error de maqueta. */
+    max-width: 22ch;
+    text-align: start;
+    font-size: clamp(1.75rem, 1rem + 3.1vw, 3.75rem);
     font-weight: 630;
     font-stretch: 104%;
     line-height: 0.98;
@@ -432,14 +472,13 @@ import {
   }
 
   .portada__previo {
-    display: block;
-    margin-block-end: 0.34em;
-    font-size: 0.46em;
+    margin-block-start: clamp(0.9rem, 2vw, 1.35rem);
+    font-size: clamp(1.25rem, 0.9rem + 1.4vw, 2rem);
     font-weight: 600;
     font-stretch: 88%;
     line-height: 1.1;
     letter-spacing: -0.012em;
-    color: rgba(255, 255, 255, 0.74);
+    color: rgba(255, 255, 255, 0.82);
   }
 
   /* El azul del acento no se lee sobre la foto: contra el velo da 3,2:1,
@@ -477,6 +516,7 @@ import {
   .portada__acciones {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.75rem;
   }
 
@@ -508,7 +548,18 @@ import {
        el edificio la otra: el velo cubre todo el ancho y la foto queda de
        fondo. Se encuadra a la derecha para no perder el edificio. */
     .portada__aerea {
-      object-position: 68% 50%;
+      object-position: 60% 78%;
+    }
+
+    /* Al lado no entra: a 400px de ancho el signo se comería la mitad del
+       renglón y el nombre quedaría en cuatro líneas de dos palabras. */
+    .portada__lockup {
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .portada__titulo {
+      text-align: center;
     }
 
     .portada__velo {

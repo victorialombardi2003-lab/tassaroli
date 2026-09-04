@@ -15,7 +15,7 @@ export const sitio = {
 
 export const navegacion = [
   { href: '/', nodo: 'INICIO', texto: 'Inicio' },
-  { href: '/proyecto', nodo: 'PROYECTO', texto: 'Nuestro proyecto' },
+  { href: '/proyecto', nodo: 'PROYECTO', texto: 'Proyecto Construcción' },
   { href: '/documentacion', nodo: 'DOCUMENTACIÓN', texto: 'Documentación' },
 ] as const;
 
