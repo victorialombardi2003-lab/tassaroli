@@ -551,15 +551,21 @@ import {
       object-position: 60% 78%;
     }
 
-    /* Al lado no entra: a 400px de ancho el signo se comería la mitad del
-       renglón y el nombre quedaría en cuatro líneas de dos palabras. */
+    /* El par se mantiene al lado también acá, como en escritorio. Para que
+       entre hay que ceder tamaño: el signo baja a 2.75rem y el nombre a
+       1.375rem, que es lo que deja "Centro Tecnológico" en un solo renglón
+       en un teléfono de 390px. Apilarlos entraba más cómodo, pero rompía el
+       armado del escudo, que es lo que la marca pide. */
     .portada__lockup {
-      flex-direction: column;
-      gap: 0.9rem;
+      gap: 0.75rem;
+    }
+
+    .portada__signo {
+      height: clamp(2.5rem, 12vw, 3.25rem);
     }
 
     .portada__titulo {
-      text-align: center;
+      font-size: clamp(1.25rem, 5.6vw, 1.75rem);
     }
 
     .portada__velo {

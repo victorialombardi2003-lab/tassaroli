@@ -112,26 +112,29 @@ const lista = espacios.map((e, i) => ({
       <blockquote class="carta__epigrafe revela">
         <p>{carta.epigrafe}</p>
       </blockquote>
-      <div class="carta revela-linea">
-        {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
-      </div>
 
-      <div class="firma revela">
-        <p class="firma__nombre">{carta.firma}</p>
-        <p class="rotulo firma__cargo">{carta.cargo}</p>
-      </div>
-    </div>
+      <div class="carta__cuerpo">
+        <div>
+          <div class="carta revela-linea">
+            {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
+          </div>
 
-    <div class="calle solapa">
-      <figure class="solapa__placa revela">
-        <Image
-          src={placaCarta}
-          alt="Desarrolla e impulsa: Fundación Tassaroli. Patrocinan y acompañan: Gobierno de Mendoza y Municipalidad de San Rafael."
-          widths={[640, 960, 1280, 1488]}
-          sizes="(min-width: 58rem) 52rem, 92vw"
-          loading="lazy"
-        />
-      </figure>
+          <div class="firma revela">
+            <p class="firma__nombre">{carta.firma}</p>
+            <p class="rotulo firma__cargo">{carta.cargo}</p>
+          </div>
+        </div>
+
+        <figure class="carta__placa revela">
+          <Image
+            src={placaCarta}
+            alt="Desarrolla e impulsa: Fundación Tassaroli. Patrocinan y acompañan: Gobierno de Mendoza y Municipalidad de San Rafael."
+            widths={[560, 768, 1024, 1280, 1489]}
+            sizes="(min-width: 104rem) 60rem, (min-width: 60rem) 52rem, 92vw"
+            loading="lazy"
+          />
+        </figure>
+      </div>
     </div>
   </section>
 
@@ -406,6 +409,7 @@ const lista = espacios.map((e, i) => ({
     color: var(--tinta);
   }
 
+
   /* La carta es el texto más largo del sitio. En una sola columna la mancha
      queda tan alta que se lee como un trámite; en dos entra de un vistazo.
      Sólo donde hay ancho real: más angosto, cada columna baja de los 40
@@ -425,39 +429,78 @@ const lista = espacios.map((e, i) => ({
       break-inside: avoid;
       margin-block-end: 1.3rem;
     }
+  }
 
-    /* La firma cierra la carta, no una de las dos columnas. */
-    .firma {
-      column-span: all;
+  /* La lámina institucional cierra la carta, debajo del texto y alineada a
+     su borde derecho: la carta ocupa el ancho completo con sus dos columnas,
+     así que al costado no queda lugar sin robarle medida a la lectura.
+
+     Va a 52rem y no más chica porque tiene texto adentro —"DESARROLLA E
+     IMPULSA", "PATROCINAN Y ACOMPAÑAN"— y ese texto tiene que leerse. A
+     400px la lámina se muestra al 27% de su tamaño y esos rótulos quedan en
+     seis píxeles de alto; a 832px llegan a doce, que es donde se leen. */
+  /* En pantalla ancha la lámina va al costado de las dos columnas y arranca
+     a la misma altura que el texto. En pantallas más chicas no hay ancho
+     para las dos cosas: dos columnas de menos de cuarenta caracteres se leen
+     a los tumbos, así que ahí la lámina baja y se pone debajo, alineada al
+     borde derecho de la carta.
+
+     El corte está en 104rem —1664px—: más angosto que eso, lo que sobra
+     para la lámina no alcanza para que se lean sus rótulos, y entonces es
+     mejor que baje y ocupe el ancho de la carta. */
+  .carta__cuerpo {
+    max-width: min(100%, 106ch);
+  }
+
+  @media (min-width: 104rem) {
+    .carta__cuerpo {
+      display: grid;
+      /* La carta cede hasta 80ch y no más. No es una cifra elegida a ojo:
+         medido en pantalla, a 80ch cada columna entra en 41 caracteres por
+         renglón, y por debajo de 40 el renglón se corta a cada rato y la
+         lectura se rompe. A 74ch la lámina llegaba a 1000px pero la columna
+         caía a 38 caracteres, del lado malo del umbral.
+
+         Todo el ancho que sobra va a la lámina. De acá no se agranda más sin
+         romper la carta. */
+      grid-template-columns: minmax(0, 80ch) minmax(0, 1fr);
+      column-gap: clamp(2.5rem, 4vw, 4.5rem);
+      align-items: start;
+      max-width: none;
     }
   }
 
-  /* La solapa institucional cierra la carta.
-
-     Va entera y contenida, no a sangre. La lámina del cliente es una
-     contratapa de presentación: el logo de la Fundación está arriba a la
-     izquierda y los patrocinadores abajo a la derecha, y entre las dos
-     puntas hay un 93% del alto. A sangre habría que recortarla, y cualquier
-     recorte pierde una de las dos. Contenida entra completa, que es lo que
-     esa lámina tiene para decir.
-
-     El tope de 52rem no es sólo de composición: el archivo mide 1488px de
-     ancho, así que a 832px no se agranda ni en una pantalla retina, que
-     pide el doble. */
-  .solapa {
-    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
-  }
-
-  .solapa__placa {
+  .carta__placa {
     max-width: min(100%, 52rem);
-    margin: 0 auto;
+    margin: clamp(2.25rem, 5vw, 3.25rem) 0 0 auto;
   }
 
-  .solapa__placa :global(img) {
+  @media (min-width: 104rem) {
+    .carta__placa {
+      max-width: min(100%, 60rem);
+      margin: 0;
+    }
+  }
+
+  /* La lámina se desvanece contra el papel en vez de cortarse en un
+     rectángulo. La pluma es del 7% por medida, no por gusto: el logo de la
+     Fundación empieza al 15% del ancho y los patrocinadores terminan al 88%,
+     así que a 7% se disuelve el degradé y ninguna marca se toca.
+
+     Van dos máscaras cruzadas, una por eje, intersecadas: una sola no puede
+     desvanecer las cuatro orillas a la vez. */
+  .carta__placa :global(img) {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 3px;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%);
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
   }
 
   /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega

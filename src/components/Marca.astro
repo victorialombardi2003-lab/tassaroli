@@ -30,7 +30,9 @@ import isotipo from '../assets/isotipo-fundacion.png';
     densities={[1, 2]}
     loading="eager"
   />
-  <span class="marca-lockup__nombre">Fundación Tassaroli</span>
+  <span class="marca-lockup__nombre"
+    >Fundación <span class="marca-lockup__apellido">Tassaroli</span></span
+  >
 </span>
 
 <style>
@@ -45,6 +47,12 @@ import isotipo from '../assets/isotipo-fundacion.png';
     width: auto;
     height: clamp(1.5rem, 3.2vw, 1.95rem);
     object-fit: contain;
+  }
+
+  /* El apellido va más pesado que "Fundación", como en el logotipo del
+     cliente, donde TASSAROLI está en negrita y FUNDACIÓN no. */
+  .marca-lockup__apellido {
+    font-weight: 640;
   }
 
   .marca-lockup__nombre {
