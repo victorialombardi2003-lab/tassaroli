@@ -1,4 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+import isotipoCentro from '../assets/marca-tassaroli.png';
+
 import '@fontsource-variable/archivo/standard.css';
 import '@fontsource/martian-mono/400.css';
 import '@fontsource/martian-mono/600.css';
@@ -112,6 +115,17 @@ const anio = new Date().getFullYear();
       </main>
 
       <footer class="pie">
+        <Image
+          class="pie__filigrana"
+          src={isotipoCentro}
+          alt=""
+          width={760}
+          height={760}
+          densities={[1, 1.5]}
+          loading="lazy"
+          aria-hidden="true"
+        />
+
         <div class="calle pie__interior">
           <div class="pie__identidad">
             <p class="pie__nombre">{sitio.fundacion}</p>
@@ -278,14 +292,59 @@ const anio = new Date().getFullYear();
       }
 
       /* --- pie --- */
-      /* El pie es el único bloque en azul noche: ancla la página sin
-         oscurecer la lectura. */
+      /* El pie lleva el degradé de la placa institucional, el mismo que abre
+         Documentación: cierra la página con la imagen de marca del cliente.
+
+         Encima va un velo de azul noche al 62%, y no es decorativo. Sobre el
+         naranja pleno el texto del pie da 1,9:1 y es ilegible; con el velo
+         sube a 6,2:1, y sobre el azul del otro extremo a 9,0:1. El naranja
+         queda como una brasa en la esquina en vez de una franja encendida,
+         que además es lo que corresponde: un pie no grita. */
       .pie {
         position: relative;
+        isolation: isolate;
         z-index: 1;
-        background: var(--azul-900);
+        background: var(--placa-degrade);
+        background-color: var(--azul-900);
         color: #dfe4ee;
         padding-block: clamp(3rem, 7vw, 5rem);
+      }
+
+      .pie::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: color-mix(in srgb, var(--azul-900) 62%, transparent);
+      }
+
+      /* El isotipo del Centro como marca de agua. Va detrás del velo —z-index
+         -2 contra -1— y no delante: así el mismo velo que hace legible al
+         texto lo apaga a él también, y no hay forma de que compita.
+
+         El archivo es azul y monocromo; se pasa a blanco con el filtro, igual
+         que en la apertura de Documentación. El desenfoque es lo que lo vuelve
+         atmósfera en vez de un logo apoyado en la esquina. */
+      .pie__filigrana {
+        position: absolute;
+        inset-block-end: -14%;
+        inset-inline-end: -4%;
+        z-index: -2;
+        width: min(30rem, 46vw);
+        height: auto;
+        aspect-ratio: 1;
+        object-fit: contain;
+        opacity: 0.3;
+        filter: brightness(0) invert(1) blur(2px);
+        pointer-events: none;
+      }
+
+      @media (max-width: 48rem) {
+        .pie__filigrana {
+          inset-inline-end: -18%;
+          width: 62vw;
+          opacity: 0.22;
+        }
       }
 
       .pie__interior {

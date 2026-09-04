@@ -40,6 +40,29 @@
   --azul-200: #bfdbfe;
   --azul-50: #eff6ff;
 
+  /* El degrade de la placa institucional del cliente: azul que vira a naranja.
+     Vive acá y no en una página porque lo usan dos superficies distintas —la
+     apertura de Documentación y el pie— y si estuviera duplicado, con el
+     tiempo una de las dos quedaría distinta. */
+  --placa-degrade:
+    radial-gradient(
+      78% 74% at 104% 108%,
+      rgba(242, 146, 28, 0.96) 0%,
+      rgba(240, 150, 35, 0.72) 26%,
+      rgba(238, 160, 60, 0.28) 46%,
+      rgba(240, 160, 60, 0) 66%
+    ),
+    linear-gradient(
+      118deg,
+      #1f56dd 0%,
+      #2f7fe4 34%,
+      #3f9fea 56%,
+      #5ab6ee 72%,
+      #8ab0c9 84%,
+      #e79a33 95%,
+      #f2921c 100%
+    );
+
   /* El azul propio del isotipo. No es el mismo que el acento de interfaz:
      es el del archivo de marca, y el nombre escrito al lado tiene que
      coincidir con él. 8.2:1 sobre el fondo. */
@@ -527,6 +550,23 @@ html:not([data-motion='on']) .marca {
   color: var(--acento);
   box-shadow: inset 0 0 0 1px var(--acento);
   transform: translateY(-2px);
+}
+
+/* El boton de linea es tinta sobre transparente: sobre un fondo oscuro
+   desaparece. Dentro de una zona marcada como oscura se da vuelta, y el
+   contorno pasa a blanco translucido para no competir con el boton lleno
+   que va al lado. */
+[data-hero-oscuro] ~ * .accion--linea,
+.sobre-oscuro .accion--linea {
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+[data-hero-oscuro] ~ * .accion--linea:hover,
+.sobre-oscuro .accion--linea:hover {
+  color: var(--azul-900);
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #ffffff;
 }
 
 /* ------------------------------------------------------------ utilidades */

@@ -113,25 +113,9 @@ import { sitio, documentos, planos, acceso } from '../data/contenido';
     min-height: 100svh;
     overflow: hidden;
     /* El mismo degradé de la placa, en CSS. Sirve de respaldo mientras el
-       archivo no esté cargado y evita el destello blanco del primer frame. */
-    background:
-      radial-gradient(
-        78% 74% at 104% 108%,
-        rgba(242, 146, 28, 0.96) 0%,
-        rgba(240, 150, 35, 0.72) 26%,
-        rgba(238, 160, 60, 0.28) 46%,
-        rgba(240, 160, 60, 0) 66%
-      ),
-      linear-gradient(
-        118deg,
-        #1f56dd 0%,
-        #2f7fe4 34%,
-        #3f9fea 56%,
-        #5ab6ee 72%,
-        #8ab0c9 84%,
-        #e79a33 95%,
-        #f2921c 100%
-      );
+       archivo no esté cargado y evita el destello blanco del primer frame.
+       La definición vive en base.css: la comparte con el pie. */
+    background: var(--placa-degrade);
   }
 
   .apertura__fondo {

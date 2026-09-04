@@ -114,14 +114,14 @@ const lista = espacios.map((e, i) => ({
       <div class="carta revela-linea">
         {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
       </div>
-    </div>
 
-    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}>
-      <div class="calle solapa__firma revela">
+      <div class="firma revela">
         <p class="firma__nombre">{carta.firma}</p>
         <p class="rotulo firma__cargo">{carta.cargo}</p>
       </div>
     </div>
+
+    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}></div>
   </section>
 
   {/* ------------------------------------------------------------ espacios */}
@@ -440,7 +440,11 @@ const lista = espacios.map((e, i) => ({
   .solapa {
     margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
     margin-block-end: calc(-1 * var(--seccion));
-    padding-block: clamp(2rem, 4.5vw, 3.25rem) calc(17vw + 2rem);
+    /* La banda ya no lleva nada adentro, asi que su alto es sólo el que
+       necesita la placa. La ola y los logos viven en el ultimo cuarto de una
+       imagen de 2600x1726: a ancho completo ese cuarto mide 17vw. El resto
+       es un respiro de azul plano por encima. */
+    min-block-size: calc(17vw + 2.75rem);
     background-color: #2869e8;
     background-image: var(--placa);
     background-repeat: no-repeat;
@@ -449,22 +453,26 @@ const lista = espacios.map((e, i) => ({
     color: #ffffff;
   }
 
-  .solapa__firma {
+  /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega
+     al nombre de quien la escribe antes de entrar en la placa institucional,
+     que es de la Fundacion y no de ella. */
+  .firma {
+    margin-block-start: clamp(1.75rem, 4vw, 2.5rem);
     padding-block-start: 1.35rem;
-    border-block-start: 1px solid rgba(255, 255, 255, 0.32);
+    border-block-start: 1px solid var(--linea-fuerte);
   }
 
-  .solapa .firma__nombre {
+  .firma__nombre {
     font-stretch: 102%;
     font-weight: 640;
     font-size: 1.1875rem;
     letter-spacing: -0.02em;
-    color: #ffffff;
+    color: var(--tinta);
   }
 
-  .solapa .firma__cargo {
+  .firma__cargo {
     margin-block-start: 0.35rem;
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--tinta-3);
   }
 
   .solapa :global(.marca) {

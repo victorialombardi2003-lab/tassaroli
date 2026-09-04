@@ -7,7 +7,9 @@ import Flecha from '../components/Flecha.astro';
 // El fondo del hero usa el isotipo del hexágono; la barra superior usa el
 // lockup de la Fundación. Son dos marcas distintas y cada una va donde
 // corresponde.
-import signo from '../assets/marca-tassaroli.png';
+import aerea from '../assets/aerea-parque-norte.webp';
+import isotipoCentro from '../assets/marca-tassaroli.png';
+import parqueAntecedentes from '../assets/parque-antecedentes.webp';
 // La trama urbana de San Rafael, de fondo en la sección que habla del lugar.
 import planoSanRafael from '../assets/plano-san-rafael.png';
 import {
@@ -23,12 +25,20 @@ import {
 } from '../data/contenido';
 ---
 
-<Base titulo={`${sitio.fundacion} — ${sitio.proyecto}`} actual="/">
+<Base titulo={`${sitio.fundacion} — ${sitio.proyecto}`} actual="/" heroOscuro>
   {/* ------------------------------------------------------------ portada */}
   <section class="portada">
-    <div class="portada__fondo" aria-hidden="true">
-      <Image class="portada__signo" src={signo} alt="" width={1020} height={1020} densities={[1, 1.5]} loading="eager" />
-      <span class="portada__velo"></span>
+    <div class="portada__fondo" data-hero-oscuro>
+      <Image
+        class="portada__aerea"
+        src={aerea}
+        alt="Vista aérea del Centro Tecnológico implantado en Parque Norte, San Rafael"
+        widths={[900, 1280, 1448]}
+        sizes="100vw"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <span class="portada__velo" aria-hidden="true"></span>
     </div>
 
     <div class="calle portada__texto">
@@ -51,18 +61,45 @@ import {
           <a class="accion" href="/proyecto">Conocé nuestro proyecto <Flecha /></a>
           <a class="accion accion--linea" href="/documentacion">Documentación <Flecha /></a>
         </div>
+
+        <p class="portada__centro">
+          <Image
+            class="portada__centro-signo"
+            src={isotipoCentro}
+            alt=""
+            width={140}
+            height={140}
+            densities={[1, 2]}
+            loading="eager"
+            aria-hidden="true"
+          />
+        </p>
       </div>
     </div>
   </section>
 
   {/* ------------------------------------------------------- antecedentes */}
   <section class="seccion banda" data-seccion>
-    <div class="calle">
-      <Nodo texto="Antecedentes" recorrido="publico" />
-      <div class="revela-linea">
-        <h2 class="titulo">{antecedentes.titulo}</h2>
-        <p class="cuerpo bloque__cuerpo cuerpo--columnas">{antecedentes.cuerpo}</p>
+    <div class="calle antecedentes">
+      <div>
+        <Nodo texto="Antecedentes" recorrido="publico" />
+        <div class="revela-linea">
+          <h2 class="titulo">{antecedentes.titulo}</h2>
+          <p class="cuerpo bloque__cuerpo">{antecedentes.cuerpo}</p>
+        </div>
       </div>
+
+      <figure class="antecedentes__lamina revela">
+        <div class="marco-imagen">
+          <Image
+            src={parqueAntecedentes}
+            alt="El parque del Centro Tecnológico al atardecer, con senderos, canteros y gente caminando"
+            widths={[640, 960, 1280, 1537]}
+            sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+            loading="lazy"
+          />
+        </div>
+      </figure>
     </div>
   </section>
 
@@ -288,42 +325,69 @@ import {
     display: flex;
     align-items: center;
     min-height: 88svh;
-    padding-block: clamp(7rem, 15vh, 9.5rem) clamp(3rem, 7vw, 5rem);
+    /* Los márgenes se ajustaron cuando entró la firma del Centro debajo de
+       las acciones: sin eso el hero pasaba de 1013px en una ventana de 880 y
+       el botón de Documentación quedaba abajo del pliegue. */
+    padding-block: clamp(5.5rem, 11vh, 8rem) clamp(2rem, 4vw, 3rem);
   }
 
-  /* Tres capas detrás del texto: el halo, el signo de la marca, y el velo
-     que le devuelve contraste al título. */
+  /* La vista aérea del proyecto, y encima el velo que le devuelve contraste
+     al título. La estructura es la misma que antes: un velo horizontal que
+     va de opaco a la izquierda, donde vive el texto, a transparente a la
+     derecha. Lo único que cambió es el color —era papel, ahora es azul
+     noche— y con él el texto, que pasó a blanco.
+
+     Que el velo se corte antes del 62% no es casual: el edificio está en
+     ese tercio derecho de la foto. Un velo parejo lo taparía, y entonces
+     la aérea sería una textura y no el proyecto. */
   .portada__fondo {
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: radial-gradient(120% 90% at 88% 50%, var(--azul-50) 0%, transparent 62%);
+    background: var(--azul-900);
   }
 
-  .portada__signo {
+  .portada__aerea {
     position: absolute;
-    inset-inline-end: -20vw;
-    inset-block-start: 50%;
-    width: min(1020px, 80vw);
-    height: auto;
-    aspect-ratio: 1;
-    object-fit: contain;
-    translate: 0 -50%;
-    opacity: 0.13;
-    pointer-events: none;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* La foto es cálida y verde; el sitio es azul. Un viraje mínimo la
+       acerca sin lavarla, y el contraste apenas subido evita que el velo
+       la aplaste en un gris. */
+    filter: saturate(0.86) contrast(1.06);
+    /* Encuadrada abajo, y no al medio, por una razon medible: la mitad
+       superior de la aerea tiene los techos blancos del barrio, y ahi el
+       texto necesitaba un 85% de velo para ser legible —o sea, tapar la
+       foto—. Corrida hacia abajo el texto cae sobre arboleda, y con 46%
+       alcanza. El edificio sigue entrando, en el tercio superior. */
+    object-position: 50% 85%;
   }
 
   .portada__velo {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      var(--papel) 26%,
-      color-mix(in srgb, var(--papel) 50%, transparent) 56%,
-      transparent 80%
-    );
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--azul-900) 74%, transparent) 0%,
+        color-mix(in srgb, var(--azul-900) 66%, transparent) 34%,
+        color-mix(in srgb, var(--azul-900) 57%, transparent) 60%,
+        color-mix(in srgb, var(--azul-900) 14%, transparent) 76%,
+        transparent 90%
+      ),
+      /* Un segundo velo vertical, mucho más suave: asienta el título y
+         despega las acciones del pasto del pie. */
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--azul-900) 34%, transparent) 0%,
+        transparent 38%,
+        transparent 66%,
+        color-mix(in srgb, var(--azul-900) 32%, transparent) 100%
+      );
   }
 
   .portada__texto {
@@ -341,7 +405,7 @@ import {
     font-weight: 500;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--acento);
+    color: var(--azul-400);
   }
 
   .portada__regla {
@@ -354,13 +418,16 @@ import {
 
   .portada__titulo {
     margin-block-start: clamp(1.1rem, 2.4vw, 1.6rem);
-    max-width: 15ch;
+    /* 13ch y no 15: acorta el titulo y con él la franja que el velo tiene
+       que cubrir. Medido en pantalla, el texto del hero llega hasta el 59%
+       del ancho, y hasta ahí llega el velo fuerte. */
+    max-width: 13ch;
     font-size: clamp(2.5rem, 1.4rem + 4.6vw, 5.5rem);
     font-weight: 630;
     font-stretch: 104%;
     line-height: 0.98;
     letter-spacing: -0.034em;
-    color: var(--tinta);
+    color: #ffffff;
     text-wrap: balance;
   }
 
@@ -372,27 +439,33 @@ import {
     font-stretch: 88%;
     line-height: 1.1;
     letter-spacing: -0.012em;
-    color: var(--tinta-2);
+    color: rgba(255, 255, 255, 0.74);
   }
 
+  /* El azul del acento no se lee sobre la foto: contra el velo da 3,2:1,
+     por debajo del 4,5:1 que pide la norma para texto. El 400 de la misma
+     escala da 7,4:1 y mantiene el acento donde estaba. */
+  /* El azul-400 sobre la foto velada da 2,3:1: no se lee. Medido sobre el
+     percentil 99 de brillo de la franja, el azul-200 da 4,2:1, que para un
+     titulo de este tamaño está holgado —la norma pide 3:1—. */
   .portada__nombre {
     display: block;
-    color: var(--acento);
+    color: var(--azul-200);
   }
 
   .portada__ubicacion {
-    margin-block-start: 40px;
+    margin-block-start: clamp(1.5rem, 3.2vh, 2.25rem);
     font-family: var(--mono);
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.26em;
     text-transform: uppercase;
-    color: var(--tinta);
+    color: rgba(255, 255, 255, 0.86);
   }
 
   .portada__acceso {
     position: relative;
-    margin-block-start: 44px;
+    margin-block-start: clamp(1.75rem, 3.6vh, 2.5rem);
     padding-inline-start: var(--rail);
     margin-inline-start: calc(-1 * var(--rail));
   }
@@ -407,6 +480,23 @@ import {
     gap: 0.75rem;
   }
 
+  /* El isotipo del Centro debajo de las acciones, solo. El archivo es azul
+     y monocromo, y se pasa a blanco con el mismo filtro que usa la apertura
+     de Documentación. */
+  .portada__centro {
+    display: flex;
+    margin-block-start: clamp(3rem, 6.5vw, 4.75rem);
+  }
+
+  .portada__centro-signo {
+    flex: none;
+    width: auto;
+    height: clamp(3.4rem, 7vw, 4.75rem);
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+  }
+
   /* En pantallas chicas el signo se corre y baja, y el velo cubre todo el
      ancho: el título nunca compite con la marca de fondo. */
   @media (max-width: 48rem) {
@@ -414,17 +504,19 @@ import {
       min-height: 84svh;
     }
 
-    .portada__signo {
-      inset-inline-end: -32vw;
-      width: min(780px, 108vw);
-      opacity: 0.08;
+    /* En pantalla angosta no hay lugar para que el texto ocupe una mitad y
+       el edificio la otra: el velo cubre todo el ancho y la foto queda de
+       fondo. Se encuadra a la derecha para no perder el edificio. */
+    .portada__aerea {
+      object-position: 68% 50%;
     }
 
     .portada__velo {
       background: linear-gradient(
-        90deg,
-        var(--papel) 30%,
-        color-mix(in srgb, var(--papel) 74%, transparent) 100%
+        180deg,
+        color-mix(in srgb, var(--azul-900) 72%, transparent) 0%,
+        color-mix(in srgb, var(--azul-900) 62%, transparent) 46%,
+        color-mix(in srgb, var(--azul-900) 82%, transparent) 100%
       );
     }
 
@@ -437,6 +529,29 @@ import {
     .portada__acceso {
       margin-block-start: 36px;
     }
+  }
+
+  /* --------------------------------------------------------- antecedentes */
+  /* El texto a la izquierda y la foto al lado, no debajo ni detrás: la foto
+     muestra el parque terminado y el texto cuenta de dónde viene, y se leen
+     mejor de a dos que uno tapando al otro. El cuerpo vuelve a una sola
+     columna —partido en dos dentro de media pantalla darían renglones de
+     veinte caracteres. */
+  .antecedentes {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+    align-items: center;
+  }
+
+  @media (min-width: 62rem) {
+    .antecedentes {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      max-width: calc(92rem + var(--rail) + 2 * var(--borde));
+    }
+  }
+
+  .antecedentes__lamina {
+    margin: 0;
   }
 
   /* ---------------------------------------------------------- bloques ---- */

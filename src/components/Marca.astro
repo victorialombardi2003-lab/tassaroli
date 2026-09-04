@@ -10,8 +10,13 @@ import isotipo from '../assets/isotipo-fundacion.png';
  * liviano y caja de oración: es lo más parecido al logotipo original que se
  * puede armar con la tipografía del sitio, sin cargar una fuente extra.
  *
- * El color lo hereda del contenedor (`currentColor`), para que sobre el hero
- * oscuro toda la marca pase a blanco de una sola vez.
+ * El isotipo trae dos azules, uno claro y uno noche. Sobre el hero oscuro
+ * se aplana a blanco con un filtro, y aunque los dos tonos se fundan la
+ * forma se sigue leyendo: son los huecos transparentes, y no el contraste
+ * entre los azules, los que dibujan el lazo.
+ *
+ * El nombre hereda el color del contenedor (`currentColor`), para que pase
+ * a blanco junto con el signo.
  */
 ---
 
@@ -21,7 +26,7 @@ import isotipo from '../assets/isotipo-fundacion.png';
     src={isotipo}
     alt=""
     width={120}
-    height={120}
+    height={71}
     densities={[1, 2]}
     loading="eager"
   />
