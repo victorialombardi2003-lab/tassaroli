@@ -36,7 +36,10 @@ const Nombre = comoTitulo ? 'h1' : 'p';
         <p class="escudo__previo">
           {rotulo.map((linea, i) => (
             <>
-              {i > 0 && <br />}
+              {/* El espacio antes del salto no es de más: sin él los dos
+                  renglones quedan pegados en el texto del documento y un
+                  lector de pantalla dice "ProyectoConstrucción". */}
+              {i > 0 && <Fragment> <br /></Fragment>}
               {linea}
             </>
           ))}

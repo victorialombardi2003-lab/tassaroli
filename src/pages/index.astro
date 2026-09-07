@@ -153,7 +153,7 @@ import {
             <li class="hilada">
               <div class="hilada__marca">
                 <i class="hilada__punto" aria-hidden="true" />
-                <span class="rotulo">{h.marca}</span>
+                <span class="solo-lectores">{h.marca}</span>
               </div>
               <div>
                 <h3 class="subtitulo">{h.titulo}</h3>
@@ -627,9 +627,18 @@ import {
     border-block-end: 1px solid var(--linea);
   }
 
+  /* La columna de la marca era de 12rem porque llevaba el rótulo del estado
+     —CONSTRUIDO, DIBUJADO, COMPROMETIDO—. Ahora sólo lleva la viñeta, así que
+     se achica a lo que mide: dejarla ancha dejaba un punto flotando lejos del
+     texto, sin nada que lo explicara.
+
+     El rótulo no desaparece, pasa a `solo-lectores`: en pantalla no está,
+     pero quien navega con lector de pantalla sigue oyendo en qué estado está
+     cada cosa, que es la única información que el punto no da. */
   @media (min-width: 52rem) {
     .hilada {
-      grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: clamp(0.9rem, 2vw, 1.5rem);
       align-items: start;
     }
   }
@@ -648,6 +657,8 @@ import {
      decían nada que el rótulo de al lado no dijera mejor. */
   .hilada__punto {
     flex: none;
+    /* Alineado con la primera línea del título, no con el borde de la caja. */
+    margin-block-start: 0.62em;
     width: 7px;
     height: 7px;
     border-radius: 50%;

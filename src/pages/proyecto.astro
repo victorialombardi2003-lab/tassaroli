@@ -5,6 +5,7 @@ import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
 import Flecha from '../components/Flecha.astro';
+import Escudo from '../components/Escudo.astro';
 import placa from '../assets/placa-fondo.webp';
 import logoFundacion from '../assets/logos/fundacion.png';
 import { sitio, carta, espacios, proposito } from '../data/contenido';
@@ -90,10 +91,12 @@ const lista = espacios.map((e, i) => ({
         <span>Anteproyecto · Estudio Lucchesi</span>
       </p>
 
-      <h1 class="display apertura__titulo">
-        Proyecto Construcción
-        <span class="apertura__nombre">Centro Tecnológico Carlos José Tassaroli</span>
-      </h1>
+      <p class="apertura__previo">Proyecto Construcción</p>
+
+      {/* El escudo va sin el rótulo de la izquierda: acá "Proyecto
+          Construcción" es un renglón propio, arriba, y repetirlo al costado
+          del signo sería decirlo dos veces. */}
+      <Escudo comoTitulo />
 
       <div class="apertura__pie">
         <a class="apertura__bajar" href="#recorrido">
@@ -301,22 +304,26 @@ const lista = espacios.map((e, i) => ({
     background: var(--azul-400);
   }
 
-  .apertura__titulo {
-    margin-block-start: clamp(1rem, 2.2vw, 1.5rem);
-    max-width: 18ch;
-    line-height: 0.99;
-    color: #ffffff;
+  /* "Proyecto Construcción" arriba, como renglón propio. En Montserrat para
+     que forme una sola voz con el escudo que va debajo, y no en la tipografía
+     del resto del sitio. */
+  .apertura__previo {
+    margin-block-start: clamp(0.9rem, 2vw, 1.35rem);
+    font-family: 'Montserrat', var(--sans);
+    font-size: clamp(1.1rem, 0.75rem + 1.5vw, 2rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+    color: rgba(255, 255, 255, 0.88);
   }
 
-  .apertura__nombre {
-    display: block;
-    margin-block-start: 0.16em;
-    font-size: 0.58em;
-    font-weight: 600;
-    font-stretch: 96%;
-    line-height: 1.06;
-    letter-spacing: -0.026em;
-    color: #f2f5fb;
+  /* El mismo escudo que abre el inicio, para que las dos aperturas digan lo
+     mismo de la misma manera. Acá va al ras de la izquierda y no centrado:
+     esta apertura apoya su texto abajo a la izquierda sobre el render, y
+     centrarlo lo dejaría flotando en el medio de la foto. */
+  .apertura__texto :global(.escudo) {
+    justify-content: flex-start;
+    margin-block-start: clamp(0.6rem, 1.4vw, 1rem);
   }
 
   .apertura__pie {
