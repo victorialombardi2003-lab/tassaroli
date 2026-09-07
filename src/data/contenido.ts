@@ -99,14 +99,14 @@ export const arquitectura = [
   {
     titulo: 'Sustentabilidad y eficiencia ambiental',
     cuerpo:
-      'El proyecto incorpora criterios pasivos de eficiencia energética: orientación adecuada, control solar, ventilación cruzada, aprovechamiento de iluminación natural y preservación de la vegetación existente.',
+      'El proyecto incorpora criterios pasivos de eficiencia energética mediante una orientación adecuada, control solar, ventilación cruzada, aprovechamiento de la iluminación natural y preservación de la vegetación existente. A estas estrategias se suma una gestión eficiente del recurso hídrico, contemplando la recuperación y reutilización del agua de lluvia, así como la separación de aguas grises y aguas negras. Las aguas grises podrán ser tratadas y reutilizadas para usos compatibles, como el riego de los espacios verdes, reduciendo el consumo de agua potable y favoreciendo un uso más sostenible de los recursos disponibles.',
     render: 'arq-sustentabilidad',
     alt: 'Render mostrando los criterios de eficiencia energética del edificio',
   },
   {
     titulo: 'Emplazamiento y relación con el entorno urbano',
     cuerpo:
-      'El proyecto se implanta dentro del Parque Norte, en un predio de gran escala con abundante vegetación y recorridos consolidados. El edificio se concibe como parte de un sistema paisajístico mayor, reforzando la continuidad del espacio público. La implantación prioriza la permeabilidad visual y física, la continuidad peatonal, transiciones graduales entre espacio público e interior y la valorización del arbolado existente, posicionando al edificio como hito tecnológico e institucional.',
+      'El proyecto se potencia a partir de su relación con el entorno natural del Parque Norte, aprovechando la presencia de abundante vegetación y, especialmente, del arbolado adulto existente. Estos elementos no solo aportan identidad y calidad paisajística al conjunto, sino que también funcionan como recurso de control solar natural, reduciendo la incidencia de la radiación y la demanda de climatización, y favoreciendo la eficiencia energética. Su preservación refuerza además el reconocimiento del árbol como parte del patrimonio mendocino y del paisaje de nuestro oasis.',
     render: 'arq-emplazamiento',
     alt: 'Render del edificio emplazado dentro del Parque Norte',
   },

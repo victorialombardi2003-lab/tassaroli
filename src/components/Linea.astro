@@ -491,7 +491,9 @@
       );
     } else {
       const partes = document.querySelectorAll(
-        '.portada__ante, .portada__titulo, .portada__ubicacion, .portada__acceso,' +
+        // `.escudo` y no `.portada__titulo`: el titular pasó a ser el escudo
+        // del Centro, y el nombre viejo de la clase dejó de existir.
+        '.portada__ante, .portada .escudo, .portada__ubicacion, .portada__acceso,' +
           '.apertura__ante, .apertura__titulo, .apertura__pie',
       );
       if (partes.length) {
@@ -530,33 +532,27 @@
       );
     }
 
-    // El signo de la marca entra más lento y después queda flotando: es el
-    // fondo, no puede competir con la lectura.
-    const signo = document.querySelector<HTMLElement>('.portada__signo');
-    if (signo) {
-      tweensEntrada.push(
-      gsap.from(signo, {
-        opacity: 0,
-        y: 28,
-        scale: 0.965,
-        duration: 1.5,
-        ease: 'expo.out',
-        // El flotado no termina nunca, así que deja el ticker de GSAP
-        // corriendo en cada cuadro por el resto de la visita —incluso con la
-        // portada fuera de pantalla—, compitiendo con el scroll. En pantalla
-        // chica la entrada queda y el flotado no.
-        onComplete: () => {
-          if (!anchura.matches) return;
-          gsap.to(signo, {
-            y: -18,
-            duration: 7,
-            ease: 'sine.inOut',
-            repeat: -1,
-            yoyo: true,
-          });
-        },
-      }),
-      );
+    // El signo del escudo queda flotando apenas, con un vaivén largo. Se
+    // busca dentro de `.portada` a propósito: el pie tiene el mismo escudo y
+    // ahí no corresponde que se mueva.
+    //
+    // Va sólo el flotado y no una entrada propia: el signo ya entra con el
+    // escudo, que está en el escalonado de arriba, y dos animaciones de `y`
+    // sobre padre e hijo se suman y exageran el gesto.
+    const signo = document.querySelector<HTMLElement>('.portada .escudo__signo');
+    if (signo && anchura.matches) {
+      // El flotado no termina nunca, así que deja el ticker de GSAP corriendo
+      // en cada cuadro por el resto de la visita —incluso con la portada
+      // fuera de pantalla—, compitiendo con el scroll. Por eso en pantalla
+      // chica no corre.
+      gsap.to(signo, {
+        y: -14,
+        duration: 7,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true,
+        delay: 1.1,
+      });
     }
   }
 

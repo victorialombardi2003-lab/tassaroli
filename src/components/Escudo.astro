@@ -1,0 +1,177 @@
+---
+import { Image } from 'astro:assets';
+import isotipoCentro from '../assets/marca-tassaroli.png';
+
+/**
+ * El escudo del Centro Tecnológico.
+ *
+ * Es la pieza gráfica del cliente pasada a HTML: un rótulo a la izquierda,
+ * una vara, el signo en el medio y el nombre a la derecha. Vive en un
+ * componente y no suelto en cada página porque va en dos lugares —la
+ * apertura del inicio y el pie— y duplicado terminarían distintos.
+ *
+ * En el pie va sin rótulo: ahí no hace falta anunciar de qué proyecto se
+ * trata, ya se recorrió el sitio entero.
+ *
+ * El tamaño no se pasa por propiedad sino por la variable `--escudo-tam`,
+ * que quien lo usa define desde afuera. Todo lo demás se mide en `em` contra
+ * ese tamaño, así que el conjunto crece y se achica como una sola pieza.
+ */
+
+interface Props {
+  /** Renglones del rótulo de la izquierda. Sin esto no hay rótulo ni vara. */
+  rotulo?: string[];
+  /** El nombre como `h1`. Sólo la apertura del inicio lo necesita. */
+  comoTitulo?: boolean;
+}
+
+const { rotulo, comoTitulo = false } = Astro.props;
+const Nombre = comoTitulo ? 'h1' : 'p';
+---
+
+<div class="escudo">
+  {
+    rotulo && rotulo.length > 0 && (
+      <>
+        <p class="escudo__previo">
+          {rotulo.map((linea, i) => (
+            <>
+              {i > 0 && <br />}
+              {linea}
+            </>
+          ))}
+        </p>
+
+        <span class="escudo__barra" aria-hidden="true" />
+      </>
+    )
+  }
+
+  <Image
+    class="escudo__signo"
+    src={isotipoCentro}
+    alt=""
+    width={340}
+    height={340}
+    densities={[1, 2]}
+    loading="eager"
+    fetchpriority="high"
+  />
+
+  <Nombre class="escudo__centro">
+    <span class="escudo__uno">Centro</span>
+    <span class="escudo__dos">Tecnológico</span>
+    <span class="escudo__tres">Carlos José Tassaroli</span>
+  </Nombre>
+</div>
+
+<style>
+  /* Va en Montserrat y no en Archivo, que es la tipografía del resto del
+     sitio, porque el pedido fue usar la de la pieza del cliente. Es el único
+     lugar donde entra: una segunda familia cuesta una descarga más y no se
+     justifica en ningún otro lado. De Montserrat se cargan tres pesos —Light
+     para los textos, Bold para "Tecnológico", Regular para el nombre— y no
+     la familia entera. */
+  .escudo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.85rem, 2.2vw, 1.75rem);
+    font-family: 'Montserrat', var(--sans);
+    font-size: var(--escudo-tam, clamp(1.5rem, 0.8rem + 2.9vw, 3.5rem));
+    line-height: 1.06;
+    color: #ffffff;
+  }
+
+  /* Contra "Centro", el rótulo de la izquierda va al 62%: es la proporción
+     que tiene en la pieza del cliente. */
+  .escudo__previo {
+    flex: none;
+    margin: 0;
+    text-align: end;
+    font-size: 0.62em;
+    font-weight: 300;
+    line-height: 1.22;
+    letter-spacing: -0.005em;
+  }
+
+  /* La vara pasa el alto del texto por arriba y por abajo, como en la pieza
+     del cliente. Se mide en `em` y no en píxeles para que acompañe al
+     conjunto cuando la tipografía crece. */
+  .escudo__barra {
+    flex: none;
+    align-self: center;
+    width: 1px;
+    height: 2.9em;
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  .escudo__signo {
+    flex: none;
+    width: auto;
+    height: 2.35em;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+
+  /* El `font-size: inherit` no es cosmético: cuando es un h1 el navegador le
+     aplica 2em por su cuenta. Sin esto el nombre sale al doble del tamaño
+     que le corresponde y rompe la proporción con el signo y con la vara,
+     que se miden contra el escudo y no contra él. */
+  .escudo__centro {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-size: inherit;
+    text-align: start;
+  }
+
+  .escudo__uno {
+    font-weight: 300;
+    letter-spacing: -0.008em;
+  }
+
+  .escudo__dos {
+    font-weight: 700;
+    letter-spacing: -0.012em;
+  }
+
+  /* El renglón del nombre va al 24,5% del escudo, que es la proporción de la
+     pieza. Esa proporción sola funciona en la apertura de escritorio, donde
+     el escudo mide 54px y el renglón queda en 13; en cualquier lugar donde
+     el escudo sea chico cae por debajo de lo legible.
+
+     De ahí el piso. Pero no puede ser uno solo para todos: en el pie hay
+     ancho de sobra y conviene que sea 0.72rem, mientras que en la apertura
+     de un teléfono la columna mide 132px y a ese tamaño el nombre necesita
+     180 y se parte en dos renglones. Por eso el piso es una variable que
+     cada lugar sube si tiene con qué. */
+  .escudo__tres {
+    margin-block-start: 0.26em;
+    font-size: max(var(--escudo-nombre-min, 0.55rem), 0.245em);
+    font-weight: 400;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  @media (max-width: 48rem) {
+    .escudo {
+      gap: 0.5rem;
+    }
+
+    /* En teléfono el rótulo cede apenas: 0.58 contra el 0.62 de escritorio.
+       Más que eso lo aleja de la pieza; menos, no entra en la fila. */
+    .escudo__previo {
+      font-size: 0.58em;
+    }
+
+    /* El interletrado cede antes que el tamaño. En la apertura de un teléfono
+       la columna del nombre mide 139px y el renglón, con el interletrado de
+       la pieza, pedía 138: quedaba al ras y se partía en dos. Bajarlo a 0.07
+       lo deja en 128 y entero, y se nota mucho menos que achicar la letra. */
+    .escudo__tres {
+      letter-spacing: 0.07em;
+    }
+  }
+</style>

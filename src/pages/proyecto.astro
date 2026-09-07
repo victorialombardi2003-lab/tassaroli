@@ -5,7 +5,8 @@ import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
 import Flecha from '../components/Flecha.astro';
-import placaCarta from '../assets/placa-carta.webp';
+import placa from '../assets/placa-fondo.webp';
+import logoFundacion from '../assets/logos/fundacion.png';
 import { sitio, carta, espacios, proposito } from '../data/contenido';
 
 /**
@@ -113,28 +114,25 @@ const lista = espacios.map((e, i) => ({
         <p>{carta.epigrafe}</p>
       </blockquote>
 
-      <div class="carta__cuerpo">
-        <div>
-          <div class="carta revela-linea">
-            {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
-          </div>
-
-          <div class="firma revela">
-            <p class="firma__nombre">{carta.firma}</p>
-            <p class="rotulo firma__cargo">{carta.cargo}</p>
-          </div>
-        </div>
-
-        <figure class="carta__placa revela">
-          <Image
-            src={placaCarta}
-            alt="Desarrolla e impulsa: Fundación Tassaroli. Patrocinan y acompañan: Gobierno de Mendoza y Municipalidad de San Rafael."
-            widths={[560, 768, 1024, 1280, 1489]}
-            sizes="(min-width: 104rem) 60rem, (min-width: 60rem) 52rem, 92vw"
-            loading="lazy"
-          />
-        </figure>
+      <div class="carta revela-linea">
+        {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
       </div>
+
+      <div class="firma revela">
+        <p class="firma__nombre">{carta.firma}</p>
+        <p class="rotulo firma__cargo">{carta.cargo}</p>
+      </div>
+    </div>
+
+    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}>
+      <div class="solapa__impulsa">
+        <p class="solapa__rotulo solapa__rotulo--claro">Desarrolla e impulsa</p>
+        <span class="solapa__tarjeta">
+          <Image src={logoFundacion} alt="Fundación Tassaroli" width={281} height={166} densities={[1, 2]} loading="lazy" />
+        </span>
+      </div>
+
+      <p class="solapa__rotulo solapa__rotulo--patrocinan">Patrocinan y acompañan</p>
     </div>
   </section>
 
@@ -417,6 +415,10 @@ const lista = espacios.map((e, i) => ({
   @media (min-width: 60rem) {
     .carta {
       display: block;
+      /* El tope de 106ch deja algo de papel libre a la derecha en pantallas
+         anchas, y está bien que lo deje: sin él cada columna se estira hasta
+         los setenta y pico de caracteres y el renglón se vuelve incómodo de
+         seguir. Dos columnas medidas antes que tres apretadas o dos anchas. */
       max-width: min(100%, 106ch);
       columns: 2;
       column-gap: clamp(2.25rem, 4vw, 4.5rem);
@@ -439,68 +441,112 @@ const lista = espacios.map((e, i) => ({
      IMPULSA", "PATROCINAN Y ACOMPAÑAN"— y ese texto tiene que leerse. A
      400px la lámina se muestra al 27% de su tamaño y esos rótulos quedan en
      seis píxeles de alto; a 832px llegan a doce, que es donde se leen. */
-  /* En pantalla ancha la lámina va al costado de las dos columnas y arranca
-     a la misma altura que el texto. En pantallas más chicas no hay ancho
-     para las dos cosas: dos columnas de menos de cuarenta caracteres se leen
-     a los tumbos, así que ahí la lámina baja y se pone debajo, alineada al
-     borde derecho de la carta.
+  /* La franja institucional cierra la sección, a sangre. La ola y los logos
+     viven en el último cuarto de una imagen de 2600x1726: a ancho completo
+     ese cuarto mide 17vw, y ése es el alto de la banda. El resto es un
+     respiro de azul plano por encima, que continúa con `background-color`
+     en el mismo color exacto para que la unión no se vea.
 
-     El corte está en 104rem —1664px—: más angosto que eso, lo que sobra
-     para la lámina no alcanza para que se lean sus rótulos, y entonces es
-     mejor que baje y ocupe el ancho de la carta. */
-  .carta__cuerpo {
-    max-width: min(100%, 106ch);
+     La imagen se ancla abajo y a ancho completo (`100% auto`), nunca en
+     `cover`: con `cover`, una banda más alta la estira y recorta los logos
+     por los costados. */
+  .solapa {
+    position: relative;
+    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    margin-block-end: calc(-1 * var(--seccion));
+    /* El alto extra respecto de lo que mide la placa deja aire arriba para la
+       tarjeta de la Fundación. Como la imagen está anclada abajo, todo lo que
+       se agregue aparece como azul plano en la parte superior, y ahí es donde
+       la tarjeta deja de pisar al logo del Centro —que en la imagen está a
+       163px del pie, siempre—. */
+    min-block-size: calc(17vw + 9rem);
+    background-color: #2869e8;
+    background-image: var(--placa);
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
+    color: #ffffff;
   }
 
-  @media (min-width: 104rem) {
-    .carta__cuerpo {
-      display: grid;
-      /* La carta cede hasta 80ch y no más. No es una cifra elegida a ojo:
-         medido en pantalla, a 80ch cada columna entra en 41 caracteres por
-         renglón, y por debajo de 40 el renglón se corta a cada rato y la
-         lectura se rompe. A 74ch la lámina llegaba a 1000px pero la columna
-         caía a 38 caracteres, del lado malo del umbral.
+  /* El logo de la Fundación se separó de la placa y ahora vive acá, arriba a
+     la izquierda y sobre el azul, en una tarjeta blanca como en la pieza del
+     cliente. La placa quedó con el arco limpio en ese lugar.
 
-         Todo el ancho que sobra va a la lámina. De acá no se agranda más sin
-         romper la carta. */
-      grid-template-columns: minmax(0, 80ch) minmax(0, 1fr);
-      column-gap: clamp(2.5rem, 4vw, 4.5rem);
-      align-items: start;
-      max-width: none;
-    }
+     Esto es lo que permite moverlo: mientras estaba pintado dentro de la
+     imagen, cualquier cambio de posición era cirugía sobre un mapa de bits y
+     rompía o el logo, o el vecino, o el borde de la ola. */
+  .solapa__impulsa {
+    position: absolute;
+    inset-block-start: clamp(1rem, 2.4vw, 2rem);
+    inset-inline-start: calc(var(--rail) + var(--borde));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
-  .carta__placa {
-    max-width: min(100%, 52rem);
-    margin: clamp(2.25rem, 5vw, 3.25rem) 0 0 auto;
-  }
-
-  @media (min-width: 104rem) {
-    .carta__placa {
-      max-width: min(100%, 60rem);
-      margin: 0;
-    }
-  }
-
-  /* La lámina se desvanece contra el papel en vez de cortarse en un
-     rectángulo. La pluma es del 7% por medida, no por gusto: el logo de la
-     Fundación empieza al 15% del ancho y los patrocinadores terminan al 88%,
-     así que a 7% se disuelve el degradé y ninguna marca se toca.
-
-     Van dos máscaras cruzadas, una por eje, intersecadas: una sola no puede
-     desvanecer las cuatro orillas a la vez. */
-  .carta__placa :global(img) {
+  .solapa__tarjeta {
     display: block;
-    width: 100%;
+    padding: clamp(0.5rem, 1.1vw, 0.85rem) clamp(0.7rem, 1.5vw, 1.1rem);
+    background: #ffffff;
+    border-radius: clamp(0.5rem, 1.2vw, 0.9rem);
+    box-shadow: 0 10px 26px -14px rgba(12, 30, 66, 0.5);
+  }
+
+  .solapa__tarjeta :global(img) {
+    display: block;
+    width: clamp(6.5rem, 11vw, 10rem);
     height: auto;
-    -webkit-mask-image:
-      linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
-      linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%);
-    mask-image:
-      linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
-      linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%);
-    -webkit-mask-composite: source-in;
-    mask-composite: intersect;
+  }
+
+  .solapa__rotulo {
+    font-family: 'Montserrat', var(--sans);
+    font-size: clamp(0.58rem, 0.72vw, 0.78rem);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .solapa__rotulo--claro {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  /* El de los patrocinadores va sobre el blanco de la placa, y ahí sí depende
+     de la geometría de la imagen: la placa entra a ancho completo y anclada
+     abajo, así que su alto es el 66,4% del ancho de la ventana y un punto que
+     en ella está a la altura `f` cae a `(1 - f) x 66,4vw` del pie de la banda.
+
+     Las cifras salieron de dibujar la caja del texto sobre la placa y mirar
+     dónde caía, no de estimarla: el arco es una curva y a los lados del centro
+     del grupo sube bastante.
+
+     Por debajo de 78rem no se muestra: el hueco de blanco donde entra mide
+     33px a 1440 y se achica en proporción, así que más abajo el rótulo caería
+     por debajo de los nueve píxeles. */
+  .solapa__rotulo--patrocinan {
+    display: none;
+  }
+
+  @media (min-width: 78rem) {
+    .solapa__rotulo--patrocinan {
+      display: block;
+      position: absolute;
+      inset-inline-start: 82.4%;
+      inset-block-end: 12.3vw;
+      transform: translateX(-50%);
+      font-size: 0.72vw;
+      color: #3f4a5c;
+    }
+  }
+
+  /* La línea del recorrido pasa por encima del azul: ahí se pone oscura, que
+     es lo que declara el `data-linea-tono`. El nodo de la calle necesita
+     fondo blanco para no perderse contra la banda. */
+  .solapa :global(.marca) {
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
   }
 
   /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega

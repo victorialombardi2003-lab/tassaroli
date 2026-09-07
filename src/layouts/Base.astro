@@ -3,6 +3,9 @@ import { Image } from 'astro:assets';
 import isotipoCentro from '../assets/marca-tassaroli.png';
 
 import '@fontsource-variable/archivo/standard.css';
+import '@fontsource/montserrat/300.css';
+import '@fontsource/montserrat/400.css';
+import '@fontsource/montserrat/700.css';
 import '@fontsource/martian-mono/400.css';
 import '@fontsource/martian-mono/600.css';
 import '../styles/base.css';
@@ -10,6 +13,7 @@ import '../styles/base.css';
 import Linea from '../components/Linea.astro';
 import Marca from '../components/Marca.astro';
 import Carga from '../components/Carga.astro';
+import Escudo from '../components/Escudo.astro';
 import { sitio, navegacion } from '../data/contenido';
 
 interface Props {
@@ -128,8 +132,7 @@ const anio = new Date().getFullYear();
 
         <div class="calle pie__interior">
           <div class="pie__identidad">
-            <p class="pie__nombre">{sitio.fundacion}</p>
-            <p class="dato pie__proyecto">{sitio.proyecto}</p>
+            <Escudo />
             <p class="dato pie__lugar">{sitio.lugar}</p>
           </div>
 
@@ -303,6 +306,11 @@ const anio = new Date().getFullYear();
       .pie {
         position: relative;
         isolation: isolate;
+        /* La filigrana se sale del pie a propósito, para que se lea como un
+           recorte y no como un logo centrado. Sin recortar acá, ese sobrante
+           ensancha el documento y aparece scroll horizontal en toda la
+           página: medido, 57px en una ventana de 1425. */
+        overflow: hidden;
         z-index: 1;
         background: var(--placa-degrade);
         background-color: var(--azul-900);
@@ -364,18 +372,27 @@ const anio = new Date().getFullYear();
         }
       }
 
-      .pie__nombre {
-        font-stretch: 104%;
-        font-weight: 640;
-        font-size: clamp(1.1875rem, 1rem + 0.9vw, 1.625rem);
-        letter-spacing: -0.024em;
-        color: #ffffff;
+      /* El escudo reemplaza al nombre de la Fundación y al del proyecto: los
+         dice a los dos, y con la misma pieza gráfica con la que abre el
+         sitio. Va sin el rótulo de la izquierda —a esta altura ya no hace
+         falta anunciar de qué se trata— y a un tercio del tamaño que tiene
+         en la apertura. */
+      .pie__identidad {
+        --escudo-tam: clamp(1.05rem, 0.85rem + 0.8vw, 1.5rem);
+        /* Acá el escudo es chico pero la columna es ancha, así que el nombre
+           puede subir hasta que se lea sin miedo a que se parta. */
+        --escudo-nombre-min: 0.72rem;
       }
 
-      .pie__proyecto,
+      /* El escudo se centra por dentro; en el pie va al ras de la izquierda,
+         como el resto de la columna. */
+      .pie__identidad :global(.escudo) {
+        justify-content: flex-start;
+      }
+
       .pie__lugar {
         color: #a9b4c8;
-        margin-block-start: 0.5rem;
+        margin-block-start: 0.9rem;
       }
 
       .pie__nav {

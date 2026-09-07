@@ -318,6 +318,25 @@ a:hover {
   }
 }
 
+/* `100vw` mide la ventana con la barra de scroll incluida, así que en
+   escritorio un elemento a sangre queda unos ocho píxeles más ancho que el
+   área visible y la página entera se puede correr en horizontal. Recortar
+   acá lo resuelve sin tocar la técnica de sangrado.
+
+   `clip` y no `hidden`: `hidden` convierte al elemento en un contenedor de
+   scroll y eso rompe el `position: sticky` y el anclaje del navegador al
+   volver atrás. `clip` sólo recorta.
+
+   Va en `body`, que se propaga al viewport, y en `main`, donde viven los
+   elementos a sangre. En `main` y no en `.pagina`: probé ahí primero y el
+   trazo de la línea dejó de dibujarse, porque `.pagina` es el contenedor
+   del SVG y donde ScrollTrigger mide, y recortarlo le cambia el marco de
+   referencia. `main` es hermano del SVG, así que no lo toca. */
+body,
+main {
+  overflow-x: clip;
+}
+
 /* -------------------------------------------------------- láminas de obra
 
    Las imágenes se presentan como láminas: marco de gris claro, la imagen
