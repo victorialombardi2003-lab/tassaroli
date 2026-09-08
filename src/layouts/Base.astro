@@ -53,12 +53,15 @@ const anio = new Date().getFullYear();
         —normalmente el favicon— y lo estiraban. De ahí que se viera borroso.
 
         1200x630 es la medida que piden todas esas plataformas, y la URL tiene
-        que ser absoluta: una ruta relativa no la resuelven. Pesa 145KB, por
-        debajo de los 300 que WhatsApp carga sin quejarse. */}
-    <meta property="og:image" content={new URL('/og.jpg', Astro.site ?? 'https://fundaciontassaroli.org.ar')} />
+        que ser absoluta: una ruta relativa no la resuelven.
+
+        Va en PNG y no en JPEG: es la marca plana sobre un fondo plano, y el
+        JPEG le deja halos alrededor de los bordes limpios. Además pesa menos
+        así. La marca va a su tamaño nativo, sin agrandar. */}
+    <meta property="og:image" content={new URL('/og.png', Astro.site ?? 'https://fundaciontassaroli.org.ar')} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Vista aérea del Centro Tecnológico Carlos José Tassaroli en Parque Norte, San Rafael" />
+    <meta property="og:image:alt" content="Fundación Tassaroli" />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline>
       // Tiene que correr antes del primer pintado, y por eso va acá adentro
