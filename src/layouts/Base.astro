@@ -36,6 +36,15 @@ const anio = new Date().getFullYear();
     <title>{titulo}</title>
     <meta name="description" content={descripcion} />
     <meta name="theme-color" content="#faf9f6" />
+    {/* Dos tamaños y no uno: la pestaña dibuja el icono a 16px, y si sólo
+        hubiera el de 32 el navegador lo achicaría por su cuenta, con el trazo
+        quedando por debajo del píxel. El de 16 está preparado para ese tamaño.
+
+        El icono es la figura izquierda de la marca, no la marca entera: el
+        logo es apaisado y a 16px de ancho quedaba en nueve de alto, ilegible.
+        Esa figura mide 312x306 en el original, así que entra en un cuadrado
+        sin deformarse y conserva los dos azules. */}
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? 'https://fundaciontassaroli.org.ar')} />

@@ -540,11 +540,16 @@ const lista = espacios.map((e, i) => ({
     .solapa__rotulo--patrocinan {
       display: block;
       position: absolute;
-      /* Medido sobre la placa después de reacomodar los logos: ocupan del
-         70,1% al 87%, y su borde de arriba está en el 85,5% del alto. */
+      transform: translateX(-50%);
+      /* Encima de los logos, centrado sobre ellos, que es como está en la
+         pieza del cliente. Probamos ponerlo a la izquierda y en línea, para
+         aprovechar el blanco libre de esa mitad del arco, y no funcionó.
+
+         Las cifras salen de medir la placa: los logos ocupan del 70,1% al 87%
+         del ancho —centro en 78,5%— y su borde de arriba está en el 85,5% del
+         alto, que la banda traduce a (1 - 0,855) x 66,4vw del pie. */
       inset-inline-start: 78.5%;
       inset-block-end: 10.8vw;
-      transform: translateX(-50%);
       font-size: 0.72vw;
       color: #3f4a5c;
     }
