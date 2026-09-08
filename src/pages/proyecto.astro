@@ -540,8 +540,10 @@ const lista = espacios.map((e, i) => ({
     .solapa__rotulo--patrocinan {
       display: block;
       position: absolute;
-      inset-inline-start: 82.4%;
-      inset-block-end: 12.3vw;
+      /* Medido sobre la placa después de reacomodar los logos: ocupan del
+         70,1% al 87%, y su borde de arriba está en el 85,5% del alto. */
+      inset-inline-start: 78.5%;
+      inset-block-end: 10.8vw;
       transform: translateX(-50%);
       font-size: 0.72vw;
       color: #3f4a5c;

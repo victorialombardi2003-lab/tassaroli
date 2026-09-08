@@ -225,6 +225,98 @@ for (let y = c.y0; y <= c.y1; y++) {
 }
 console.log(`  ${borrados.toLocaleString()} pixeles borrados de la placa`);
 
+/* Sacado el logo de la Fundación, los dos patrocinadores quedaron
+   arrinconados contra la derecha con medio arco vacío a su izquierda. Se los
+   corre en bloque para centrarlos en el blanco.
+
+   Se mueven con la misma técnica que sirvió antes: se extraen sus píxeles con
+   la transparencia despejada del blanco, se borra el original y se vuelven a
+   pegar corridos. La caja va de 68% a 94%, un tramo donde no hay nada más
+   —a su izquierda el arco está vacío desde el 52%— así que no puede llevarse
+   nada por delante ni pisar el borde de la ola. */
+const PATROCINAN = { x0: Math.round(W * 0.68), x1: Math.round(W * 0.94), y0: Math.round(H * 0.78), y1: Math.round(H * 0.95) };
+
+/* Cuánto se mueven. No van al centro exacto del arco: centrados quedaban en
+   medio de una mancha blanca grande y se leían flotando. Van corridos hacia
+   abajo y a la derecha, apoyados contra la curva, que es donde están en la
+   pieza del cliente. */
+const CORRIMIENTO = Math.round(W * 0.016);
+const BAJAR = Math.round(H * 0.018);
+
+const sprite = [];
+for (let y = PATROCINAN.y0; y <= PATROCINAN.y1; y++) {
+  for (let x = PATROCINAN.x0; x <= PATROCINAN.x1; x++) {
+    /* Sólo lo que está dentro del arco. La caja de los patrocinadores llega
+       hasta el borde derecho, y arriba a la derecha ese rectángulo todavía cae
+       sobre el naranja: sin esta condición el borrado le mordía un pedazo a la
+       curva. */
+    if (!dentro(x, y)) continue;
+    const p = y * W + x;
+    const i = p * 4;
+    const min = Math.min(data[i], data[i + 1], data[i + 2]);
+    /* Umbral más sensible que el de `isla`: el logo del Municipio trae detrás
+       una caja gris clarísima, del orden de 250, que el umbral general trata
+       como blanco. Con `isla` el logo se movía y la caja se quedaba, y esa
+       caja quedaba al lado como un fantasma. */
+    if (min > 251) continue;
+    const a = 1 - min / 255;
+    sprite.push({
+      x: x - CORRIMIENTO,
+      y: y + BAJAR,
+      a,
+      c: [0, 1, 2].map((j) => Math.max(0, Math.min(255, (data[i + j] - 255 * (1 - a)) / a))),
+    });
+    data[i] = 255;
+    data[i + 1] = 255;
+    data[i + 2] = 255;
+  }
+}
+
+for (const s of sprite) {
+  const i = (s.y * W + s.x) * 4;
+  for (let j = 0; j < 3; j++) data[i + j] = Math.round(s.c[j] * s.a + data[i + j] * (1 - s.a));
+}
+
+console.log(`  patrocinadores corridos ${CORRIMIENTO}px a la izquierda (${sprite.length.toLocaleString()} pixeles)`);
+
+/* Entre Mendoza y el Municipio quedaba un hueco de 153px. Medido contra su
+   tamaño —244px de ancho uno, 104px el otro— es demasiado: se leen como dos
+   cosas sueltas en vez de como un par. Se acerca el del Municipio.
+
+   Cerrar el hueco además centra el conjunto: el par pasa a tener su centro en
+   el 74,8% y el centro de masa del arco está en el 74,6%. */
+/* El 82% y no el 79%: con el corrimiento nuevo Mendoza llega hasta el 79,5%,
+   y una caja que arrancara antes le borraba la última letra. */
+const MUNICIPIO = { x0: Math.round(W * 0.82), x1: W - 1, y0: Math.round(H * 0.78), y1: Math.round(H * 0.96) };
+const ACERCAR = 63;
+
+const spriteMuni = [];
+for (let y = MUNICIPIO.y0; y <= MUNICIPIO.y1; y++) {
+  for (let x = MUNICIPIO.x0; x <= MUNICIPIO.x1; x++) {
+    if (!dentro(x, y)) continue;
+    const i = (y * W + x) * 4;
+    const min = Math.min(data[i], data[i + 1], data[i + 2]);
+    if (min > 251) continue;
+    const a = 1 - min / 255;
+    spriteMuni.push({
+      x: x - ACERCAR,
+      y,
+      a,
+      c: [0, 1, 2].map((j) => Math.max(0, Math.min(255, (data[i + j] - 255 * (1 - a)) / a))),
+    });
+    data[i] = 255;
+    data[i + 1] = 255;
+    data[i + 2] = 255;
+  }
+}
+
+for (const s of spriteMuni) {
+  const i = (s.y * W + s.x) * 4;
+  for (let j = 0; j < 3; j++) data[i + j] = Math.round(s.c[j] * s.a + data[i + j] * (1 - s.a));
+}
+
+console.log(`  municipio acercado ${ACERCAR}px a Mendoza`);
+
 await sharp(data, { raw: { width: W, height: H, channels: 4 } })
   .webp({ quality: 92, effort: 6 })
   .toFile(SALIDA_PLACA);
