@@ -21,6 +21,51 @@ export const navegacion = [
 
 /* ---------------------------------------------------------------- inicio */
 
+/**
+ * Video institucional, segunda lámina del hero.
+ *
+ * El archivo no vive en el repositorio. El master que entregó el cliente son
+ * 752 MB en 4K a 33 Mbps; comprimido para web seguirían siendo decenas de
+ * megas que entrarían al historial de git para siempre y que después habría
+ * que servir enteros en cada reproducción, la misma copia pesada para el que
+ * mira por fibra que para el que mira desde el celular con datos. Subido a
+ * YouTube o Vimeo no pesa un byte del sitio y cada quien lo recibe en la
+ * calidad que le da su conexión.
+ *
+ * Lo único que hay que completar es `id`:
+ *   YouTube  youtube.com/watch?v=aB3dEf7GhiJ  ->  id: 'aB3dEf7GhiJ'
+ *   Vimeo    vimeo.com/912345678              ->  id: '912345678'
+ *
+ * Mientras esté vacío el hero queda como estaba: sin botón y sin segunda
+ * lámina. No se muestra un control que no lleva a ninguna parte.
+ *
+ * `espera` son los segundos hasta que el hero pasa solo a la lámina del
+ * video. En 0 no pasa nunca solo y queda únicamente el botón.
+ */
+export const video: {
+  plataforma: 'youtube' | 'vimeo';
+  id: string;
+  rotulo: string;
+  titulo: string;
+  espera: number;
+} = {
+  plataforma: 'youtube',
+  id: '8u57UODRb84',
+  /** Rótulo del botón que vive en la portada. */
+  rotulo: 'Ver video institucional',
+  /** Sobretítulo de la lámina. El titular de abajo es el nombre del proyecto,
+      que sale de `sitio.proyecto`: es el mismo nombre, no una copia suelta. */
+  rotuloLamina: 'Video institucional',
+  /** Sólo para el atributo `title` del reproductor, que lee un lector de
+      pantalla y no se ve. Por eso dice de qué es el video y no sólo cómo se
+      llama el proyecto. */
+  titulo: 'Video institucional del Centro Tecnológico Carlos José Tassaroli',
+  reproducir: 'Reproducir',
+  pie: 'Anteproyecto · Parque Norte, San Rafael',
+  salida: 'Esc para volver',
+  espera: 5,
+};
+
 export const antecedentes = {
   titulo: 'Antecedentes',
   cuerpo: `La Fundación TASSAROLI nace con el propósito de generar y lograr cambios culturales en el corredor cordillerano de Mendoza y provincias vecinas, para impulsar el desarrollo productivo y humano, integrando Educación, Investigación, Tecnología e Industria, generando oportunidades reales en la comunidad, promoviendo la innovación a través del talento formado y fortaleciendo el crecimiento sostenible. Entendiendo que los grandes cambios se lideran y construyen en red, la Fundación TASSAROLI impulsa la articulación público-privada convocando a los actores claves para transformar el futuro energético y productivo de nuestra región.`,
@@ -133,6 +178,93 @@ export const arquitectura = [
   },
 ];
 
+/**
+ * Ubicación: el terreno y las piezas previstas adentro.
+ *
+ * Las coordenadas de los puntos son la implantación prevista, no un
+ * relevamiento, y los subtítulos son propuestos; la nota al pie del panel lo
+ * dice en el sitio, porque un mapa institucional que afirma una ubicación sin
+ * advertir que está por confirmarse es peor que uno que no la muestra.
+ *
+ * El perímetro del terreno no se escribe acá: no es copia sino geometría,
+ * levantada por rumbos y distancias desde el plano de mensura, y vive en el
+ * componente que la dibuja.
+ */
+export const ubicacion = {
+  titulo: 'Dónde se construye',
+  lugar: 'Parque Norte · San Rafael · Mendoza',
+  cuerpo: `Nueve hectáreas propias dentro del Parque Norte, a minutos del centro de San Rafael y de las tres universidades que forman a más de 10.000 estudiantes de nivel superior.`,
+  epigrafe:
+    'El terreno destinado por la Fundación en el Parque Norte y su relación con el ecosistema educativo de San Rafael.',
+  terreno: {
+    rotulo: 'Terreno · 9,7 ha',
+    nombre: 'Centro Tecnológico Carlos José Tassaroli',
+    direccion:
+      'Calle Dalmasso s/n, entre Av. José Vicente Zapata y Eduardo M., Parque Norte.',
+    detalle: 'Terreno de 9,7 ha · Plano de mensura N° 17-87897-7',
+  },
+  nota: 'Perímetro según plano de mensura N° 17-87897-7. Los puntos indican la implantación prevista de cada pieza dentro del predio.',
+  ficha: [
+    { rotulo: 'Superficie', valor: '9,7', unidad: 'ha' },
+    { rotulo: 'Frente s/ Zapata', valor: '530', unidad: 'm' },
+    { rotulo: 'Plano', valor: 'N° 17-87897-7' },
+    /* La distancia al centro la calcula el mapa contra la plaza San Martín:
+       es una medida, no un dato escrito, y tiene que seguir al perímetro si
+       el perímetro se corrige. */
+    { rotulo: 'Al centro', valor: '', calculado: 'centro' },
+  ],
+  /* Las piezas del predio, en el orden en que se leen en la lista. El
+     primero es el edificio del anteproyecto y va distinto: más grande, azul y
+     con latido, porque es de lo que habla el sitio; los otros cuatro son el
+     contexto que lo rodea.
+
+     Los subtítulos son propuestos y el cliente puede corregirlos; las
+     coordenadas son la implantación prevista, no un relevamiento. La nota al
+     pie del panel lo dice en el sitio. */
+  puntos: [
+    {
+      id: 'centro',
+      n: '1',
+      nombre: 'Centro Tecnológico Carlos José Tassaroli',
+      detalle: 'Edificio principal · anteproyecto',
+      pos: [-34.61515, -68.31137],
+      principal: true,
+    },
+    {
+      id: 'fcai',
+      n: '2',
+      nombre: 'FCAI',
+      detalle: 'Facultad de Ciencias Aplicadas a la Industria',
+      pos: [-34.61363, -68.31078],
+      principal: false,
+    },
+    {
+      id: 'uncuyo',
+      n: '3',
+      nombre: 'UNCuyo',
+      detalle: 'Lote de la Universidad Nacional de Cuyo',
+      pos: [-34.61457, -68.31301],
+      principal: false,
+    },
+    {
+      id: 'dormis',
+      n: '4',
+      nombre: 'Dormis',
+      detalle: 'Residencias para estudiantes',
+      pos: [-34.61582, -68.31017],
+      principal: false,
+    },
+    {
+      id: 'mercado',
+      n: '5',
+      nombre: 'Mercado',
+      detalle: 'Espacio comercial y gastronómico',
+      pos: [-34.6163, -68.30932],
+      principal: false,
+    },
+  ],
+} as const;
+
 export const implantacion = {
   titulo: 'Implantación del proyecto',
   lugar: 'Parque Norte, ciudad de San Rafael, Mendoza, Argentina.',
@@ -147,6 +279,13 @@ export const cierre = {
 /* -------------------------------------------------------------- proyecto */
 
 export const carta = {
+  /* La carta entera se lee en una ventana aparte: en la página quedaba una
+     mancha de texto que el cliente pidió acortar. Lo que se ve en la página es
+     la tapa —numeral, título y botón—; el texto de abajo no cambió. */
+  numero: '01',
+  titulo: 'Carta Motivación',
+  abrir: 'Leer la carta',
+  lectura: '3 min de lectura',
   epigrafe:
     'Hay proyectos que nacen para resolver un problema. Y hay otros que nacen para transformar una realidad.',
   parrafos: [
@@ -162,6 +301,34 @@ export const carta = {
 };
 
 export const espacios = [
+  {
+    nodo: 'Exteriores',
+    titulo: 'Exteriores',
+    cuerpo:
+      'El objetivo es que el Master Plan construya la idea de un parque de aprendizaje donde, naturalmente, existe un edificio. La experiencia educativa, cultural, tecnológica y humana comienza desde el primer paso dentro del predio y acompaña al visitante a lo largo de todo el recorrido hasta el acceso principal. El exterior se concibe como una extensión activa del Centro Tecnológico, un espacio de encuentro, trabajo, contemplación, creatividad e inspiración, donde naturaleza y conocimiento conviven de manera integrada. El visitante no debe sentir que llega simplemente a un edificio, sino que ingresa a una experiencia que transmite desde el primer momento los valores de innovación, curiosidad, conocimiento, creatividad, bienestar y encuentro humano, convirtiendo al paisaje en una de las principales señas de identidad del Centro Tecnológico Carlos José Tassaroli.',
+    renders: [
+      'esp-exteriores-01',
+      'esp-exteriores-02',
+      'esp-exteriores-03',
+      'esp-exteriores-04',
+      'esp-exteriores-05',
+      'esp-exteriores-06',
+      'esp-exteriores-07',
+      'esp-exteriores-08',
+      'esp-exteriores-09',
+      'esp-exteriores-10',
+      'esp-exteriores-11',
+      'esp-exteriores-12',
+      'esp-exteriores-13',
+      'esp-exteriores-14',
+      'esp-exteriores-15',
+      'esp-exteriores-17',
+      'esp-exteriores-18',
+      'esp-exteriores-19',
+      'esp-exteriores-20',
+    ],
+    alt: 'Render de los exteriores y el parque de aprendizaje',
+  },
   {
     nodo: 'Espacios comunes',
     titulo: 'Espacios comunes',
@@ -179,59 +346,24 @@ export const espacios = [
     alt: 'Render de los espacios comunes con mobiliario modular y mesas comunitarias',
   },
   {
-    nodo: 'Sala de reuniones',
-    titulo: 'Sala de reuniones',
+    nodo: 'Taller',
+    titulo: 'Taller',
     cuerpo:
-      'La Sala de reuniones se concibe como un espacio estratégico de encuentro, inspiración y toma de decisiones, suspendido sobre el parque y en permanente conexión con la naturaleza. El recorrido desde el hall genera una transición hacia un ambiente de mayor concentración y reflexión, culminando en un espacio donde el entorno se convierte en protagonista. La arquitectura busca desdibujar los límites entre interior y exterior, permitiendo que los árboles, la luz natural y el paso de las estaciones formen parte de la experiencia. Un espacio pensado para que las ideas, las decisiones y las estrategias de futuro se desarrollen en contacto directo con el entorno, potenciando una experiencia diferencial y un fuerte valor para la innovación y la visión a largo plazo.',
-    renders: ['esp-sala-reuniones'],
-    alt: 'Render de la sala de reuniones suspendida sobre el parque',
-  },
-  {
-    nodo: 'Salas de encuentro',
-    titulo: 'Salas de encuentro',
-    cuerpo:
-      'Pequeños espacios de reunión distribuidos estratégicamente en el recorrido entre la cocina, el cowork y el área de IDI, diseñados para acompañar la dinámica cotidiana del proyecto. Estas cápsulas ofrecen un entorno flexible para reuniones rápidas, conversaciones privadas, definiciones operativas, videoconferencias y cierre de acuerdos, optimizando el uso de los espacios formales y favoreciendo una cultura de trabajo ágil, colaborativa y conectada.',
-    renders: ['esp-salas-encuentro-01', 'esp-salas-encuentro-02'],
-    alt: 'Render de las cápsulas de reunión distribuidas en el recorrido',
-  },
-  {
-    nodo: 'Auditorio',
-    titulo: 'Auditorio',
-    cuerpo:
-      'Auditorio para 150 a 200 personas, con gradas suaves que garantizan excelente visibilidad y una sensación de cercanía con el expositor. Su configuración busca una experiencia dinámica e inmersiva, inspirada en el formato TED Conference, promoviendo una relación más directa y participativa entre el público y el expositor. Las fachadas laterales vidriadas presentan dos tratamientos: una con vista abierta e inmersiva hacia el parque, integrando el paisaje al salón; y otra con malla metálica microperforada de diseño orgánico, que aporta control solar, identidad arquitectónica y filtrado de luz.',
-    renders: ['esp-auditorio-01', 'esp-auditorio-02', 'esp-auditorio-03'],
-    alt: 'Render del auditorio con gradas suaves y fachada vidriada hacia el parque',
-  },
-  {
-    nodo: 'Circulaciones',
-    titulo: 'Circulaciones',
-    cuerpo:
-      'La circulación del edificio se organiza como una red de recorridos que conecta los principales nodos de actividad: Talleres, Aulas, Laboratorios, Cowork e IDI. Se propone un sistema de orientación integrado a la arquitectura mediante líneas, texturas o iluminación, inspirado en circuitos tecnológicos y ondas sonoras. Cada recorrido tendrá una identidad propia, guiando intuitivamente a las personas y reforzando la idea de una red de conocimiento en movimiento, sin competir visualmente con el espacio ni interferir con la conexión hacia el parque. La señalización se integra al lenguaje arquitectónico como parte de la experiencia, evitando la percepción de una señalética tradicional.',
+      'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnología de fabricación avanzada y áreas de ensayo, articuladas en un espacio de doble altura que conecta aulas y áreas prácticas. Su resolución en estructura metálica liviana refuerza una arquitectura flexible, contemporánea y preparada para acompañar el crecimiento y la evolución tecnológica.',
     renders: [
-      'esp-circulaciones-01',
-      'esp-circulaciones-02',
-      'esp-circulaciones-03',
-      'esp-circulaciones-04',
-      'esp-circulaciones-05',
-      'esp-circulaciones-06',
+      'esp-taller-01',
+      'esp-taller-02',
+      'esp-taller-03',
+      'esp-taller-04',
+      'esp-taller-05',
+      'esp-taller-06',
+      'esp-taller-07',
+      'esp-taller-08',
+      'esp-taller-09',
+      'esp-taller-10',
+      'esp-taller-11',
     ],
-    alt: 'Render de las circulaciones con el sistema de orientación integrado a la arquitectura',
-  },
-  {
-    nodo: 'Laboratorios',
-    titulo: 'Laboratorios',
-    cuerpo:
-      'Un espacio especializado para la investigación, el desarrollo y la innovación aplicada, equipado con áreas destinadas al análisis y estudio de materiales. El laboratorio integra sala de corrosión, análisis químicos, muestras y metalografía, complementadas por espacios de trabajo ubicados en el acceso a cada área. Una propuesta que articula conocimiento, experimentación y tecnología para impulsar soluciones y nuevos desarrollos industriales.',
-    renders: [
-      'esp-laboratorios-01',
-      'esp-laboratorios-02',
-      'esp-laboratorios-03',
-      'esp-laboratorios-05',
-      'esp-laboratorios-06',
-      'esp-laboratorios-07',
-      'esp-laboratorios-08',
-    ],
-    alt: 'Render del laboratorio de ensayos y análisis de materiales',
+    alt: 'Render del taller de doble altura con estructura metálica liviana',
   },
   {
     nodo: 'Aulas',
@@ -251,6 +383,22 @@ export const espacios = [
       'esp-aulas-10',
     ],
     alt: 'Render de las aulas con conexión visual al taller a través de la doble altura',
+  },
+  {
+    nodo: 'Laboratorios',
+    titulo: 'Laboratorios',
+    cuerpo:
+      'Un espacio especializado para la investigación, el desarrollo y la innovación aplicada, equipado con áreas destinadas al análisis y estudio de materiales. El laboratorio integra sala de corrosión, análisis químicos, muestras y metalografía, complementadas por espacios de trabajo ubicados en el acceso a cada área. Una propuesta que articula conocimiento, experimentación y tecnología para impulsar soluciones y nuevos desarrollos industriales.',
+    renders: [
+      'esp-laboratorios-01',
+      'esp-laboratorios-02',
+      'esp-laboratorios-03',
+      'esp-laboratorios-05',
+      'esp-laboratorios-06',
+      'esp-laboratorios-07',
+      'esp-laboratorios-08',
+    ],
+    alt: 'Render del laboratorio de ensayos y análisis de materiales',
   },
   {
     nodo: 'HUB IDI',
@@ -280,6 +428,45 @@ export const espacios = [
     alt: 'Render del espacio de coworking',
   },
   {
+    nodo: 'Auditorio',
+    titulo: 'Auditorio',
+    cuerpo:
+      'Auditorio para 150 a 200 personas, con gradas suaves que garantizan excelente visibilidad y una sensación de cercanía con el expositor. Su configuración busca una experiencia dinámica e inmersiva, inspirada en el formato TED Conference, promoviendo una relación más directa y participativa entre el público y el expositor. Las fachadas laterales vidriadas presentan dos tratamientos: una con vista abierta e inmersiva hacia el parque, integrando el paisaje al salón; y otra con malla metálica microperforada de diseño orgánico, que aporta control solar, identidad arquitectónica y filtrado de luz.',
+    renders: ['esp-auditorio-01', 'esp-auditorio-02', 'esp-auditorio-03'],
+    alt: 'Render del auditorio con gradas suaves y fachada vidriada hacia el parque',
+  },
+  {
+    nodo: 'Sala de reuniones',
+    titulo: 'Sala de reuniones',
+    cuerpo:
+      'La Sala de reuniones se concibe como un espacio estratégico de encuentro, inspiración y toma de decisiones, suspendido sobre el parque y en permanente conexión con la naturaleza. El recorrido desde el hall genera una transición hacia un ambiente de mayor concentración y reflexión, culminando en un espacio donde el entorno se convierte en protagonista. La arquitectura busca desdibujar los límites entre interior y exterior, permitiendo que los árboles, la luz natural y el paso de las estaciones formen parte de la experiencia. Un espacio pensado para que las ideas, las decisiones y las estrategias de futuro se desarrollen en contacto directo con el entorno, potenciando una experiencia diferencial y un fuerte valor para la innovación y la visión a largo plazo.',
+    renders: ['esp-sala-reuniones'],
+    alt: 'Render de la sala de reuniones suspendida sobre el parque',
+  },
+  {
+    nodo: 'Circulaciones',
+    titulo: 'Circulaciones',
+    cuerpo:
+      'La circulación del edificio se organiza como una red de recorridos que conecta los principales nodos de actividad: Talleres, Aulas, Laboratorios, Cowork e IDI. Se propone un sistema de orientación integrado a la arquitectura mediante líneas, texturas o iluminación, inspirado en circuitos tecnológicos y ondas sonoras. Cada recorrido tendrá una identidad propia, guiando intuitivamente a las personas y reforzando la idea de una red de conocimiento en movimiento, sin competir visualmente con el espacio ni interferir con la conexión hacia el parque. La señalización se integra al lenguaje arquitectónico como parte de la experiencia, evitando la percepción de una señalética tradicional.',
+    renders: [
+      'esp-circulaciones-01',
+      'esp-circulaciones-02',
+      'esp-circulaciones-03',
+      'esp-circulaciones-04',
+      'esp-circulaciones-05',
+      'esp-circulaciones-06',
+    ],
+    alt: 'Render de las circulaciones con el sistema de orientación integrado a la arquitectura',
+  },
+  {
+    nodo: 'Salas de encuentro',
+    titulo: 'Salas de encuentro',
+    cuerpo:
+      'Pequeños espacios de reunión distribuidos estratégicamente en el recorrido entre la cocina, el cowork y el área de IDI, diseñados para acompañar la dinámica cotidiana del proyecto. Estas cápsulas ofrecen un entorno flexible para reuniones rápidas, conversaciones privadas, definiciones operativas, videoconferencias y cierre de acuerdos, optimizando el uso de los espacios formales y favoreciendo una cultura de trabajo ágil, colaborativa y conectada.',
+    renders: ['esp-salas-encuentro-01', 'esp-salas-encuentro-02'],
+    alt: 'Render de las cápsulas de reunión distribuidas en el recorrido',
+  },
+  {
     nodo: 'Baño y vestuarios',
     titulo: 'Baño y vestuarios',
     cuerpo:
@@ -292,54 +479,6 @@ export const espacios = [
       'esp-banos-vestuarios-05',
     ],
     alt: 'Render de los baños y vestuarios con sanitarios, lockers y duchas',
-  },
-  {
-    nodo: 'Taller',
-    titulo: 'Taller',
-    cuerpo:
-      'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnología de fabricación avanzada y áreas de ensayo, articuladas en un espacio de doble altura que conecta aulas y áreas prácticas. Su resolución en estructura metálica liviana refuerza una arquitectura flexible, contemporánea y preparada para acompañar el crecimiento y la evolución tecnológica.',
-    renders: [
-      'esp-taller-01',
-      'esp-taller-02',
-      'esp-taller-03',
-      'esp-taller-04',
-      'esp-taller-05',
-      'esp-taller-06',
-      'esp-taller-07',
-      'esp-taller-08',
-      'esp-taller-09',
-      'esp-taller-10',
-      'esp-taller-11',
-    ],
-    alt: 'Render del taller de doble altura con estructura metálica liviana',
-  },
-  {
-    nodo: 'Exteriores',
-    titulo: 'Exteriores',
-    cuerpo:
-      'El objetivo es que el Master Plan construya la idea de un parque de aprendizaje donde, naturalmente, existe un edificio. La experiencia educativa, cultural, tecnológica y humana comienza desde el primer paso dentro del predio y acompaña al visitante a lo largo de todo el recorrido hasta el acceso principal. El exterior se concibe como una extensión activa del Centro Tecnológico, un espacio de encuentro, trabajo, contemplación, creatividad e inspiración, donde naturaleza y conocimiento conviven de manera integrada. El visitante no debe sentir que llega simplemente a un edificio, sino que ingresa a una experiencia que transmite desde el primer momento los valores de innovación, curiosidad, conocimiento, creatividad, bienestar y encuentro humano, convirtiendo al paisaje en una de las principales señas de identidad del Centro Tecnológico Carlos José Tassaroli.',
-    renders: [
-      'esp-exteriores-01',
-      'esp-exteriores-02',
-      'esp-exteriores-03',
-      'esp-exteriores-04',
-      'esp-exteriores-05',
-      'esp-exteriores-06',
-      'esp-exteriores-07',
-      'esp-exteriores-08',
-      'esp-exteriores-09',
-      'esp-exteriores-10',
-      'esp-exteriores-11',
-      'esp-exteriores-12',
-      'esp-exteriores-13',
-      'esp-exteriores-14',
-      'esp-exteriores-15',
-      'esp-exteriores-17',
-      'esp-exteriores-18',
-      'esp-exteriores-19',
-      'esp-exteriores-20',
-    ],
-    alt: 'Render de los exteriores y el parque de aprendizaje',
   },
 ];
 

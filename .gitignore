@@ -32,6 +32,12 @@ logo tassaroli_files/
 # Renders originales sin optimizar: pesados, y el sitio usa los de src/assets
 renders-originales/
 
+# Master del video institucional: 752 MB en 4K a 33 Mbps, tal como lo
+# entregó el cliente. Al sitio va la versión comprimida en public/video/;
+# el master se guarda aparte y no entra al repositorio.
+/C. F. TSA .mp4
+*.master.mp4
+
 # Artefactos del skill de diseño
 .impeccable/
 
