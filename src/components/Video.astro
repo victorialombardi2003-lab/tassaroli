@@ -1,0 +1,711 @@
+---
+import { getImage } from 'astro:assets';
+import { sitio, video } from '../data/contenido';
+import aerea from '../assets/aerea-parque-norte.webp';
+
+/**
+ * Video institucional, como segunda lámina del hero.
+ *
+ * El componente se usa tres veces y rinde tres piezas de una misma cosa: el
+ * botón que vive en la portada (`parte="boton"`), la lámina con el
+ * reproductor (`parte="lamina"`) y los dos puntos que dicen en cuál de las
+ * dos se está (`parte="puntos"`). El estilo y el script salen una sola vez
+ * igual, así que conviene que las tres partes queden en un archivo y no
+ * repartidas por la página.
+ *
+ * La lámina puede llegar sola a los `video.espera` segundos, pero lo que
+ * llega es el póster: una imagen que el sitio ya tenía. El reproductor de
+ * YouTube recién se construye cuando alguien aprieta play, y se destruye al
+ * volver. Así el pase automático no le cuesta nada a quien no pensaba mirar
+ * el video, y el que lo mira no se lleva un iframe sonando detrás de la
+ * portada.
+ */
+
+interface Props {
+  parte: 'boton' | 'lamina' | 'puntos';
+}
+
+const { parte } = Astro.props;
+
+/* Dos variantes de la misma aérea del hero. El fondo va desenfocado y muy
+   bajo —la lámina tiene que sentirse continua con la portada y no un cine
+   negro pegado encima—, así que se pide chico: a 18px de blur nadie va a
+   contar los árboles, y pedirlo grande sería pagar píxeles para borrarlos.
+   El póster del marco sí va entero, que ahí se mira. */
+const [fondo, poster] = await Promise.all([
+  getImage({ src: aerea, width: 900, format: 'webp' }),
+  getImage({ src: aerea, width: 1600, format: 'webp' }),
+]);
+
+/* youtube-nocookie y el `dnt` de Vimeo evitan el rastreo de quien mira. El
+   autoplay es correcto acá porque el video arranca por un click explícito. */
+const fuente =
+  video.plataforma === 'vimeo'
+    ? `https://player.vimeo.com/video/${video.id}?autoplay=1&dnt=1`
+    : `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+---
+
+{parte === 'boton' && (
+  <button class="video-abre" type="button" data-video-abre style={`--espera: ${video.espera}s`}>
+    <span class="video-abre__signo" aria-hidden="true">
+      <svg width="8" height="10" viewBox="0 0 8 10" fill="none" focusable="false">
+        <path d="M1 0.6 7.2 5 1 9.4Z" fill="currentColor" />
+      </svg>
+    </span>
+    <span class="video-abre__texto">
+      {video.rotulo}
+      {/* La cuenta regresiva del pase automático. No es adorno: si el hero va
+          a cambiar solo, el visitante tiene derecho a ver que eso va a pasar
+          y cuánto le queda. Se dibuja sólo mientras el pase está pendiente. */}
+      <span class="video-abre__cuenta" data-video-cuenta aria-hidden="true"></span>
+    </span>
+  </button>
+)}
+
+{parte === 'puntos' && (
+  <div class="video-puntos" role="group" aria-label="Láminas de la portada">
+    <button type="button" class="video-puntos__punto" data-video-punto="0" aria-current="true">
+      <span class="solo-lectores">Ir a la portada</span>
+    </button>
+    <button type="button" class="video-puntos__punto" data-video-punto="1">
+      <span class="solo-lectores">Ir al video institucional</span>
+    </button>
+  </div>
+)}
+
+{parte === 'lamina' && (
+  <div class="lamina-video" data-video-lamina data-fuente={fuente}>
+    {/* La misma aérea de la portada, desenfocada y bajada de luz. Debajo de
+        todo, sin participar de la grilla. */}
+    <div class="lamina-video__fondo" aria-hidden="true">
+      <img src={fondo.src} alt="" />
+      <span class="lamina-video__velo"></span>
+    </div>
+
+    <header class="lamina-video__cab">
+      <div>
+        <p class="lamina-video__ante">
+          <span class="lamina-video__regla"></span>
+          <span>{video.rotuloLamina}</span>
+        </p>
+        <h2 class="lamina-video__titulo">{sitio.proyecto}</h2>
+      </div>
+
+      <button class="video-vuelve" type="button" data-video-vuelve>
+        <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true" focusable="false">
+          <path d="M15 5H2M6 1 2 5l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" />
+        </svg>
+        <span>Volver</span>
+      </button>
+    </header>
+
+    {/* La escena es quien mide: el marco se calcula contra su alto para
+        entrar en 16:9 sin desbordar ni dejar aire de más. */}
+    <div class="lamina-video__escena">
+      <div class="lamina-video__marco">
+        <img class="lamina-video__poster" src={poster.src} alt="" />
+        <span class="lamina-video__sombra" aria-hidden="true"></span>
+
+        <button class="lamina-video__play" type="button" data-video-play>
+          <span class="lamina-video__signo" aria-hidden="true">
+            <svg width="16" height="20" viewBox="0 0 16 20" fill="none" focusable="false">
+              <path d="M2 1.2 14.5 10 2 18.8Z" fill="currentColor" />
+            </svg>
+          </span>
+          <span class="lamina-video__rotulo">{video.reproducir}</span>
+          <span class="solo-lectores">: {video.titulo}</span>
+        </button>
+
+        {/* El hueco del reproductor. Vacío hasta que alguien aprieta play. */}
+        <div class="lamina-video__cuadro" data-video-marco></div>
+      </div>
+    </div>
+
+    <p class="lamina-video__pie">
+      <span>{video.pie}</span>
+      <span>{video.salida}</span>
+    </p>
+  </div>
+)}
+
+<style>
+  /* --------------------------------------------------- el botón, portada */
+
+  /* Vive sobre la aérea del hero, que es oscura: blanco y translúcido, en la
+     mono de los rótulos, para leerse como tercera opción detrás de los dos
+     botones de arriba y no como un tercer botón igual. */
+  .video-abre {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-block-start: clamp(1.1rem, 2.4vh, 1.6rem);
+    padding: 0.4rem 0.2rem 0.55rem;
+    background: none;
+    border: none;
+    font-family: var(--mono);
+    /* Achica con la ventana en vez de partirse en dos renglones. En teléfono
+       el rótulo entero mide casi exactamente el ancho que le queda debajo de
+       los dos botones, y un pelo de más lo parte y deja el triangulito
+       colgado al costado de dos líneas. */
+    font-size: clamp(10.5px, 2.6vw, 12px);
+    font-weight: 600;
+    letter-spacing: clamp(0.12em, 0.5vw, 0.2em);
+    text-transform: uppercase;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.82);
+    cursor: pointer;
+    transition: color 180ms ease-out;
+  }
+
+  .video-abre__signo {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: clamp(22px, 5.6vw, 26px);
+    height: clamp(22px, 5.6vw, 26px);
+    border-radius: 50%;
+    /* El triángulo corrido un pelo a la derecha: centrado por caja, un
+       triángulo se ve siempre caído hacia la izquierda. */
+    padding-inline-start: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+    transition: box-shadow 180ms ease-out, background-color 180ms ease-out,
+      color 180ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Un aro que sale del contorno y se desvanece, cada tantos segundos. Es la
+     única cosa que se mueve sola en un hero quieto, así que va lento y tenue:
+     alcanza para que el ojo lo encuentre, no para competir con el título.
+
+     Va en un pseudoelemento y anima `transform` y `opacity`, que el navegador
+     resuelve en el compositor. No es lo mismo que un bucle de GSAP, que
+     dejaría el ticker corriendo en cada cuadro por el resto de la visita. */
+  .video-abre__signo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    animation: video-latido 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  /* Con el cursor encima el aro sobra: ya hay respuesta al hover. */
+  .video-abre:hover .video-abre__signo::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  @keyframes video-latido {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    60% {
+      transform: scale(1.85);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.85);
+      opacity: 0;
+    }
+  }
+
+  .video-abre:hover {
+    color: #ffffff;
+  }
+
+  .video-abre:hover .video-abre__signo {
+    background: #ffffff;
+    color: var(--azul-900);
+    box-shadow: inset 0 0 0 1px #ffffff;
+    transform: scale(1.08);
+  }
+
+  .video-abre:active .video-abre__signo {
+    transform: scale(1);
+  }
+
+  /* La cuenta regresiva: una regla que se llena de izquierda a derecha en lo
+     que tarda el pase automático. Va sólo debajo del rótulo y no debajo del
+     aro, porque lo que mide es el texto que anuncia adónde se va. */
+  .video-abre__texto {
+    position: relative;
+  }
+
+  .video-abre__cuenta {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -6px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.7);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .video-abre[data-contando] .video-abre__cuenta {
+    animation: video-cuenta var(--espera, 5s) linear forwards;
+  }
+
+  @keyframes video-cuenta {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Sin movimiento no hay pase automático, así que tampoco hay nada que
+     contar. El script ni siquiera marca el botón, pero la regla queda por si
+     alguien cambia de opinión más arriba. */
+  @media (prefers-reduced-motion: reduce) {
+    .video-abre__signo::after,
+    .video-abre[data-contando] .video-abre__cuenta {
+      animation: none;
+    }
+
+    .video-abre__cuenta {
+      display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------- puntos */
+
+  /* Dos puntos abajo a la izquierda del hero, alineados con la calle. Dicen
+     en cuál de las dos láminas se está y llevan a la otra. El activo se
+     estira en vez de sólo encenderse: un punto más largo se lee como «acá»
+     aun sin comparar brillos, que es lo que hace falta cuando el fondo
+     cambia de una lámina a la otra. */
+  .video-puntos {
+    position: absolute;
+    z-index: 3;
+    inset-block-end: 22px;
+    inset-inline-start: calc(var(--rail) + var(--borde));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .video-puntos__punto {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: width 400ms cubic-bezier(0.16, 1, 0.3, 1), background-color 300ms ease-out;
+  }
+
+  .video-puntos__punto[aria-current='true'] {
+    width: 28px;
+    background: #ffffff;
+  }
+
+  .video-puntos__punto:hover {
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  .video-puntos__punto[aria-current='true']:hover {
+    background: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video-puntos__punto {
+      transition: none;
+    }
+  }
+
+  /* ------------------------------------------------------------- lámina */
+
+  /* Tres filas: cabecera, video, pie. El video se lleva todo lo que sobra y
+     las otras dos miden lo que miden. El margen superior despeja la barra de
+     navegación, que flota encima; los laterales son los de la calle, para que
+     el titular arranque en la misma vertical que el resto de la página. */
+  .lamina-video {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 22px;
+    width: 100%;
+    height: 100%;
+    padding: 96px var(--borde) 40px calc(var(--rail) + var(--borde));
+    color: #ffffff;
+    background: var(--azul-900);
+  }
+
+  /* El fondo es la aérea de la portada, desenfocada. La lámina se siente
+     continua con lo que se estaba mirando en vez de un cine negro que aparece
+     de golpe. El `scale` de más es para que el desenfoque no deje los bordes
+     transparentes: un blur de 18px descubre 18px de nada por cada lado. */
+  .lamina-video__fondo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .lamina-video__fondo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.35) saturate(0.6) blur(18px);
+    transform: scale(1.08);
+  }
+
+  .lamina-video__velo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(20, 33, 61, 0.7), rgba(20, 33, 61, 0.9));
+  }
+
+  .lamina-video > :not(.lamina-video__fondo) {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+  }
+
+  /* --------------------------------------------------------- fila 1: cab */
+
+  .lamina-video__cab {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  /* El mismo sobretítulo con regla que abre la portada: es la misma familia
+     de pieza y se anuncia igual. */
+  .lamina-video__ante {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--azul-400);
+  }
+
+  .lamina-video__regla {
+    flex: none;
+    width: 36px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .lamina-video__titulo {
+    margin: 0.75rem 0 0;
+    max-width: 22ch;
+    font-family: var(--sans);
+    /* El spec fija 34px. Acá va con techo en 34 y piso más abajo: a 34px
+       fijos, 22ch no entran en un teléfono y el titular se sale de la caja. */
+    font-size: clamp(1.375rem, 1rem + 1.6vw, 2.125rem);
+    font-weight: 620;
+    line-height: 1.05;
+    letter-spacing: -0.026em;
+    text-wrap: balance;
+  }
+
+  .video-vuelve {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1rem;
+    background: color-mix(in srgb, var(--azul-900) 72%, transparent);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.86);
+    cursor: pointer;
+    transition: color 180ms ease-out, box-shadow 180ms ease-out;
+  }
+
+  .video-vuelve:hover {
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  /* ------------------------------------------------------ fila 2: escena */
+
+  /* La escena es la que mide, no la lámina entera: el marco tiene que caber
+     en la fila que le tocó, descontadas la cabecera y el pie. Declararla
+     contenedor de tamaño es lo que le da a `cqh` el alto correcto; medido
+     contra la lámina, el marco se pasaría de largo por el alto de las otras
+     dos filas. */
+  .lamina-video__escena {
+    container-type: size;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+  }
+
+  .lamina-video__marco {
+    position: relative;
+    display: grid;
+    /* Fila y columna de medida definida. Con la fila en `auto` el póster
+       —cuyo `height: 100%` no resuelve contra algo indefinido— cae en su alto
+       intrínseco, la fila crece hasta ahí, y todo lo que se apile encima
+       hereda esa altura equivocada: medido, el reproductor salía de 814x610
+       en vez de 814x458 y se recortaba contra el borde del marco. */
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    width: min(100%, calc(100cqh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #0b1730;
+    box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .lamina-video__marco > * {
+    grid-area: 1 / 1;
+  }
+
+  .lamina-video__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.6) saturate(0.9);
+  }
+
+  /* Un pie de sombra sobre el póster: el rótulo de reproducir cae ahí y sin
+     esto pelea con lo que tenga la foto debajo. */
+  .lamina-video__sombra {
+    align-self: end;
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(180deg, transparent, rgba(11, 23, 48, 0.75));
+  }
+
+  .lamina-video__play {
+    place-self: center;
+    display: grid;
+    justify-items: center;
+    gap: clamp(0.75rem, 2vw, 1.1rem);
+    padding: 1rem;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+  .lamina-video__signo {
+    display: grid;
+    place-items: center;
+    width: clamp(58px, 11vw, 84px);
+    height: clamp(58px, 11vw, 84px);
+    border-radius: 50%;
+    /* El triángulo corrido a la derecha: centrado por caja se ve caído. */
+    padding-inline-start: 4px;
+    background: color-mix(in srgb, var(--azul-900) 35%, transparent);
+    backdrop-filter: blur(3px);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.65);
+    transition: background-color 240ms ease-out, color 240ms ease-out,
+      box-shadow 240ms ease-out, transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .lamina-video__play:hover .lamina-video__signo {
+    background: #ffffff;
+    color: var(--azul-900);
+    box-shadow: inset 0 0 0 1.5px #ffffff;
+    transform: scale(1.07);
+  }
+
+  .lamina-video__play:active .lamina-video__signo {
+    transform: scale(1);
+  }
+
+  .lamina-video__rotulo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* El hueco del reproductor. Vacío y fuera de vista hasta que hay video. */
+  .lamina-video__cuadro {
+    display: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  .lamina-video[data-mirando] .lamina-video__cuadro {
+    display: block;
+  }
+
+  .lamina-video[data-mirando] .lamina-video__poster,
+  .lamina-video[data-mirando] .lamina-video__sombra,
+  .lamina-video[data-mirando] .lamina-video__play {
+    visibility: hidden;
+  }
+
+  /* El iframe lo crea el script, así que no lleva la marca de estilo de este
+     componente y hay que alcanzarlo desde afuera del alcance. */
+  .lamina-video__cuadro :global(iframe) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* --------------------------------------------------------- fila 3: pie */
+
+  .lamina-video__pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* ------------------------------------------------------------- angosto */
+
+  /* En teléfono la cabecera no entra en una fila: el titular ocupa el ancho y
+     el botón de volver se va arriba, que es donde la mano lo busca. El aviso
+     de la tecla Escape se va con el teclado que no hay. */
+  @media (max-width: 48rem) {
+    .lamina-video {
+      gap: 16px;
+      padding: 88px var(--borde) 32px calc(var(--rail) + var(--borde));
+    }
+
+    .lamina-video__cab {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .lamina-video__pie span:last-child {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const portada = document.querySelector<HTMLElement>('[data-portada]');
+  const laminas = Array.from(portada?.querySelectorAll<HTMLElement>('[data-lamina]') ?? []);
+  const lamina = portada?.querySelector<HTMLElement>('[data-video-lamina]');
+  const marco = portada?.querySelector<HTMLElement>('[data-video-marco]');
+  const abre = portada?.querySelector<HTMLButtonElement>('[data-video-abre]');
+  const play = portada?.querySelector<HTMLButtonElement>('[data-video-play]');
+  const vuelve = portada?.querySelector<HTMLButtonElement>('[data-video-vuelve]');
+  const puntos = Array.from(portada?.querySelectorAll<HTMLButtonElement>('[data-video-punto]') ?? []);
+
+  if (portada && laminas.length === 2 && lamina && marco && abre && play && vuelve) {
+    const quieto = matchMedia('(prefers-reduced-motion: reduce)');
+    const fuente = lamina.dataset.fuente ?? '';
+
+    function ir(destino: number, foco: HTMLElement | null) {
+      portada!.dataset.activa = String(destino);
+
+      // La lámina que no se ve queda inerte: sin esto el tabulador se va a
+      // buscar los botones de la lámina de al lado, que están en pantalla
+      // para el navegador aunque la persona no los vea.
+      laminas.forEach((l, i) => {
+        l.inert = i !== destino;
+      });
+
+      puntos.forEach((p, i) => {
+        if (i === destino) p.setAttribute('aria-current', 'true');
+        else p.removeAttribute('aria-current');
+      });
+
+      // Llegar al video termina la cuenta regresiva: ya no hay nada pendiente
+      // que anunciar.
+      if (destino === 1) detenerCuenta();
+
+      // Volver apaga el reproductor. No es prolijidad: un iframe que sigue
+      // vivo detrás de la portada sigue sonando y sigue ocupando la memoria
+      // que YouTube reservó para él.
+      if (destino === 0) apagar();
+
+      foco?.focus({ preventScroll: true });
+    }
+
+    function encender() {
+      const cuadro = document.createElement('iframe');
+      cuadro.src = fuente;
+      cuadro.title = lamina!.querySelector('h2')?.textContent?.trim() ?? 'Video institucional';
+      cuadro.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+      cuadro.allowFullscreen = true;
+      cuadro.referrerPolicy = 'strict-origin-when-cross-origin';
+      marco!.replaceChildren(cuadro);
+      lamina!.dataset.mirando = '';
+    }
+
+    function apagar() {
+      marco!.replaceChildren();
+      delete lamina!.dataset.mirando;
+    }
+
+    abre.addEventListener('click', () => ir(1, play));
+    vuelve.addEventListener('click', () => ir(0, abre));
+    play.addEventListener('click', encender);
+    puntos.forEach((p, i) =>
+      p.addEventListener('click', () => ir(i, i === 1 ? play : abre)),
+    );
+
+    // Escape sale de a un paso: primero apaga el video, después vuelve.
+    portada.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || portada.dataset.activa !== '1') return;
+      if (lamina.dataset.mirando !== undefined) {
+        apagar();
+        play.focus({ preventScroll: true });
+      } else {
+        ir(0, abre);
+      }
+    });
+
+    /* ---------------------------------------------------------- solo, a los
+       segundos que diga el contenido.
+
+       Lo que llega solo es el póster, no el video: nadie descarga nada por
+       quedarse mirando el hero. El pase se cancela en cuanto la persona hace
+       algo —si ya está leyendo, tocando o bajando, cambiarle el hero abajo
+       del cursor es sacarle la página de las manos— y no corre nunca si pidió
+       menos movimiento. */
+    let reloj = 0;
+
+    function detenerCuenta() {
+      window.clearTimeout(reloj);
+      delete abre!.dataset.contando;
+    }
+
+    const espera = Number(portada.dataset.espera ?? 0);
+    if (espera > 0 && !quieto.matches) {
+      // La regla del botón y el reloj arrancan juntos: lo que se dibuja es
+      // exactamente lo que falta.
+      abre.dataset.contando = '';
+      reloj = window.setTimeout(() => {
+        if (portada.dataset.activa !== '1') ir(1, null);
+      }, espera * 1000);
+
+      addEventListener('pointerdown', detenerCuenta, { once: true, passive: true });
+      addEventListener('keydown', detenerCuenta, { once: true });
+      addEventListener(
+        'scroll',
+        () => {
+          if (scrollY > 40) detenerCuenta();
+        },
+        { passive: true },
+      );
+    }
+  }
+</script>

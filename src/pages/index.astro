@@ -5,6 +5,8 @@ import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Flecha from '../components/Flecha.astro';
 import Escudo from '../components/Escudo.astro';
+import Video from '../components/Video.astro';
+import Mapa from '../components/Mapa.astro';
 // El fondo del hero usa el isotipo del hexágono; la barra superior usa el
 // lockup de la Fundación. Son dos marcas distintas y cada una va donde
 // corresponde.
@@ -14,12 +16,14 @@ import parqueAntecedentes from '../assets/parque-antecedentes.webp';
 import planoSanRafael from '../assets/plano-san-rafael.png';
 import {
   sitio,
+  video,
   antecedentes,
   porQue,
   activo,
   estado,
   areas,
   arquitectura,
+  ubicacion,
   implantacion,
   cierre,
 } from '../data/contenido';
@@ -27,39 +31,57 @@ import {
 
 <Base titulo={`${sitio.fundacion} — ${sitio.proyecto}`} actual="/" heroOscuro>
   {/* ------------------------------------------------------------ portada */}
-  <section class="portada">
-    <div class="portada__fondo" data-hero-oscuro>
-      <Image
-        class="portada__aerea"
-        src={aerea}
-        alt="Vista aérea del Centro Tecnológico implantado en Parque Norte, San Rafael"
-        widths={[900, 1280, 1448]}
-        sizes="100vw"
-        loading="eager"
-        fetchpriority="high"
-      />
-      <span class="portada__velo" aria-hidden="true"></span>
-    </div>
+  {/* Dos láminas en una pista que se corre de a una pantalla: la portada y
+      el video. La pista es CSS puro —una transición de `translate`— y el
+      script no hace más que cambiar qué número dice `data-activa`. */}
+  <section class="portada" data-portada data-activa="0" data-espera={video.espera}>
+    <div class="portada__pista">
+      <div class="portada__lamina" data-lamina>
+        <div class="portada__fondo" data-hero-oscuro>
+          <Image
+            class="portada__aerea"
+            src={aerea}
+            alt="Vista aérea del Centro Tecnológico implantado en Parque Norte, San Rafael"
+            widths={[900, 1280, 1448]}
+            sizes="100vw"
+            loading="eager"
+            fetchpriority="high"
+          />
+          <span class="portada__velo" aria-hidden="true"></span>
+        </div>
 
-    <div class="calle portada__texto">
-      <p class="portada__ante">
-        <span class="portada__regla"></span>
-        <span>Anteproyecto</span>
-        <span class="portada__regla"></span>
-      </p>
+        <div class="calle portada__texto">
+          <p class="portada__ante">
+            <span class="portada__regla"></span>
+            <span>Anteproyecto</span>
+            <span class="portada__regla"></span>
+          </p>
 
-      <Escudo rotulo={['Proyecto', 'Construcción:']} comoTitulo />
+          <Escudo rotulo={['Proyecto', 'Construcción:']} comoTitulo />
 
-      <p class="portada__ubicacion">San Rafael, Mendoza</p>
+          <p class="portada__ubicacion">San Rafael, Mendoza</p>
 
-      <div class="portada__acceso">
-        <i class="marca" style="--carril: 0" aria-hidden="true"></i>
-        <div class="portada__acciones">
-          <a class="accion" href="/proyecto">Conocé nuestro proyecto <Flecha /></a>
-          <a class="accion accion--linea" href="/documentacion">Documentación <Flecha /></a>
+          <div class="portada__acceso">
+            <i class="marca" style="--carril: 0" aria-hidden="true"></i>
+            <div class="portada__acciones">
+              <a class="accion" href="/proyecto">Conocé nuestro proyecto <Flecha /></a>
+              <a class="accion accion--linea" href="/documentacion">Documentación <Flecha /></a>
+            </div>
+            {video.id && <Video parte="boton" />}
+          </div>
         </div>
       </div>
+
+      {
+        video.id && (
+          <div class="portada__lamina" data-lamina inert>
+            <Video parte="lamina" />
+          </div>
+        )
+      }
     </div>
+
+    {video.id && <Video parte="puntos" />}
   </section>
 
   {/* ------------------------------------------------------- antecedentes */}
@@ -166,6 +188,28 @@ import {
     </div>
   </section>
 
+  {/* --------------------------------------------------------------- ubicación */}
+  <section class="seccion banda" data-seccion>
+    <div class="calle">
+      <Nodo texto="Ubicación" recorrido="parque" />
+      <div class="ubicacion__cab revela-linea">
+        <div>
+          <h2 class="titulo">{ubicacion.titulo}</h2>
+          <p class="rotulo ubicacion__lugar">{ubicacion.lugar}</p>
+        </div>
+        <p class="cuerpo ubicacion__cuerpo">{ubicacion.cuerpo}</p>
+      </div>
+    </div>
+
+    <figure class="calle ubicacion__figura revela">
+      <Mapa />
+      <figcaption class="epigrafe">
+        <span class="dato">Fig. 04</span>
+        <span>{ubicacion.epigrafe}</span>
+      </figcaption>
+    </figure>
+  </section>
+
   {/* ----------------------------------------------------------- implantación */}
   <section class="seccion banda-fuerte" data-seccion>
     <div class="calle">
@@ -267,13 +311,70 @@ import {
   .portada {
     position: relative;
     overflow: hidden;
+    display: grid;
+    min-height: 88svh;
+  }
+
+  /* Las dos láminas una al lado de la otra, cada una del ancho entero. La
+     segunda se sale de la caja por la derecha y el `overflow: hidden` de
+     arriba la esconde hasta que le toca. */
+  .portada__pista {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    align-items: stretch;
+    /* `translate` y no `transform`: GSAP anima `transform` en varias cosas
+       del hero y no conviene que dos manos escriban la misma propiedad. */
+    translate: 0 0;
+    transition: translate 900ms cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  .portada[data-activa='1'] .portada__pista {
+    translate: -100% 0;
+    /* Con el video puesto, la línea del recorrido se va.
+       El trazo es un SVG que cruza la página entera por encima de todo
+       (z-index 1 dentro de `.pagina`), así que no se puede apagar un tramo
+       suyo: lo que se hace es levantar la pista por encima y que lo tape
+       donde está la lámina. Fuera del hero el recorrido sigue intacto, que es
+       lo que corresponde —la línea es del sitio, no de la portada—, y al
+       volver a la primera lámina reaparece sola.
+
+       La pista ya arma contexto de apilado por su `translate`, así que este
+       z-index se compara directamente con el del trazo. Queda muy por debajo
+       del 50 del encabezado: la barra de navegación nunca se tapa. */
+    z-index: 2;
+  }
+
+  /* Quien pidió menos movimiento igual llega al video: cambia la lámina,
+     nada más que sin el barrido. */
+  @media (prefers-reduced-motion: reduce) {
+    .portada__pista {
+      transition: none;
+    }
+  }
+
+  .portada__lamina {
+    position: relative;
     display: flex;
     align-items: center;
-    min-height: 88svh;
+    min-width: 0;
     /* Los márgenes se ajustaron cuando entró la firma del Centro debajo de
        las acciones: sin eso el hero pasaba de 1013px en una ventana de 880 y
        el botón de Documentación quedaba abajo del pliegue. */
     padding-block: clamp(5.5rem, 11vh, 8rem) clamp(2rem, 4vw, 3rem);
+  }
+
+  /* La lámina del video no lleva márgenes propios: los pone ella adentro,
+     donde puede despejar la barra de navegación arriba y alinear el titular
+     con la calle a la izquierda. Y se estira en vez de centrarse, porque es
+     una grilla de tres filas que necesita el alto entero para repartirlo.
+
+     `nth-child(2)` y no `last-child`: mientras no haya video cargado, la
+     segunda lámina no se dibuja y `last-child` le caería encima a la
+     portada, cambiándole los márgenes por nada. */
+  .portada__lamina:nth-child(2) {
+    align-items: stretch;
+    padding: 0;
   }
 
   /* La vista aérea del proyecto, y encima el velo que le devuelve contraste
@@ -433,6 +534,10 @@ import {
       min-height: 84svh;
     }
 
+    .portada__lamina:first-child {
+      padding-block: clamp(4.5rem, 9vh, 6rem) clamp(1.5rem, 3vw, 2.5rem);
+    }
+
     /* En pantalla angosta no hay lugar para que el texto ocupe una mitad y
        el edificio la otra: el velo cubre todo el ancho y la foto queda de
        fondo. Se encuadra a la derecha para no perder el edificio. */
@@ -467,6 +572,36 @@ import {
     .portada__acceso {
       margin-block-start: 36px;
     }
+  }
+
+  /* ------------------------------------------------------------ ubicación */
+
+  /* El título a la izquierda y el párrafo al lado, como la cabecera de
+     Antecedentes: la sección abre con una afirmación corta y su desarrollo,
+     y recién debajo entra el mapa a ancho completo. */
+  .ubicacion__cab {
+    display: grid;
+    gap: clamp(1rem, 3vw, 3.1875rem);
+    align-items: end;
+  }
+
+  @media (min-width: 62rem) {
+    .ubicacion__cab {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .ubicacion__lugar {
+    margin-block-start: 0.875rem;
+    color: var(--tinta-3);
+  }
+
+  .ubicacion__cuerpo {
+    margin: 0;
+  }
+
+  .ubicacion__figura {
+    margin-block-start: clamp(1.75rem, 4vw, 2.75rem);
   }
 
   /* --------------------------------------------------------- antecedentes */

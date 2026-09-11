@@ -1,0 +1,964 @@
+---
+import { ubicacion } from '../data/contenido';
+import Flecha from './Flecha.astro';
+
+/**
+ * Mapa del terreno y de las piezas previstas adentro.
+ *
+ * El perímetro no está dibujado a ojo sobre la foto satelital: se levanta por
+ * rumbos y distancias desde el plano de mensura N° 17-87897-7, igual que en
+ * el papel, y recién después se apoya sobre el mundo. Por eso el polígono
+ * cierra y las medidas del frente son las del plano y no una estimación.
+ *
+ * Leaflet no viene de un CDN ni se carga con la página: es una dependencia
+ * del proyecto y entra por `import()` dinámico cuando la sección se acerca a
+ * la pantalla. Son ~150 kB que no paga nadie que no baje hasta acá, y que
+ * cuando se pagan salen del mismo dominio y no de un tercero. Las teselas sí
+ * son de afuera —de Esri—, que es inevitable en un mapa.
+ */
+---
+
+<div class="mapa" data-mapa>
+  <div class="mapa__lienzo" data-mapa-lienzo role="region" aria-label="Mapa de ubicación del Centro Tecnológico"></div>
+
+  <aside class="mapa__panel">
+    <div class="mapa__cab">
+      <p class="rotulo mapa__rotulo">{ubicacion.terreno.rotulo}</p>
+      <h3 class="mapa__nombre">{ubicacion.terreno.nombre}</h3>
+      <p class="mapa__direccion">{ubicacion.terreno.direccion}</p>
+    </div>
+
+    {/* La lista la arma el script desde el mismo dato que alimenta los
+        marcadores: una sola fuente para la fila y el pin, o se desincronizan. */}
+    <ul class="mapa__lista" data-mapa-lista></ul>
+
+    <div class="mapa__pie">
+      <a class="accion" data-mapa-gmaps href="#" target="_blank" rel="noopener">
+        Abrir en Google Maps <Flecha />
+      </a>
+      <p class="mapa__nota">{ubicacion.nota}</p>
+    </div>
+  </aside>
+
+  <div class="mapa__capas" role="group" aria-label="Tipo de mapa">
+    <button type="button" data-mapa-calles aria-pressed="true">Calles</button>
+    <button type="button" data-mapa-satelite aria-pressed="false">Satélite</button>
+  </div>
+
+  <div class="mapa__ficha">
+    {
+      ubicacion.ficha.map((f) => (
+        <div>
+          <p class="rotulo mapa__ficha-rotulo">{f.rotulo}</p>
+          <p class="mapa__ficha-valor">
+            <span class="cifra" data-mapa-calculado={'calculado' in f ? f.calculado : undefined}>
+              {f.valor}
+            </span>
+            {'unidad' in f && f.unidad && <small>{f.unidad}</small>}
+          </p>
+        </div>
+      ))
+    }
+  </div>
+
+  <button type="button" class="accion accion--linea mapa__volver" data-mapa-volver>
+    Volver al terreno
+  </button>
+</div>
+
+<style>
+  /* --------------------------------------------------------------- caja */
+
+  .mapa {
+    position: relative;
+    height: 680px;
+    border: 1px solid var(--linea-fuerte);
+    background: #e6e8ec;
+    overflow: hidden;
+  }
+
+  .mapa__lienzo {
+    position: absolute;
+    inset: 0;
+    background: #e6e8ec;
+  }
+
+  /* -------------------------------------------------------------- panel */
+
+  .mapa__panel {
+    position: absolute;
+    z-index: 1000;
+    inset-block: 22px;
+    inset-inline-start: 22px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    background: color-mix(in srgb, var(--papel) 96%, transparent);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    box-shadow: 0 24px 50px -30px rgba(20, 33, 61, 0.55);
+  }
+
+  .mapa__cab {
+    padding: 22px 22px 16px;
+    border-block-end: 1px solid var(--linea-fuerte);
+  }
+
+  .mapa__rotulo {
+    margin: 0;
+    color: var(--tinta-3);
+  }
+
+  .mapa__nombre {
+    margin: 8px 0 0;
+    font-size: 1.0625rem;
+    font-weight: 620;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+  }
+
+  .mapa__direccion {
+    margin: 6px 0 0;
+    font-size: 0.78125rem;
+    line-height: 1.45;
+    color: var(--tinta-3);
+  }
+
+  .mapa__lista {
+    flex: 1;
+    overflow: auto;
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+  }
+
+  .mapa__pie {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 22px 18px;
+    border-block-start: 1px solid var(--linea-fuerte);
+  }
+
+  .mapa__nota {
+    margin: 0;
+    font-size: 0.71875rem;
+    line-height: 1.5;
+    color: var(--tinta-3);
+  }
+
+  /* Las filas las crea el script, así que salen del alcance del componente. */
+  .mapa__lista :global(.mapa__lugar) {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 12px 22px;
+    background: transparent;
+    border: 0;
+    text-align: start;
+    font: inherit;
+    color: var(--tinta);
+    cursor: pointer;
+    transition: background-color 160ms ease-out;
+  }
+
+  .mapa__lista :global(.mapa__lugar:hover),
+  .mapa__lista :global(.mapa__lugar[aria-current='true']) {
+    background: var(--azul-50);
+  }
+
+  .mapa__lista :global(.mapa__pin) {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--tinta-2);
+    transition: background-color 160ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mapa__lista :global(.mapa__lugar:hover .mapa__pin),
+  .mapa__lista :global(.mapa__lugar[aria-current='true'] .mapa__pin) {
+    background: var(--acento);
+    transform: scale(1.12);
+  }
+
+  /* El pin del edificio principal ya nace azul: mismo criterio que en el
+     mapa, donde su marcador tampoco espera al hover para distinguirse. */
+  .mapa__lista :global(.mapa__pin--principal) {
+    background: var(--acento);
+  }
+
+  .mapa__lista :global(.mapa__lugar b) {
+    display: block;
+    font-weight: 620;
+    font-size: 0.90625rem;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .mapa__lista :global(.mapa__lugar small) {
+    display: block;
+    margin-block-start: 3px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--tinta-3);
+  }
+
+  /* ----------------------------------------------------------- controles */
+
+  .mapa__capas {
+    position: absolute;
+    z-index: 1000;
+    inset-block-start: 22px;
+    inset-inline-end: 22px;
+    display: flex;
+    background: var(--papel);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    box-shadow: 0 8px 24px -14px rgba(20, 33, 61, 0.5);
+  }
+
+  .mapa__capas button {
+    padding: 10px 14px;
+    background: transparent;
+    border: 0;
+    font-family: var(--sans);
+    font-stretch: 88%;
+    font-weight: 620;
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--tinta-3);
+    cursor: pointer;
+    transition: color 160ms ease-out, box-shadow 160ms ease-out;
+  }
+
+  .mapa__capas button:hover {
+    color: var(--tinta);
+  }
+
+  .mapa__capas button[aria-pressed='true'] {
+    color: var(--tinta);
+    box-shadow: inset 0 -2px 0 var(--acento);
+  }
+
+  .mapa__capas button + button {
+    border-inline-start: 1px solid var(--linea-fuerte);
+  }
+
+  .mapa__ficha {
+    position: absolute;
+    z-index: 1000;
+    inset-block-start: 74px;
+    inset-inline-end: 22px;
+    width: 260px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+    padding: 16px 18px;
+    background: var(--papel);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    box-shadow: 0 8px 24px -14px rgba(20, 33, 61, 0.5);
+  }
+
+  .mapa__ficha-rotulo {
+    margin: 0 0 4px;
+    font-size: 0.625rem;
+    color: var(--tinta-3);
+  }
+
+  .mapa__ficha-valor {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .mapa__ficha-valor small {
+    margin-inline-start: 3px;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--tinta-3);
+  }
+
+  .mapa__volver {
+    position: absolute;
+    z-index: 1000;
+    inset-inline-end: 22px;
+    inset-block-end: 22px;
+    background: var(--papel);
+  }
+
+  .mapa__volver:hover {
+    background: var(--papel);
+  }
+  /* ------------------------------------------------------------- angosto */
+
+  /* El mock se dibujó sobre una lámina de 1280px. En un teléfono un panel
+     flotante de 320px tapa el mapa entero, así que baja y se apoya debajo:
+     el mapa queda entero para el mapa y la lista se lee como lista. La ficha
+     de datos se va —sus cuatro cifras ya están en el cuerpo de la sección— y
+     el conmutador de capas se queda, que es lo único que no tiene otro lugar
+     donde vivir.
+
+     Va en el bloque con alcance y no en el global: estas reglas pisan a las
+     de más arriba, que son del mismo alcance y por lo tanto de la misma
+     especificidad. Declaradas como globales empatarían y ganaría la que el
+     empaquetador ponga última, que no es una carrera que convenga correr. */
+  @media (max-width: 62rem) {
+    .mapa {
+      height: auto;
+      border: 0;
+    }
+
+    .mapa__lienzo {
+      position: relative;
+      height: 60svh;
+      min-height: 340px;
+      border: 1px solid var(--linea-fuerte);
+    }
+
+    .mapa__panel {
+      position: relative;
+      inset: auto;
+      width: auto;
+      margin-block-start: 1rem;
+      backdrop-filter: none;
+    }
+
+    .mapa__lista {
+      overflow: visible;
+    }
+
+    .mapa__ficha {
+      display: none;
+    }
+
+    .mapa__volver {
+      inset-block-end: auto;
+      inset-block-start: 74px;
+      inset-inline-end: 22px;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Todo lo que sigue lo crea Leaflet en tiempo de ejecución —marcadores,
+     globos, controles—, así que no lleva la marca de alcance del componente
+     y hay que declararlo global. Va acotado bajo `.mapa` para no pisar nada
+     del resto del sitio.
+
+     Lo que pisa las clases propias de Leaflet lleva además `.leaflet-container`
+     en el selector. No es decoración: la hoja de la librería entra por
+     `import()`, o sea después que la nuestra, y varias de sus reglas tienen
+     exactamente la misma especificidad que las nuestras —`.leaflet-top
+     .leaflet-control`, `.leaflet-touch .leaflet-bar`—, así que en un empate
+     gana la que llegó última y es la de ellos. Con el ancestro de más el
+     empate se rompe del lado correcto, que es más honesto que llenar todo de
+     `!important`. */
+
+  .mapa .leaflet-container {
+    font-family: var(--sans);
+    background: #e6e8ec;
+  }
+
+  /* El callejero de Esri viene en color; acá se lo desatura entero para que
+     el mapa se lea como el resto del sitio y el azul del perímetro sea el
+     único color de la lámina. Va sobre el panel de teselas y no sobre el
+     contenedor, para no despintar también el polígono ni los marcadores.
+     En satélite la clase se saca: ahí el color es la información. */
+  .mapa .mapa__lienzo.gris .leaflet-tile-pane {
+    filter: grayscale(1) contrast(0.92) brightness(1.06);
+  }
+
+  .mapa .leaflet-container .leaflet-control-zoom {
+    border: 1px solid var(--linea-fuerte);
+    border-radius: 2px;
+    box-shadow: 0 8px 24px -14px rgba(20, 33, 61, 0.5);
+    /* Debajo de la ficha de datos y alineado con ella. La cuenta es la de la
+       ficha: arranca a 74px del borde, mide 129 de alto, y doce de aire.
+       Leaflet apila sus controles en la esquina y no sabe que ahí arriba hay
+       algo nuestro, así que el lugar se lo hacemos desde acá. */
+    margin: 215px 22px 0 0;
+  }
+
+  .mapa .leaflet-container .leaflet-control-zoom a {
+    color: var(--tinta);
+    background: var(--papel);
+    border-color: var(--linea-fuerte);
+  }
+
+  .mapa .leaflet-container .leaflet-control-attribution {
+    background: color-mix(in srgb, var(--papel) 85%, transparent);
+    font-size: 10px;
+    color: var(--tinta-3);
+  }
+
+  .mapa .leaflet-container .leaflet-popup-content-wrapper {
+    border-radius: 2px;
+    box-shadow: 0 12px 30px -14px rgba(20, 33, 61, 0.5);
+  }
+
+  .mapa .leaflet-container .leaflet-popup-content {
+    margin: 14px 16px;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--tinta);
+  }
+
+  .mapa .leaflet-container .leaflet-popup-content b {
+    display: block;
+    font-weight: 620;
+    margin-block-end: 2px;
+  }
+
+  .mapa .leaflet-container .leaflet-popup-content small {
+    font-size: 0.75rem;
+    color: var(--tinta-3);
+  }
+
+  .mapa .leaflet-container .leaflet-popup-content a {
+    display: inline-block;
+    margin-block-start: 8px;
+    font-stretch: 88%;
+    font-weight: 620;
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  /* marcadores */
+  .mapa .marcador {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--tinta-2);
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(20, 33, 61, 0.35);
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms ease-out;
+  }
+
+  .mapa .marcador.activo {
+    transform: scale(1.25);
+    background: var(--acento);
+  }
+
+  /* El edificio del anteproyecto: más grande, azul y latiendo. Es de lo que
+     habla la página, y tiene que distinguirse de los otros cuatro puntos sin
+     necesidad de leer el número. */
+  .mapa .marcador--principal {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    background: var(--acento);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22), 0 2px 8px rgba(20, 33, 61, 0.35);
+    animation: mapa-latido 2.4s ease-in-out infinite;
+  }
+
+  @keyframes mapa-latido {
+    0%,
+    100% {
+      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22), 0 2px 8px rgba(20, 33, 61, 0.35);
+    }
+    50% {
+      box-shadow: 0 0 0 14px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(20, 33, 61, 0.35);
+    }
+  }
+
+  .mapa .etiqueta {
+    padding: 5px 9px;
+    background: var(--tinta);
+    border: 0;
+    border-radius: 2px;
+    box-shadow: none;
+    font-stretch: 88%;
+    font-weight: 620;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #ffffff;
+  }
+
+  .mapa .etiqueta::before {
+    display: none;
+  }
+
+  .mapa .etiqueta--suave {
+    background: color-mix(in srgb, var(--tinta-2) 85%, transparent);
+  }
+
+  /* El perímetro se dibuja de un trazo al entrar: el largo real del camino lo
+     mide el script y lo deja en `--largo`. */
+  .mapa .perimetro {
+    transition: fill-opacity 200ms ease-out;
+  }
+
+  .mapa .perimetro.dibujar {
+    animation: mapa-trazar 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes mapa-trazar {
+    from {
+      stroke-dashoffset: var(--largo);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mapa .marcador--principal {
+      animation: none;
+    }
+
+    .mapa .perimetro.dibujar {
+      animation: none;
+    }
+  }
+  /* Lo único de la adaptación angosta que sí va acá: el control de zoom es de
+     Leaflet, y en pantalla chica tiene que despejar el botón de volver, que
+     sube a la esquina donde estaba la ficha. */
+  @media (max-width: 62rem) {
+    .mapa .leaflet-container .leaflet-control-zoom {
+      margin-block-start: 132px;
+    }
+  }
+</style>
+
+<script>
+  import type * as LeafletNS from 'leaflet';
+  import { ubicacion } from '../data/contenido';
+
+  const caja = document.querySelector<HTMLElement>('[data-mapa]');
+  const lienzo = caja?.querySelector<HTMLElement>('[data-mapa-lienzo]');
+
+  if (caja && lienzo) {
+    /* ------------------------------------------------ geometría del plano */
+
+    /* Plano de mensura N° 17-87897-7. Cada lado es un rumbo y una distancia,
+       tal como se lee en el papel: cuadrante, ángulo en grados decimales y
+       metros. El noveno lado es el de cierre y no está acotado en el plano:
+       se deduce de los demás. */
+    const LADOS: ([string, number, string, number] | null)[] = [
+      ['N', 9 + 25 / 60, 'E', 314.9],
+      ['S', 81 + 47 / 60 + 10 / 3600, 'E', 155.0],
+      ['S', 9 + 25 / 60, 'O', 150.0],
+      ['S', 80 + 34 / 60 + 59 / 3600, 'E', 80.0],
+      ['N', 9 + 25 / 60, 'E', 151.68],
+      ['S', 81 + 47 / 60 + 10 / 3600, 'E', 64.74],
+      ['S', 27 + 38 / 60, 'E', 381.9],
+      ['N', 81 + 42 / 60, 'O', 379.7],
+      null,
+      ['N', 81 + 42 / 60, 'O', 123.4],
+    ];
+
+    /* Las dos esquinas relevadas. La primera ubica el vértice 1; la segunda
+       da el rumbo verdadero del lado 1-2, y de la diferencia con el rumbo del
+       plano sale cuánto hay que girar todo el polígono (~13°). Sin esto el
+       terreno quedaría bien dibujado pero torcido respecto de las calles. */
+    const ESQ_SO: [number, number] = [-34.61536157397676, -68.31438931623443];
+    const ESQ_NO: [number, number] = [-34.612347444037404, -68.3128850912374];
+    const PLAZA: [number, number] = [-34.6177, -68.3301];
+
+    const rad = (g: number) => (g * Math.PI) / 180;
+    const M_LAT = 111320;
+    const M_LON = 111320 * Math.cos(rad(Math.abs(ESQ_SO[0])));
+
+    /** Levanta el polígono en metros, con el vértice 1 en el origen. */
+    function levantar(lados: typeof LADOS) {
+      const pts: ([number, number] | null)[] = [[0, 0]];
+      let x = 0;
+      let y = 0;
+      for (const l of lados) {
+        if (!l) {
+          pts.push(null);
+          continue;
+        }
+        const [ns, ang, eo, d] = l;
+        x += d * Math.sin(rad(ang)) * (eo === 'E' ? 1 : -1);
+        y += d * Math.cos(rad(ang)) * (ns === 'N' ? 1 : -1);
+        pts.push([x, y]);
+      }
+      // El lado de cierre se resuelve caminando el último lado al revés desde
+      // el vértice 1: es el único punto que falta y el polígono queda cerrado.
+      const u = lados[lados.length - 1]!;
+      const dx = u[3] * Math.sin(rad(u[1])) * (u[2] === 'E' ? 1 : -1);
+      const dy = u[3] * Math.cos(rad(u[1])) * (u[0] === 'N' ? 1 : -1);
+      pts[pts.indexOf(null)] = [-dx, -dy];
+      pts.pop();
+      return pts as [number, number][];
+    }
+
+    const LOCAL = levantar(LADOS);
+    const dN = (ESQ_NO[0] - ESQ_SO[0]) * M_LAT;
+    const dE = (ESQ_NO[1] - ESQ_SO[1]) * M_LON;
+    const ROT = rad((Math.atan2(dE, dN) * 180) / Math.PI - (9 + 25 / 60));
+    const girar = ([x, y]: [number, number]): [number, number] => [
+      x * Math.cos(ROT) + y * Math.sin(ROT),
+      -x * Math.sin(ROT) + y * Math.cos(ROT),
+    ];
+
+    /* La esquina que se relevó es el centro del cruce, no el vértice: el
+       vértice está a medio ancho de cada calle. Zapata mide 40 m y Eduardo M.
+       20 m, así que son 20 m al norte y 10 m al este. */
+    const ANCLA = girar([-10, -20]);
+    const aLatLon = (p: [number, number]): [number, number] => {
+      const [rx, ry] = girar(p);
+      return [ESQ_SO[0] + (ry - ANCLA[1]) / M_LAT, ESQ_SO[1] + (rx - ANCLA[0]) / M_LON];
+    };
+
+    const PERIMETRO = LOCAL.map(aLatLon);
+    const LOTE_UNCUYO = [LOCAL[2], LOCAL[3], LOCAL[4], LOCAL[5]].map(aLatLon);
+
+    /** Centroide del polígono, por el método del área con signo. */
+    const CENTRO = ((): [number, number] => {
+      let a = 0;
+      let cx = 0;
+      let cy = 0;
+      for (let i = 0; i < LOCAL.length; i++) {
+        const [x0, y0] = LOCAL[i];
+        const [x1, y1] = LOCAL[(i + 1) % LOCAL.length];
+        const f = x0 * y1 - x1 * y0;
+        a += f;
+        cx += (x0 + x1) * f;
+        cy += (y0 + y1) * f;
+      }
+      a /= 2;
+      return aLatLon([cx / (6 * a), cy / (6 * a)]);
+    })();
+
+    /* Distancia en la unidad que corresponde: redondeada a diez metros
+       mientras se lea como una caminata, y en kilómetros con un decimal
+       cuando deja de serlo. Una cifra como «1.240 m» no le dice nada a
+       nadie. */
+    const medir = (a: readonly [number, number], b: readonly [number, number]) => {
+      const d = Math.hypot((a[0] - b[0]) * M_LAT, (a[1] - b[1]) * M_LON);
+      return d < 950
+        ? `${Math.round(d / 10) * 10} m`
+        : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
+    };
+
+    const gmaps = `https://www.google.com/maps?q=${CENTRO[0].toFixed(6)},${CENTRO[1].toFixed(6)}`;
+    caja.querySelector<HTMLAnchorElement>('[data-mapa-gmaps]')?.setAttribute('href', gmaps);
+    const celdaCentro = caja.querySelector<HTMLElement>('[data-mapa-calculado="centro"]');
+    if (celdaCentro) celdaCentro.textContent = medir(CENTRO, PLAZA);
+
+    /* ------------------------------------------------------------- armado */
+
+    let armado = false;
+    /* `visto` dice que la sección ya entró en pantalla; `entrar` es el vuelo,
+       que existe recién cuando el mapa está armado. Las dos cosas pueden
+       pasar en cualquier orden —una conexión lenta arma tarde, un salto con
+       ancla ve la sección enseguida—, así que la que llegue segunda dispara. */
+    let visto = false;
+    let entrar: (() => void) | null = null;
+
+    async function armar() {
+      if (armado) return;
+      armado = true;
+
+      // Leaflet y su hoja de estilo entran recién acá. Son ~150 kB que no
+      // paga quien nunca baja hasta esta sección.
+      //
+      // Leaflet se publica como UMD, así que empaquetado deja toda su API
+      // colgada de `default` en vez de exportarla suelta. El `?? mod` cubre
+      // el caso contrario por si algún día publica ESM de verdad: cualquiera
+      // de las dos formas sirve y no hay que volver acá.
+      const [mod] = await Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]);
+      const L = ((mod as { default?: unknown }).default ?? mod) as typeof LeafletNS;
+
+      const mapa = L.map(lienzo!, {
+        center: PLAZA,
+        zoom: 13,
+        // La rueda no hace zoom hasta que alguien entra al mapa a propósito:
+        // si no, bajar la página se traba acá adentro.
+        scrollWheelZoom: false,
+        zoomControl: true,
+        attributionControl: true,
+      });
+      mapa.zoomControl.setPosition('topright');
+      mapa.on('click focus', () => mapa.scrollWheelZoom.enable());
+      mapa.on('mouseout', () => mapa.scrollWheelZoom.disable());
+
+      /* La base de calles era CARTO, y dejó de servirse sin clave: hoy sus
+         teselas vuelven con «API KEY REQUIRED» escrito encima. En su lugar va
+         el callejero de Esri, que no pide clave y encima es del mismo
+         proveedor que la vista satélite, así que el mapa entero se atribuye a
+         una sola fuente.
+
+         Viene en color, y el gris neutro que queremos se consigue
+         desaturándolo por CSS sobre el panel de teselas. Suena a truco y no
+         lo es: el callejero de Esri trae toda la nomenclatura y la jerarquía
+         de calles dibujadas, que es lo que hace legible dónde está el
+         terreno, y quitarle el color es más barato que buscar una capa gris
+         que traiga menos datos. El filtro se saca en satélite, donde el color
+         es justamente lo que se mira. */
+      const calles = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '© Esri, HERE, Garmin, OpenStreetMap contributors' },
+      );
+      const satelite = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: 'Imágenes © Esri, Maxar, Earthstar Geographics' },
+      );
+      calles.addTo(mapa);
+      lienzo!.classList.add('gris');
+
+      const poli = L.polygon(PERIMETRO, {
+        className: 'perimetro',
+        color: '#2563eb',
+        weight: 2.5,
+        fillColor: '#2563eb',
+        fillOpacity: 0.14,
+      }).addTo(mapa);
+
+      L.polygon(LOTE_UNCUYO, {
+        color: '#48546e',
+        weight: 1.5,
+        dashArray: '4 4',
+        fillColor: '#48546e',
+        fillOpacity: 0.08,
+      })
+        .addTo(mapa)
+        .bindTooltip('Lote UNCuyo (NC 359276)', {
+          direction: 'center',
+          className: 'etiqueta etiqueta--suave',
+        });
+
+      poli.bindPopup(
+        `<b>${ubicacion.terreno.nombre}</b><small>${ubicacion.terreno.detalle}</small><br>` +
+          `<a href="${gmaps}" target="_blank" rel="noopener">Abrir en Google Maps →</a>`,
+      );
+
+      const bCalles = caja!.querySelector<HTMLButtonElement>('[data-mapa-calles]')!;
+      const bSatelite = caja!.querySelector<HTMLButtonElement>('[data-mapa-satelite]')!;
+      let enSatelite = false;
+
+      // Sobre la foto aérea el mismo relleno se pierde: sube, y el trazo se
+      // aclara para despegarse del verde.
+      const rellenoBase = () => (enSatelite ? 0.22 : 0.14);
+
+      function setCapa(sat: boolean) {
+        enSatelite = sat;
+        [calles, satelite].forEach((c) => mapa.hasLayer(c) && mapa.removeLayer(c));
+        (sat ? satelite : calles).addTo(mapa);
+        lienzo!.classList.toggle('gris', !sat);
+        poli.setStyle({ fillOpacity: rellenoBase(), color: sat ? '#60a5fa' : '#2563eb' });
+        bCalles.setAttribute('aria-pressed', String(!sat));
+        bSatelite.setAttribute('aria-pressed', String(sat));
+      }
+      bCalles.addEventListener('click', () => setCapa(false));
+      bSatelite.addEventListener('click', () => setCapa(true));
+
+      poli.on('mouseover', () => poli.setStyle({ fillOpacity: 0.26 }));
+      poli.on('mouseout', () => poli.setStyle({ fillOpacity: rellenoBase() }));
+
+      /* ---------------------------------------- los puntos del predio */
+
+      const lista = caja!.querySelector<HTMLElement>('[data-mapa-lista]')!;
+      const marcadores: Record<string, LeafletNS.Marker> = {};
+      const filas: Record<string, HTMLButtonElement> = {};
+      let actual: string | null = null;
+
+      const resaltar = (id: string, on: boolean) =>
+        marcadores[id]?.getElement()?.querySelector('.marcador')?.classList.toggle('activo', on);
+
+      function seleccionar(id: string | null) {
+        actual = id;
+        Object.values(filas).forEach((b) => b.removeAttribute('aria-current'));
+        if (id && filas[id]) filas[id].setAttribute('aria-current', 'true');
+      }
+
+      for (const l of ubicacion.puntos) {
+        const pos = l.pos as unknown as [number, number];
+        const tam = l.principal ? 32 : 26;
+
+        const m = L.marker(pos, {
+          icon: L.divIcon({
+            className: '',
+            html: `<div class="marcador${l.principal ? ' marcador--principal' : ''}">${l.n}</div>`,
+            iconSize: [tam, tam],
+            iconAnchor: [tam / 2, tam / 2],
+            popupAnchor: [0, -tam / 2 - 2],
+          }),
+          title: l.nombre,
+        }).addTo(mapa);
+
+        m.bindPopup(`<b>${l.nombre}</b><small>${l.detalle}</small>`);
+        m.bindTooltip(l.nombre, {
+          direction: 'top',
+          offset: [0, -tam / 2],
+          className: 'etiqueta',
+        });
+        marcadores[l.id] = m;
+
+        const li = document.createElement('li');
+        li.innerHTML =
+          `<button type="button" class="mapa__lugar">` +
+          `<span class="mapa__pin${l.principal ? ' mapa__pin--principal' : ''}">${l.n}</span>` +
+          `<span><b>${l.nombre}</b><small>${l.detalle}</small></span></button>`;
+        const b = li.querySelector('button')!;
+
+        b.addEventListener('click', () => ir(l.id));
+        b.addEventListener('mouseenter', () => resaltar(l.id, true));
+        b.addEventListener('mouseleave', () => resaltar(l.id, false));
+        m.on('mouseover', () => {
+          resaltar(l.id, true);
+          b.setAttribute('aria-current', 'true');
+        });
+        m.on('mouseout', () => {
+          resaltar(l.id, false);
+          if (actual !== l.id) b.removeAttribute('aria-current');
+        });
+        m.on('click', () => seleccionar(l.id));
+
+        filas[l.id] = b;
+        lista.appendChild(li);
+      }
+
+      // El margen izquierdo de más es el ancho del panel flotante, que tapa
+      // esa franja del mapa. En pantalla angosta el panel no flota —está
+      // debajo— y el margen no corresponde.
+      const angosto = () => matchMedia('(max-width: 62rem)').matches;
+      const margenPanel = (): [number, number] => (angosto() ? [40, 40] : [380, 60]);
+
+      /* Los cinco puntos están todos adentro del predio, a metros unos de
+         otros: encuadrarlos junto al centroide daría siempre el mismo
+         encuadre. Así que se va derecho al punto, de cerca.
+
+         El centro se corre en píxeles y no en grados porque lo que hay que
+         esquivar es el panel, que mide 320px fijos y no una porción del
+         mundo: la misma cuenta en grados taparía distinto según el zoom. Se
+         proyecta a píxeles del nivel 18, se desplaza, y se vuelve. */
+      function ir(id: string) {
+        const l = ubicacion.puntos.find((x) => x.id === id);
+        if (!l) return;
+        seleccionar(id);
+        const pos = l.pos as unknown as [number, number];
+        const corrido = angosto()
+          ? L.latLng(pos)
+          : mapa.unproject(mapa.project(pos, 18).subtract([170, 0]), 18);
+        mapa.flyTo(corrido, 18, { duration: 0.9 });
+        mapa.once('moveend', () => marcadores[id].openPopup());
+      }
+
+      caja!.querySelector<HTMLButtonElement>('[data-mapa-volver]')!.addEventListener('click', () => {
+        seleccionar(null);
+        mapa.closePopup();
+        mapa.flyToBounds(poli.getBounds(), {
+          duration: 1.4,
+          paddingTopLeft: margenPanel(),
+          paddingBottomRight: [60, 60],
+        });
+      });
+
+      /* ------------------------------------------- entrada: ciudad → terreno */
+
+      const quieto = matchMedia('(prefers-reduced-motion: reduce)');
+
+      function trazar() {
+        const p = poli.getElement() as SVGPathElement | null;
+        if (!p) return;
+        const largo = p.getTotalLength();
+        p.style.setProperty('--largo', String(largo));
+        p.style.strokeDasharray = String(largo);
+        p.style.strokeDashoffset = String(largo);
+        p.classList.add('dibujar');
+        // Las medidas se sacan al terminar: si el trazo se queda con su
+        // `dasharray` puesto, cualquier cambio de zoom lo redibuja cortado.
+        p.addEventListener(
+          'animationend',
+          () => {
+            p.style.strokeDasharray = '';
+            p.style.strokeDashoffset = '';
+            p.classList.remove('dibujar');
+          },
+          { once: true },
+        );
+      }
+
+      // Quien pidió menos movimiento no vuela: el mapa ya aparece encuadrado
+      // en el terreno, con el perímetro puesto.
+      if (quieto.matches) {
+        mapa.fitBounds(poli.getBounds(), {
+          paddingTopLeft: margenPanel(),
+          paddingBottomRight: [60, 60],
+        });
+        return;
+      }
+
+      poli.setStyle({ opacity: 0, fillOpacity: 0 });
+
+      entrar = () => {
+        setTimeout(() => {
+          mapa.once('moveend', () => {
+            poli.setStyle({ opacity: 1 });
+            trazar();
+            // El relleno entra después del trazo, no con él: primero se lee
+            // el límite, después la superficie.
+            setTimeout(() => poli.setStyle({ fillOpacity: rellenoBase() }), 900);
+          });
+          mapa.flyToBounds(poli.getBounds(), {
+            duration: 2.2,
+            paddingTopLeft: margenPanel(),
+            paddingBottomRight: [60, 60],
+          });
+        }, 500);
+      };
+
+      // Si la sección ya se vio mientras la librería viajaba, el vuelo sale
+      // apenas termina de armarse.
+      if (visto) entrar();
+    }
+
+    /* Dos umbrales distintos, a propósito.
+
+       La librería se pide cuando la sección todavía viene en camino, para que
+       el mapa esté armado y mostrando la ciudad antes de que nadie lo mire. El
+       vuelo recién sale cuando la sección se ve de verdad. Con un solo umbral
+       una de las dos cosas se rompe: o el vuelo ocurre fuera de pantalla y se
+       pierde —que es justamente lo que cuenta dónde queda San Rafael—, o el
+       mapa aparece armándose encima del visitante. */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        (es, o) => {
+          if (es.some((e) => e.isIntersecting)) {
+            armar();
+            o.disconnect();
+          }
+        },
+        { rootMargin: '600px' },
+      ).observe(caja);
+
+      new IntersectionObserver(
+        (es, o) => {
+          if (es.some((e) => e.isIntersecting)) {
+            visto = true;
+            entrar?.();
+            entrar = null;
+            o.disconnect();
+          }
+        },
+        { threshold: 0.4 },
+      ).observe(caja);
+    } else {
+      visto = true;
+      armar();
+    }
+  }
+</script>

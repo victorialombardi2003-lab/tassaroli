@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de implantación · Fundación Tassaroli</title>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+  :root { --tinta:#14213d; --tinta-2:#48546e; --tinta-3:#636d89; --azul:#2563eb; --azul-2:#1d4ed8; --papel:#faf9f6; --papel-2:#f4f3ef; --linea:#d3d7de; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#d9dbe0; font-family:'Archivo', system-ui, sans-serif; color:var(--tinta); -webkit-font-smoothing:antialiased; }
+  a { color:var(--azul); text-decoration:none; } a:hover { color:var(--azul-2); }
+  .lienzo { padding:48px 56px 96px; display:flex; flex-direction:column; gap:12px; }
+  .meta { font-family:'Martian Mono', monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--tinta-2); }
+  .artboard { width:1280px; background:var(--papel); box-shadow:0 30px 60px -40px rgba(20,33,61,.45); }
+  .seccion { position:relative; }
+  .seccion::before { content:''; position:absolute; left:54px; top:0; bottom:0; width:1.5px; background:var(--azul); z-index:1; }
+  .calle { position:relative; padding-left:141px; padding-right:51px; }
+  .nodo { position:absolute; top:8px; left:51px; width:90px; display:flex; flex-direction:column; align-items:flex-start; gap:14px; margin:0; color:var(--tinta-3); z-index:2; }
+  .nodo i { display:block; width:7px; height:7px; margin-top:5px; border-radius:50%; background:var(--azul); box-shadow:0 0 0 4px rgba(37,99,235,.16); }
+  .nodo span { margin-left:52px; writing-mode:vertical-rl; transform:rotate(180deg); font-stretch:82%; font-weight:620; font-size:10px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap; }
+  .titulo { margin:0; font-size:44px; font-weight:620; line-height:1.08; letter-spacing:-.026em; text-wrap:balance; }
+  .dato { font-stretch:82%; font-weight:620; font-size:12px; letter-spacing:.15em; text-transform:uppercase; line-height:1.2; color:var(--tinta-3); }
+  .cuerpo { color:var(--tinta-2); font-size:18.5px; line-height:1.68; text-wrap:pretty; }
+  .subtitulo { margin:0; font-size:21px; font-weight:620; letter-spacing:-.02em; line-height:1.2; }
+  .boton { display:inline-flex; align-items:center; gap:12px; padding:12px 18px; border:0; border-radius:2px; background:transparent; color:var(--tinta); box-shadow:inset 0 0 0 1px var(--linea); font-family:'Archivo', sans-serif; font-stretch:88%; font-weight:620; font-size:11.5px; letter-spacing:.11em; text-transform:uppercase; cursor:pointer; transition:color 160ms, box-shadow 160ms, transform 200ms cubic-bezier(.16,1,.3,1); }
+  .boton:hover { color:var(--azul); box-shadow:inset 0 0 0 1px var(--azul); transform:translateY(-1px); }
+  .boton--lleno { background:var(--azul); color:#fff; box-shadow:none; }
+  .boton--lleno:hover { background:var(--azul-2); color:#fff; box-shadow:none; }
+
+  .estado { padding:72px 51px 96px 141px; }
+  .estado .hilada { display:grid; grid-template-columns:30px 1fr; gap:22px; max-width:760px; }
+  .estado .hilada i { display:block; width:9px; height:9px; margin:8px 0 0 10px; border-radius:50%; background:var(--tinta); }
+
+  /* ------------------------------------------------------------ mapa */
+  .mapa-sec { background:var(--papel-2); padding:128px 0 112px; }
+  .mapa-cab { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:51px; align-items:end; }
+  .mapa-cab .dato { margin:14px 0 0; }
+  .mapa-cab .cuerpo { margin:0; max-width:46ch; font-size:17px; }
+  .mapa-wrap { position:relative; height:680px; margin:44px 51px 0 141px; border:1px solid var(--linea); background:#e6e8ec; overflow:hidden; }
+  #mapa { position:absolute; inset:0; background:#e6e8ec; }
+  .leaflet-container { font-family:'Archivo', sans-serif; }
+  .leaflet-control-zoom { border:1px solid var(--linea) !important; border-radius:2px !important; box-shadow:0 8px 24px -14px rgba(20,33,61,.5) !important; margin:196px 22px 0 0 !important; }
+  .leaflet-control-zoom a { color:var(--tinta); background:var(--papel); border-color:var(--linea) !important; }
+  .leaflet-control-attribution { font-size:10px; background:rgba(250,249,246,.85); color:var(--tinta-3); }
+
+  /* panel flotante */
+  .panel { position:absolute; z-index:1000; top:22px; left:22px; bottom:22px; width:320px; display:flex; flex-direction:column; background:rgba(250,249,246,.96); backdrop-filter:blur(6px); border:1px solid var(--linea); border-radius:2px; box-shadow:0 24px 50px -30px rgba(20,33,61,.55); }
+  .panel__cab { padding:22px 22px 16px; border-bottom:1px solid var(--linea); }
+  .panel__cab .dato { margin:0; }
+  .panel__cab h3 { margin:8px 0 0; font-size:17px; font-weight:620; letter-spacing:-.015em; line-height:1.3; }
+  .panel__cab small { display:block; margin-top:6px; font-size:12.5px; color:var(--tinta-3); line-height:1.45; }
+  .lista { list-style:none; margin:0; padding:6px 0; overflow:auto; flex:1; }
+  .lugar { width:100%; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:14px; align-items:center; padding:12px 22px; background:transparent; border:0; text-align:left; font:inherit; color:var(--tinta); cursor:pointer; transition:background-color 160ms; }
+  .lugar:hover, .lugar[aria-current="true"] { background:#eaf0fc; }
+  .lugar[aria-current="true"] .pin { background:var(--azul); }
+  .lugar .pin { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-family:'Martian Mono', monospace; font-size:10px; font-weight:600; color:#fff; background:var(--tinta-2); transition:background-color 160ms, transform 200ms cubic-bezier(.16,1,.3,1); }
+  .lugar:hover .pin { transform:scale(1.12); }
+  .lugar b { display:block; font-weight:620; font-size:14.5px; letter-spacing:-.01em; line-height:1.25; }
+  .lugar small { display:block; margin-top:3px; font-size:12px; color:var(--tinta-3); line-height:1.4; }
+  .lugar .dist { font-family:'Martian Mono', monospace; font-size:11px; color:var(--tinta-3); white-space:nowrap; }
+  .panel__pie { padding:14px 22px 18px; border-top:1px solid var(--linea); display:flex; flex-direction:column; gap:12px; }
+  .panel__pie .nota { margin:0; font-size:11.5px; line-height:1.5; color:var(--tinta-3); }
+
+  /* controles */
+  .capas { position:absolute; top:22px; right:22px; z-index:1000; display:flex; background:var(--papel); border:1px solid var(--linea); border-radius:2px; box-shadow:0 8px 24px -14px rgba(20,33,61,.5); }
+  .capas button { padding:10px 14px; border:0; background:transparent; font-family:'Archivo', sans-serif; font-stretch:88%; font-weight:620; font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--tinta-3); cursor:pointer; transition:color 160ms; }
+  .capas button:hover { color:var(--tinta); }
+  .capas button[aria-pressed="true"] { color:var(--tinta); box-shadow:inset 0 -2px 0 var(--azul); }
+  .capas button + button { border-left:1px solid var(--linea); }
+  .recentrar { position:absolute; right:22px; bottom:22px; z-index:1000; background:var(--papel); box-shadow:0 8px 24px -14px rgba(20,33,61,.5), inset 0 0 0 1px var(--linea); }
+  .ficha { position:absolute; right:22px; top:74px; z-index:1000; width:260px; padding:16px 18px; background:var(--papel); border:1px solid var(--linea); border-radius:2px; box-shadow:0 8px 24px -14px rgba(20,33,61,.5); display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; }
+  .ficha div { display:flex; flex-direction:column; gap:4px; }
+  .ficha .dato { margin:0; font-size:10px; }
+  .ficha b { font-size:16px; font-weight:620; letter-spacing:-.015em; line-height:1.15; }
+  .ficha b small { font-size:11px; font-weight:400; color:var(--tinta-3); margin-left:3px; }
+
+  /* marcadores */
+  .marcador { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-family:'Martian Mono', monospace; font-size:10px; font-weight:600; color:#fff; background:var(--tinta-2); border:2px solid #fff; box-shadow:0 2px 8px rgba(20,33,61,.35); transition:transform 220ms cubic-bezier(.16,1,.3,1), background-color 160ms; }
+  .marcador.activo { transform:scale(1.25); background:var(--azul); }
+  .marcador--terreno { width:16px; height:16px; background:var(--azul); box-shadow:0 0 0 6px rgba(37,99,235,.22), 0 2px 8px rgba(20,33,61,.35); animation:latido 2.4s ease-in-out infinite; }
+  @keyframes latido { 0%,100% { box-shadow:0 0 0 6px rgba(37,99,235,.22), 0 2px 8px rgba(20,33,61,.35); } 50% { box-shadow:0 0 0 14px rgba(37,99,235,.08), 0 2px 8px rgba(20,33,61,.35); } }
+  .etiqueta { background:var(--tinta); color:#fff; border:0; border-radius:2px; padding:5px 9px; font-stretch:88%; font-weight:620; font-size:10px; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; box-shadow:none; }
+  .etiqueta::before { display:none; }
+  .etiqueta--suave { background:rgba(72,84,110,.85); }
+  .leaflet-popup-content-wrapper { border-radius:2px; box-shadow:0 12px 30px -14px rgba(20,33,61,.5); }
+  .leaflet-popup-content { margin:14px 16px; font-size:14px; line-height:1.45; color:var(--tinta); }
+  .leaflet-popup-content b { display:block; font-weight:620; margin-bottom:2px; }
+  .leaflet-popup-content small { color:var(--tinta-3); font-size:12px; }
+  .leaflet-popup-content a { display:inline-block; margin-top:8px; font-stretch:88%; font-weight:620; font-size:11px; letter-spacing:.11em; text-transform:uppercase; }
+  .perimetro { transition:fill-opacity 200ms; }
+  .perimetro.dibujar { animation:trazar 1.6s cubic-bezier(.4,0,.2,1) forwards; }
+  @keyframes trazar { from { stroke-dashoffset:var(--largo); } to { stroke-dashoffset:0; } }
+  .epigrafe { display:flex; gap:22px; margin:18px 51px 0 141px; font-size:13px; color:var(--tinta-3); line-height:1.5; }
+
+  .implant { background:#14213d; color:#fff; padding:128px 51px 64px 141px; }
+  .implant::before { background:#2563eb; }
+  .implant .titulo { color:#fff; }
+  .implant .dato { color:rgba(255,255,255,.7); margin-top:14px; }
+  .implant .nodo { color:rgba(255,255,255,.7); }
+</style>
+</head>
+<body>
+<div class="lienzo">
+  <div style="display:flex; align-items:baseline; gap:16px;">
+    <span class="meta">Inicio · nueva sección entre «Estado del proyecto» e «Implantación»</span>
+    <span style="font-size:13px; color:var(--tinta-3);">Al entrar en pantalla el mapa vuela desde la ciudad al terreno y dibuja el perímetro. Referencias con distancia; hover sincronizado con el mapa.</span>
+  </div>
+
+  <div class="artboard">
+    <section class="seccion estado">
+      <div class="hilada">
+        <i></i>
+        <div>
+          <h3 class="subtitulo">Anteproyecto presentado</h3>
+          <p class="cuerpo" style="margin:8px 0 0;">Presentación pública del anteproyecto del edificio definitivo del Centro Tecnológico Carlos José Tassaroli.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion mapa-sec">
+      <div class="calle">
+        <p class="nodo"><i></i><span>Ubicación</span></p>
+        <div class="mapa-cab">
+          <div>
+            <h2 class="titulo">Dónde se construye</h2>
+            <p class="dato">Parque Norte · San Rafael · Mendoza</p>
+          </div>
+          <p class="cuerpo">Nueve hectáreas propias dentro del Parque Norte, a minutos del centro de San Rafael y de las tres universidades que forman a más de 10.000 estudiantes de nivel superior.</p>
+        </div>
+      </div>
+
+      <div class="mapa-wrap" id="wrap">
+        <div id="mapa" role="region" aria-label="Mapa de ubicación del Centro Tecnológico"></div>
+
+        <aside class="panel">
+          <div class="panel__cab">
+            <p class="dato">Terreno</p>
+            <h3>Centro Tecnológico Carlos José Tassaroli</h3>
+            <small>Calle Dalmasso s/n, entre Av. José Vicente Zapata y Eduardo M., Parque Norte.</small>
+          </div>
+          <ul class="lista" id="lista"></ul>
+          <div class="panel__pie">
+            <a class="boton boton--lleno" id="gmaps" href="#" target="_blank" rel="noopener">Abrir en Google Maps <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M0 5h13M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"></path></svg></a>
+            <p class="nota">Perímetro según plano de mensura N° 17-87897-7. Ubicaciones de referencia a confirmar.</p>
+          </div>
+        </aside>
+
+        <div class="capas" role="group" aria-label="Tipo de mapa">
+          <button type="button" id="btn-calles" aria-pressed="true">Calles</button>
+          <button type="button" id="btn-satelite" aria-pressed="false">Satélite</button>
+        </div>
+        <div class="ficha" aria-label="Datos del terreno">
+          <div><p class="dato">Superficie</p><b>9,7<small>ha</small></b></div>
+          <div><p class="dato">Frente s/ Zapata</p><b>530<small>m</small></b></div>
+          <div><p class="dato">Plano</p><b style="font-size:13px;">N° 17-87897-7</b></div>
+          <div><p class="dato">Al centro</p><b id="dist-centro">–</b></div>
+        </div>
+        <button type="button" class="boton recentrar" id="recentrar">Volver al terreno</button>
+      </div>
+      <p class="epigrafe"><span class="dato" style="color:var(--tinta-3);">Fig. 04</span><span>El terreno destinado por la Fundación en el Parque Norte y su relación con el ecosistema educativo de San Rafael.</span></p>
+    </section>
+
+    <section class="seccion implant">
+      <p class="nodo"><i></i><span>Implantación</span></p>
+      <h2 class="titulo">Implantación del proyecto</h2>
+      <p class="dato">Parque Norte, ciudad de San Rafael, Mendoza, Argentina.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+  // ---- geometría del terreno (plano de mensura N° 17-87897-7) -------------
+  const ESQ_SO = [-34.61536157397676, -68.31438931623443]; // Av. Zapata y Eduardo M. → vértice 1
+  const ESQ_NO = [-34.612347444037404, -68.3128850912374]; // Eduardo M. y Juan José Paso → rumbo del lado 1-2
+  const PLAZA = [-34.6177, -68.3301]; // plaza San Martín, centro de San Rafael
+  const rad = (g) => (g * Math.PI) / 180;
+  const M_LAT = 111320, M_LON = 111320 * Math.cos(rad(Math.abs(ESQ_SO[0])));
+  const LADOS = [
+    ['N', 9 + 25 / 60, 'E', 314.90], ['S', 81 + 47 / 60 + 10 / 3600, 'E', 155.00], ['S', 9 + 25 / 60, 'O', 150.00],
+    ['S', 80 + 34 / 60 + 59 / 3600, 'E', 80.00], ['N', 9 + 25 / 60, 'E', 151.68], ['S', 81 + 47 / 60 + 10 / 3600, 'E', 64.74],
+    ['S', 27 + 38 / 60, 'E', 381.90], ['N', 81 + 42 / 60, 'O', 379.70], null, ['N', 81 + 42 / 60, 'O', 123.40],
+  ];
+  function levantar(lados) {
+    const pts = [[0, 0]]; let x = 0, y = 0;
+    for (const l of lados) {
+      if (!l) { pts.push(null); continue; }
+      const [ns, ang, eo, d] = l;
+      x += d * Math.sin(rad(ang)) * (eo === 'E' ? 1 : -1); y += d * Math.cos(rad(ang)) * (ns === 'N' ? 1 : -1);
+      pts.push([x, y]);
+    }
+    const u = lados[lados.length - 1];
+    const dx = u[3] * Math.sin(rad(u[1])) * (u[2] === 'E' ? 1 : -1), dy = u[3] * Math.cos(rad(u[1])) * (u[0] === 'N' ? 1 : -1);
+    pts[pts.indexOf(null)] = [-dx, -dy]; pts.pop(); return pts;
+  }
+  const LOCAL = levantar(LADOS);
+  const dN = (ESQ_NO[0] - ESQ_SO[0]) * M_LAT, dE = (ESQ_NO[1] - ESQ_SO[1]) * M_LON;
+  const ROT = rad((Math.atan2(dE, dN) * 180) / Math.PI - (9 + 25 / 60));
+  // El vértice 1 está a medio ancho de calle del cruce relevado (Zapata 40 m, Eduardo M. 20 m).
+  const girar = ([x, y]) => [x * Math.cos(ROT) + y * Math.sin(ROT), -x * Math.sin(ROT) + y * Math.cos(ROT)];
+  const ANCLA = girar([-10, -20]);
+  const aLatLon = (p) => { const [rx, ry] = girar(p); return [ESQ_SO[0] + (ry - ANCLA[1]) / M_LAT, ESQ_SO[1] + (rx - ANCLA[0]) / M_LON]; };
+  const PERIMETRO = LOCAL.map(aLatLon);
+  const LOTE_UNCUYO = [LOCAL[2], LOCAL[3], LOCAL[4], LOCAL[5]].map(aLatLon);
+  const CENTRO = (() => { let a = 0, cx = 0, cy = 0; for (let i = 0; i < LOCAL.length; i++) { const [x0, y0] = LOCAL[i], [x1, y1] = LOCAL[(i + 1) % LOCAL.length]; const f = x0 * y1 - x1 * y0; a += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f; } a /= 2; return aLatLon([cx / (6 * a), cy / (6 * a)]); })();
+
+  const km = (a, b) => { const d = Math.hypot((a[0] - b[0]) * M_LAT, (a[1] - b[1]) * M_LON); return d < 950 ? Math.round(d / 10) * 10 + ' m' : (d / 1000).toFixed(1).replace('.', ',') + ' km'; };
+
+  const LUGARES = [
+    { id: 'terreno', tipo: 'terreno', n: '', nombre: 'Centro Tecnológico Carlos José Tassaroli', detalle: 'Terreno de 9,7 ha · Parque Norte', pos: CENTRO, zoom: 16 },
+    { id: 'utn', n: '1', nombre: 'UTN Facultad Regional San Rafael', detalle: 'Gral. Urquiza 314', pos: [-34.6205, -68.3352], zoom: 15 },
+    { id: 'uncuyo', n: '2', nombre: 'UNCuyo · Ciencias Aplicadas a la Industria', detalle: 'Bernardo de Irigoyen 375', pos: [-34.6136, -68.3384], zoom: 15 },
+    { id: 'um', n: '3', nombre: 'Universidad de Mendoza · Sede San Rafael', detalle: 'Centro de San Rafael', pos: [-34.6172, -68.3299], zoom: 15 },
+    { id: 'tecnicas', n: '4', nombre: 'Escuelas técnicas industriales', detalle: 'Siete establecimientos · listado a confirmar', pos: [-34.6260, -68.3260], zoom: 14 },
+  ];
+
+  // ---- mapa ------------------------------------------------------------
+  const cont = document.getElementById('mapa');
+  const mapa = L.map('mapa', { center: PLAZA, zoom: 13, scrollWheelZoom: false, zoomControl: true, attributionControl: true });
+  mapa.zoomControl.setPosition('topright');
+  mapa.on('click focus', () => mapa.scrollWheelZoom.enable());
+  mapa.on('mouseout', () => mapa.scrollWheelZoom.disable());
+
+  const calles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, attribution: '© OpenStreetMap contributors © CARTO' });
+  const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imágenes © Esri, Maxar, Earthstar Geographics' });
+  calles.addTo(mapa);
+
+  const bC = document.getElementById('btn-calles'), bS = document.getElementById('btn-satelite');
+  function setCapa(sat) {
+    [calles, satelite].forEach((c) => mapa.hasLayer(c) && mapa.removeLayer(c));
+    (sat ? satelite : calles).addTo(mapa);
+    poliTerreno.setStyle({ fillOpacity: sat ? 0.22 : 0.14, color: sat ? '#60a5fa' : '#2563eb' });
+    bC.setAttribute('aria-pressed', String(!sat)); bS.setAttribute('aria-pressed', String(sat));
+  }
+  bC.addEventListener('click', () => setCapa(false));
+  bS.addEventListener('click', () => setCapa(true));
+
+  const poliTerreno = L.polygon(PERIMETRO, { className: 'perimetro', color: '#2563eb', weight: 2.5, fillColor: '#2563eb', fillOpacity: 0.14 }).addTo(mapa);
+  const poliUncuyo = L.polygon(LOTE_UNCUYO, { color: '#48546e', weight: 1.5, dashArray: '4 4', fillColor: '#48546e', fillOpacity: 0.08 }).addTo(mapa)
+    .bindTooltip('Lote UNCuyo (NC 359276)', { direction: 'center', className: 'etiqueta etiqueta--suave' });
+  const gmaps = `https://www.google.com/maps?q=${CENTRO[0].toFixed(6)},${CENTRO[1].toFixed(6)}`;
+  document.getElementById('gmaps').href = gmaps;
+  poliTerreno.bindPopup(`<b>Centro Tecnológico Carlos José Tassaroli</b><small>Terreno de 9,7 ha · Plano de mensura N° 17-87897-7</small><br><a href="${gmaps}" target="_blank" rel="noopener">Abrir en Google Maps →</a>`);
+  poliTerreno.on('mouseover', () => poliTerreno.setStyle({ fillOpacity: 0.26 }));
+  poliTerreno.on('mouseout', () => poliTerreno.setStyle({ fillOpacity: bS.getAttribute('aria-pressed') === 'true' ? 0.22 : 0.14 }));
+
+  document.getElementById('dist-centro').textContent = km(CENTRO, PLAZA);
+
+  // ---- referencias -------------------------------------------------------
+  const lista = document.getElementById('lista');
+  const marcadores = {}, filas = {};
+  LUGARES.forEach((l) => {
+    const esT = l.tipo === 'terreno';
+    const icono = L.divIcon({ className: '', html: `<div class="marcador${esT ? ' marcador--terreno' : ''}" data-id="${l.id}">${l.n}</div>`, iconSize: esT ? [16, 16] : [26, 26], iconAnchor: esT ? [8, 8] : [13, 13], popupAnchor: [0, -14] });
+    const m = L.marker(l.pos, { icon: icono, title: l.nombre }).addTo(mapa);
+    m.bindPopup(`<b>${l.nombre}</b><small>${l.detalle}${esT ? '' : ' · ' + km(l.pos, CENTRO) + ' al terreno'}</small>`);
+    if (esT) m.bindTooltip('Centro Tecnológico · 9,7 ha', { permanent: true, direction: 'top', offset: [0, -12], className: 'etiqueta' });
+    marcadores[l.id] = m;
+    if (esT) return;
+    const li = document.createElement('li');
+    li.innerHTML = `<button type="button" class="lugar" data-id="${l.id}"><span class="pin">${l.n}</span><span><b>${l.nombre}</b><small>${l.detalle}</small></span><span class="dist">${km(l.pos, CENTRO)}</span></button>`;
+    const b = li.querySelector('button');
+    b.addEventListener('click', () => ir(l.id));
+    b.addEventListener('mouseenter', () => resaltar(l.id, true));
+    b.addEventListener('mouseleave', () => resaltar(l.id, false));
+    m.on('mouseover', () => { resaltar(l.id, true); b.setAttribute('aria-current', 'true'); });
+    m.on('mouseout', () => { resaltar(l.id, false); if (actual !== l.id) b.removeAttribute('aria-current'); });
+    m.on('click', () => seleccionar(l.id));
+    filas[l.id] = b; lista.appendChild(li);
+  });
+  let actual = null;
+  function resaltar(id, on) { const el = marcadores[id].getElement()?.querySelector('.marcador'); el && el.classList.toggle('activo', on); }
+  function seleccionar(id) { actual = id; Object.values(filas).forEach((b) => b.removeAttribute('aria-current')); if (filas[id]) filas[id].setAttribute('aria-current', 'true'); }
+  function ir(id) {
+    const l = LUGARES.find((x) => x.id === id);
+    seleccionar(id);
+    // encuadra el destino junto con el terreno para leer la distancia
+    const b = L.latLngBounds([l.pos, CENTRO]).pad(0.35);
+    mapa.flyToBounds(b, { duration: 0.9, paddingTopLeft: [360, 40], paddingBottomRight: [40, 40] });
+    mapa.once('moveend', () => marcadores[id].openPopup());
+  }
+  function volver() {
+    actual = null; Object.values(filas).forEach((b) => b.removeAttribute('aria-current'));
+    mapa.closePopup();
+    mapa.flyToBounds(poliTerreno.getBounds(), { duration: 1.4, paddingTopLeft: [380, 60], paddingBottomRight: [60, 60] });
+  }
+  document.getElementById('recentrar').addEventListener('click', volver);
+
+  // ---- entrada: vuelo ciudad → terreno y trazado del perímetro -----------
+  function trazar() {
+    const p = poliTerreno.getElement(); if (!p) return;
+    const largo = p.getTotalLength();
+    p.style.setProperty('--largo', largo); p.style.strokeDasharray = largo; p.style.strokeDashoffset = largo;
+    p.classList.add('dibujar');
+    p.addEventListener('animationend', () => { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; p.classList.remove('dibujar'); }, { once: true });
+  }
+  let entro = false;
+  function entrar() {
+    if (entro) return; entro = true;
+    poliTerreno.setStyle({ opacity: 0, fillOpacity: 0 });
+    setTimeout(() => {
+      mapa.once('moveend', () => { poliTerreno.setStyle({ opacity: 1 }); trazar(); setTimeout(() => poliTerreno.setStyle({ fillOpacity: 0.14 }), 900); });
+      mapa.flyToBounds(poliTerreno.getBounds(), { duration: 2.2, paddingTopLeft: [380, 60], paddingBottomRight: [60, 60] });
+    }, 500);
+  }
+  const wrap = document.getElementById('wrap');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((es, o) => { if (es.some((e) => e.isIntersecting)) { entrar(); o.disconnect(); } }, { threshold: 0.4 }).observe(wrap);
+  } else entrar();
+</script>
+</body>
+</html>
