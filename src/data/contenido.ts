@@ -203,16 +203,7 @@ export const ubicacion = {
       'Calle Dalmasso s/n, entre Av. José Vicente Zapata y Eduardo M., Parque Norte.',
     detalle: 'Terreno de 9,7 ha · Plano de mensura N° 17-87897-7',
   },
-  nota: 'Perímetro según plano de mensura N° 17-87897-7. Los puntos indican la implantación prevista de cada pieza dentro del predio.',
-  ficha: [
-    { rotulo: 'Superficie', valor: '9,7', unidad: 'ha' },
-    { rotulo: 'Frente s/ Zapata', valor: '530', unidad: 'm' },
-    { rotulo: 'Plano', valor: 'N° 17-87897-7' },
-    /* La distancia al centro la calcula el mapa contra la plaza San Martín:
-       es una medida, no un dato escrito, y tiene que seguir al perímetro si
-       el perímetro se corrige. */
-    { rotulo: 'Al centro', valor: '', calculado: 'centro' },
-  ],
+  nota: 'Perímetro según plano de mensura N° 17-87897-7. Los puntos indican la implantación prevista de cada pieza; FCAI y UNCuyo son los lotes vecinos.',
   /* Las piezas del predio, en el orden en que se leen en la lista. El
      primero es el edificio del anteproyecto y va distinto: más grande, azul y
      con latido, porque es de lo que habla el sitio; los otros cuatro son el
@@ -234,7 +225,7 @@ export const ubicacion = {
       id: 'fcai',
       n: '2',
       nombre: 'FCAI',
-      detalle: 'Facultad de Ciencias Aplicadas a la Industria',
+      detalle: 'Facultad de Ciencias Aplicadas a la Industria · lote vecino',
       pos: [-34.61363, -68.31078],
       principal: false,
     },
@@ -242,7 +233,7 @@ export const ubicacion = {
       id: 'uncuyo',
       n: '3',
       nombre: 'UNCuyo',
-      detalle: 'Lote de la Universidad Nacional de Cuyo',
+      detalle: 'Universidad Nacional de Cuyo · lote vecino',
       pos: [-34.61457, -68.31301],
       principal: false,
     },

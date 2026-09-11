@@ -45,22 +45,6 @@ import Flecha from './Flecha.astro';
     <button type="button" data-mapa-satelite aria-pressed="false">Satélite</button>
   </div>
 
-  <div class="mapa__ficha">
-    {
-      ubicacion.ficha.map((f) => (
-        <div>
-          <p class="rotulo mapa__ficha-rotulo">{f.rotulo}</p>
-          <p class="mapa__ficha-valor">
-            <span class="cifra" data-mapa-calculado={'calculado' in f ? f.calculado : undefined}>
-              {f.valor}
-            </span>
-            {'unidad' in f && f.unidad && <small>{f.unidad}</small>}
-          </p>
-        </div>
-      ))
-    }
-  </div>
-
   <button type="button" class="accion accion--linea mapa__volver" data-mapa-volver>
     Volver al terreno
   </button>
@@ -254,41 +238,6 @@ import Flecha from './Flecha.astro';
     border-inline-start: 1px solid var(--linea-fuerte);
   }
 
-  .mapa__ficha {
-    position: absolute;
-    z-index: 1000;
-    inset-block-start: 74px;
-    inset-inline-end: 22px;
-    width: 260px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px 18px;
-    padding: 16px 18px;
-    background: var(--papel);
-    border: 1px solid var(--linea-fuerte);
-    border-radius: 2px;
-    box-shadow: 0 8px 24px -14px rgba(20, 33, 61, 0.5);
-  }
-
-  .mapa__ficha-rotulo {
-    margin: 0 0 4px;
-    font-size: 0.625rem;
-    color: var(--tinta-3);
-  }
-
-  .mapa__ficha-valor {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.15;
-  }
-
-  .mapa__ficha-valor small {
-    margin-inline-start: 3px;
-    font-size: 0.6875rem;
-    font-weight: 400;
-    color: var(--tinta-3);
-  }
-
   .mapa__volver {
     position: absolute;
     z-index: 1000;
@@ -304,10 +253,9 @@ import Flecha from './Flecha.astro';
 
   /* El mock se dibujó sobre una lámina de 1280px. En un teléfono un panel
      flotante de 320px tapa el mapa entero, así que baja y se apoya debajo:
-     el mapa queda entero para el mapa y la lista se lee como lista. La ficha
-     de datos se va —sus cuatro cifras ya están en el cuerpo de la sección— y
-     el conmutador de capas se queda, que es lo único que no tiene otro lugar
-     donde vivir.
+     el mapa queda entero para el mapa y la lista se lee como lista. El
+     conmutador de capas se queda arriba, que es lo único que no tiene otro
+     lugar donde vivir.
 
      Va en el bloque con alcance y no en el global: estas reglas pisan a las
      de más arriba, que son del mismo alcance y por lo tanto de la misma
@@ -336,10 +284,6 @@ import Flecha from './Flecha.astro';
 
     .mapa__lista {
       overflow: visible;
-    }
-
-    .mapa__ficha {
-      display: none;
     }
 
     .mapa__volver {
@@ -383,11 +327,10 @@ import Flecha from './Flecha.astro';
     border: 1px solid var(--linea-fuerte);
     border-radius: 2px;
     box-shadow: 0 8px 24px -14px rgba(20, 33, 61, 0.5);
-    /* Debajo de la ficha de datos y alineado con ella. La cuenta es la de la
-       ficha: arranca a 74px del borde, mide 129 de alto, y doce de aire.
-       Leaflet apila sus controles en la esquina y no sabe que ahí arriba hay
-       algo nuestro, así que el lugar se lo hacemos desde acá. */
-    margin: 215px 22px 0 0;
+    /* Debajo del conmutador de capas, que termina a 56px del borde. Leaflet
+       apila sus controles en la esquina y no sabe que ahí arriba hay algo
+       nuestro, así que el lugar se lo hacemos desde acá. */
+    margin: 74px 22px 0 0;
   }
 
   .mapa .leaflet-container .leaflet-control-zoom a {
@@ -532,7 +475,7 @@ import Flecha from './Flecha.astro';
   }
   /* Lo único de la adaptación angosta que sí va acá: el control de zoom es de
      Leaflet, y en pantalla chica tiene que despejar el botón de volver, que
-     sube a la esquina donde estaba la ficha. */
+     sube a la esquina de arriba a la derecha. */
   @media (max-width: 62rem) {
     .mapa .leaflet-container .leaflet-control-zoom {
       margin-block-start: 132px;
@@ -548,115 +491,75 @@ import Flecha from './Flecha.astro';
   const lienzo = caja?.querySelector<HTMLElement>('[data-mapa-lienzo]');
 
   if (caja && lienzo) {
-    /* ------------------------------------------------ geometría del plano */
+    /* --------------------------------------------------------- el perímetro */
 
-    /* Plano de mensura N° 17-87897-7. Cada lado es un rumbo y una distancia,
-       tal como se lee en el papel: cuadrante, ángulo en grados decimales y
-       metros. El noveno lado es el de cierre y no está acotado en el plano:
-       se deduce de los demás. */
-    const LADOS: ([string, number, string, number] | null)[] = [
-      ['N', 9 + 25 / 60, 'E', 314.9],
-      ['S', 81 + 47 / 60 + 10 / 3600, 'E', 155.0],
-      ['S', 9 + 25 / 60, 'O', 150.0],
-      ['S', 80 + 34 / 60 + 59 / 3600, 'E', 80.0],
-      ['N', 9 + 25 / 60, 'E', 151.68],
-      ['S', 81 + 47 / 60 + 10 / 3600, 'E', 64.74],
-      ['S', 27 + 38 / 60, 'E', 381.9],
-      ['N', 81 + 42 / 60, 'O', 379.7],
-      null,
-      ['N', 81 + 42 / 60, 'O', 123.4],
+    /* Los catorce vértices del predio, en sentido horario desde la esquina de
+       Zapata y Eduardo M., tal como los entregó el cliente.
+
+       Antes esto se levantaba por rumbos y distancias desde el plano de
+       mensura y después se giraba y anclaba sobre el mundo. Era más elegante
+       —y reproducía los nueve lados acotados al centímetro— pero apoyaba todo
+       el dibujo en dos coordenadas de esquina y en un ángulo deducido de
+       ellas, así que cualquier error en esas dos arrastraba al polígono
+       entero. Con los vértices puestos, lo que se dibuja es lo que se midió.
+
+       Los dos entrantes no son caprichos del trazado: son los lotes vecinos
+       de la FCAI y de la UNCuyo, y se dibujan aparte más abajo. */
+    const PERIMETRO: [number, number][] = [
+      [-34.61528, -68.31435],
+      [-34.61233, -68.31287],
+      [-34.61279, -68.31129],
+      [-34.61406, -68.31181],
+      [-34.61458, -68.31111],
+      [-34.61309, -68.31032],
+      [-34.61325, -68.30968],
+      [-34.61637, -68.30877],
+      [-34.61665, -68.30892],
+      [-34.61533, -68.31297],
+      [-34.61412, -68.31238],
+      [-34.61392, -68.31302],
+      [-34.61516, -68.31356],
+      [-34.61513, -68.31383],
     ];
 
-    /* Las dos esquinas relevadas. La primera ubica el vértice 1; la segunda
-       da el rumbo verdadero del lado 1-2, y de la diferencia con el rumbo del
-       plano sale cuánto hay que girar todo el polígono (~13°). Sin esto el
-       terreno quedaría bien dibujado pero torcido respecto de las calles. */
-    const ESQ_SO: [number, number] = [-34.61536157397676, -68.31438931623443];
-    const ESQ_NO: [number, number] = [-34.612347444037404, -68.3128850912374];
-    const PLAZA: [number, number] = [-34.6177, -68.3301];
+    /* Los entrantes, por posición en la vuelta. Van por índice y no copiados
+       a mano: si un vértice se corrige, el lote se corrige con él. */
+    const LOTE_FCAI = PERIMETRO.slice(2, 6);
+    const LOTE_UNCUYO = PERIMETRO.slice(9, 13);
 
     const rad = (g: number) => (g * Math.PI) / 180;
     const M_LAT = 111320;
-    const M_LON = 111320 * Math.cos(rad(Math.abs(ESQ_SO[0])));
+    const M_LON = 111320 * Math.cos(rad(Math.abs(PERIMETRO[0][0])));
 
-    /** Levanta el polígono en metros, con el vértice 1 en el origen. */
-    function levantar(lados: typeof LADOS) {
-      const pts: ([number, number] | null)[] = [[0, 0]];
-      let x = 0;
-      let y = 0;
-      for (const l of lados) {
-        if (!l) {
-          pts.push(null);
-          continue;
-        }
-        const [ns, ang, eo, d] = l;
-        x += d * Math.sin(rad(ang)) * (eo === 'E' ? 1 : -1);
-        y += d * Math.cos(rad(ang)) * (ns === 'N' ? 1 : -1);
-        pts.push([x, y]);
-      }
-      // El lado de cierre se resuelve caminando el último lado al revés desde
-      // el vértice 1: es el único punto que falta y el polígono queda cerrado.
-      const u = lados[lados.length - 1]!;
-      const dx = u[3] * Math.sin(rad(u[1])) * (u[2] === 'E' ? 1 : -1);
-      const dy = u[3] * Math.cos(rad(u[1])) * (u[0] === 'N' ? 1 : -1);
-      pts[pts.indexOf(null)] = [-dx, -dy];
-      pts.pop();
-      return pts as [number, number][];
-    }
-
-    const LOCAL = levantar(LADOS);
-    const dN = (ESQ_NO[0] - ESQ_SO[0]) * M_LAT;
-    const dE = (ESQ_NO[1] - ESQ_SO[1]) * M_LON;
-    const ROT = rad((Math.atan2(dE, dN) * 180) / Math.PI - (9 + 25 / 60));
-    const girar = ([x, y]: [number, number]): [number, number] => [
-      x * Math.cos(ROT) + y * Math.sin(ROT),
-      -x * Math.sin(ROT) + y * Math.cos(ROT),
-    ];
-
-    /* La esquina que se relevó es el centro del cruce, no el vértice: el
-       vértice está a medio ancho de cada calle. Zapata mide 40 m y Eduardo M.
-       20 m, así que son 20 m al norte y 10 m al este. */
-    const ANCLA = girar([-10, -20]);
-    const aLatLon = (p: [number, number]): [number, number] => {
-      const [rx, ry] = girar(p);
-      return [ESQ_SO[0] + (ry - ANCLA[1]) / M_LAT, ESQ_SO[1] + (rx - ANCLA[0]) / M_LON];
-    };
-
-    const PERIMETRO = LOCAL.map(aLatLon);
-    const LOTE_UNCUYO = [LOCAL[2], LOCAL[3], LOCAL[4], LOCAL[5]].map(aLatLon);
-
-    /** Centroide del polígono, por el método del área con signo. */
+    /* Centroide por el método del área con signo. Se pasa a metros antes de
+       promediar: en grados, un paso de longitud vale menos que uno de latitud
+       —acá un 82 %— y el centro saldría corrido hacia el este. */
     const CENTRO = ((): [number, number] => {
       let a = 0;
       let cx = 0;
       let cy = 0;
-      for (let i = 0; i < LOCAL.length; i++) {
-        const [x0, y0] = LOCAL[i];
-        const [x1, y1] = LOCAL[(i + 1) % LOCAL.length];
-        const f = x0 * y1 - x1 * y0;
+      for (let i = 0; i < PERIMETRO.length; i++) {
+        const [y0, x0] = PERIMETRO[i];
+        const [y1, x1] = PERIMETRO[(i + 1) % PERIMETRO.length];
+        const ax = x0 * M_LON;
+        const ay = y0 * M_LAT;
+        const bx = x1 * M_LON;
+        const by = y1 * M_LAT;
+        const f = ax * by - bx * ay;
         a += f;
-        cx += (x0 + x1) * f;
-        cy += (y0 + y1) * f;
+        cx += (ax + bx) * f;
+        cy += (ay + by) * f;
       }
       a /= 2;
-      return aLatLon([cx / (6 * a), cy / (6 * a)]);
+      return [cy / (6 * a) / M_LAT, cx / (6 * a) / M_LON];
     })();
 
-    /* Distancia en la unidad que corresponde: redondeada a diez metros
-       mientras se lea como una caminata, y en kilómetros con un decimal
-       cuando deja de serlo. Una cifra como «1.240 m» no le dice nada a
-       nadie. */
-    const medir = (a: readonly [number, number], b: readonly [number, number]) => {
-      const d = Math.hypot((a[0] - b[0]) * M_LAT, (a[1] - b[1]) * M_LON);
-      return d < 950
-        ? `${Math.round(d / 10) * 10} m`
-        : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
-    };
+    /* El vuelo de entrada arranca sobre la plaza San Martín, el centro de San
+       Rafael: lo que la sección cuenta primero es dónde queda la ciudad. */
+    const PLAZA: [number, number] = [-34.6177, -68.3301];
 
     const gmaps = `https://www.google.com/maps?q=${CENTRO[0].toFixed(6)},${CENTRO[1].toFixed(6)}`;
     caja.querySelector<HTMLAnchorElement>('[data-mapa-gmaps]')?.setAttribute('href', gmaps);
-    const celdaCentro = caja.querySelector<HTMLElement>('[data-mapa-calculado="centro"]');
-    if (celdaCentro) celdaCentro.textContent = medir(CENTRO, PLAZA);
 
     /* ------------------------------------------------------------- armado */
 
@@ -727,18 +630,27 @@ import Flecha from './Flecha.astro';
         fillOpacity: 0.14,
       }).addTo(mapa);
 
-      L.polygon(LOTE_UNCUYO, {
-        color: '#48546e',
-        weight: 1.5,
-        dashArray: '4 4',
-        fillColor: '#48546e',
-        fillOpacity: 0.08,
-      })
-        .addTo(mapa)
-        .bindTooltip('Lote UNCuyo (NC 359276)', {
-          direction: 'center',
-          className: 'etiqueta etiqueta--suave',
-        });
+      /* Los dos entrantes del perímetro, punteados y en gris: son lotes
+         vecinos y no parte del predio de la Fundación. Dibujarlos es lo que
+         explica por qué el contorno se mete para adentro en esos dos lugares;
+         sin ellos parece un error de trazado. */
+      for (const [forma, nombre] of [
+        [LOTE_FCAI, 'Lote FCAI'],
+        [LOTE_UNCUYO, 'Lote UNCuyo'],
+      ] as const) {
+        L.polygon(forma, {
+          color: '#48546e',
+          weight: 1.5,
+          dashArray: '4 4',
+          fillColor: '#48546e',
+          fillOpacity: 0.08,
+        })
+          .addTo(mapa)
+          .bindTooltip(nombre, {
+            direction: 'center',
+            className: 'etiqueta etiqueta--suave',
+          });
+      }
 
       poli.bindPopup(
         `<b>${ubicacion.terreno.nombre}</b><small>${ubicacion.terreno.detalle}</small><br>` +
