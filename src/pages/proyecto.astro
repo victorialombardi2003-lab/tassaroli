@@ -110,33 +110,78 @@ const lista = espacios.map((e, i) => ({
   </section>
 
   {/* --------------------------------------------------------------- carta */}
+  {/* En la página queda la tapa; la carta entera se lee en una ventana. El
+      texto es el mismo, sólo cambió dónde se lee: en la página era la mancha
+      más alta del sitio y el cliente pidió acortarla. */}
   <section class="seccion banda carta-seccion" id="recorrido" data-seccion>
     <div class="calle">
       <Nodo texto="Carta de la presidenta" recorrido="publico" />
-      <blockquote class="carta__epigrafe revela">
-        <p>{carta.epigrafe}</p>
-      </blockquote>
 
-      <div class="carta revela-linea">
-        {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
-      </div>
+      <div class="carta-tapa revela-linea">
+        <div>
+          <p class="dato carta-tapa__num">{carta.numero}</p>
+          <h2 class="titulo carta-tapa__titulo">{carta.titulo}</h2>
+          <p class="rotulo carta-tapa__marca">{sitio.fundacion}</p>
+        </div>
 
-      <div class="firma revela">
-        <p class="firma__nombre">{carta.firma}</p>
-        <p class="rotulo firma__cargo">{carta.cargo}</p>
+        <div class="carta-tapa__accion">
+          <button class="accion" type="button" data-carta-abre>
+            {carta.abrir} <Flecha />
+          </button>
+          <span class="dato carta-tapa__lectura">{carta.lectura}</span>
+        </div>
       </div>
     </div>
 
-    <div class="solapa sangrado" data-linea-tono="oscuro" style={`--placa: url(${placa.src})`}>
-      <div class="solapa__impulsa">
-        <p class="solapa__rotulo solapa__rotulo--claro">Desarrolla e impulsa</p>
-        <span class="solapa__tarjeta">
-          <Image src={logoFundacion} alt="Fundación Tassaroli" width={281} height={166} densities={[1, 2]} loading="lazy" />
-        </span>
-      </div>
+    {/* Un <dialog> nativo: la tecla Escape, el foco atrapado adentro y el
+        resto de la página inerte los resuelve el navegador sin una línea
+        nuestra. */}
+    <dialog class="carta-ventana" data-carta-ventana aria-label={`${carta.titulo}, ${sitio.fundacion}`}>
+      <article class="carta-panel">
+        <header class="carta-panel__cab">
+          <span class="carta-panel__id">
+            <span class="dato carta-panel__num">{carta.numero}</span>
+            <span class="rotulo carta-panel__rotulo">{carta.titulo} · {sitio.fundacion}</span>
+          </span>
 
-      <p class="solapa__rotulo solapa__rotulo--patrocinan">Patrocinan y acompañan</p>
-    </div>
+          <form method="dialog">
+            <button class="carta-panel__cerrar" type="submit">
+              <span>Cerrar</span>
+              <span aria-hidden="true">×</span>
+            </button>
+          </form>
+        </header>
+
+        <div class="carta-panel__cuerpo">
+          <blockquote class="carta__epigrafe">
+            <p>{carta.epigrafe}</p>
+          </blockquote>
+
+          <div class="carta">
+            {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
+          </div>
+
+          <div class="firma">
+            <p class="firma__nombre">{carta.firma}</p>
+            <p class="rotulo firma__cargo">{carta.cargo}</p>
+          </div>
+
+          {/* La placa institucional cierra la carta. Sale del margen del
+              cuerpo para ocupar el ancho entero del panel, como en la pieza
+              del cliente. */}
+          <div class="placa" style={`--placa: url(${placa.src})`}>
+            <div class="placa__impulsa">
+              <p class="placa__rotulo placa__rotulo--claro">Desarrolla e impulsa</p>
+              <span class="placa__tarjeta">
+                <Image src={logoFundacion} alt="Fundación Tassaroli" width={281} height={166} densities={[1, 2]} loading="lazy" />
+              </span>
+            </div>
+
+            <p class="placa__rotulo placa__rotulo--patrocinan">Patrocinan y acompañan</p>
+          </div>
+        </div>
+      </article>
+    </dialog>
   </section>
 
   {/* ------------------------------------------------------------ espacios */}
@@ -378,6 +423,185 @@ const lista = espacios.map((e, i) => ({
     }
   }
 
+  /* ---------------------------------------------------------- carta: tapa */
+
+  /* Lo que queda en la página: numeral, título, marca y el botón que abre.
+     Sin resumen ni extracto a propósito —un extracto de una carta obliga a
+     leerla dos veces, la primera en falso. */
+  .carta-tapa {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3.1875rem);
+    align-items: end;
+  }
+
+  @media (min-width: 56rem) {
+    .carta-tapa {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .carta-tapa__accion {
+      justify-content: flex-end;
+    }
+  }
+
+  .carta-tapa__num {
+    color: var(--acento);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .carta-tapa__titulo {
+    margin-block-start: 0.875rem;
+  }
+
+  .carta-tapa__marca {
+    margin-block-start: 0.875rem;
+    color: var(--tinta-3);
+  }
+
+  .carta-tapa__accion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .carta-tapa__lectura {
+    color: var(--tinta-3);
+  }
+
+  /* -------------------------------------------------------- carta: ventana */
+
+  /* El <dialog> trae medidas y borde propios del navegador; se los sacamos
+     para que sea la pantalla entera y el panel se centre adentro. */
+  .carta-ventana {
+    --panel-aire: clamp(1.5rem, 4vw, 3rem);
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 24px;
+    border: none;
+    background: transparent;
+    overscroll-behavior: contain;
+  }
+
+  .carta-ventana[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  /* El velo va en color literal: las variables de :root no llegan a
+     ::backdrop en todos los navegadores todavía. Es el --azul-900 del sitio
+     al 58 %, como pide la pieza. */
+  .carta-ventana::backdrop {
+    background: rgba(20, 33, 61, 0.58);
+    animation: carta-velo 300ms ease-out;
+  }
+
+  @keyframes carta-velo {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .carta-panel {
+    display: flex;
+    flex-direction: column;
+    width: 820px;
+    max-width: 100%;
+    max-height: 100%;
+    background: var(--papel);
+    border-radius: 4px;
+    box-shadow: 0 40px 90px -30px rgba(20, 33, 61, 0.65);
+    overflow: hidden;
+    animation: carta-panel 520ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes carta-panel {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .carta-ventana::backdrop,
+    .carta-panel {
+      animation: none;
+    }
+  }
+
+  /* La cabecera no scrollea: dice dónde se está y cómo salir, y las dos cosas
+     tienen que estar a mano en cualquier punto de la carta. */
+  .carta-panel__cab {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 22px var(--panel-aire);
+    border-block-end: 1px solid var(--linea);
+    background: var(--papel);
+  }
+
+  .carta-panel__id {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .carta-panel__num {
+    color: var(--acento);
+    letter-spacing: 0.08em;
+  }
+
+  .carta-panel__rotulo {
+    color: var(--tinta-3);
+  }
+
+  .carta-panel__cerrar {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--linea-fuerte);
+    font-family: var(--sans);
+    font-stretch: 88%;
+    font-weight: 620;
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--tinta);
+    cursor: pointer;
+    transition: color 160ms ease-out, box-shadow 160ms ease-out;
+  }
+
+  .carta-panel__cerrar:hover {
+    color: var(--acento);
+    box-shadow: inset 0 0 0 1px var(--acento);
+  }
+
+  .carta-panel__cerrar span:last-child {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .carta-panel__cuerpo {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: clamp(1.75rem, 4vw, 2.75rem) var(--panel-aire) 0;
+  }
+
   /* --------------------------------------------------------------- carta */
   /* La cita abre la carta y tiene que leerse como una frase, no como una
      columna angosta apilada en seis renglones contra el margen izquierdo con
@@ -402,11 +626,13 @@ const lista = espacios.map((e, i) => ({
     text-wrap: pretty;
   }
 
+  /* Una sola columna. En la página la carta iba en dos porque tenía el ancho
+     entero; adentro del panel, que mide 820px menos márgenes, dos columnas
+     dejarían renglones de cuarenta caracteres y se leería a los saltos. */
   .carta {
     display: flex;
     flex-direction: column;
-    gap: 1.3rem;
-    max-width: var(--medida);
+    gap: 1.25rem;
   }
 
   .carta .cuerpo:first-child {
@@ -415,58 +641,19 @@ const lista = espacios.map((e, i) => ({
   }
 
 
-  /* La carta es el texto más largo del sitio. En una sola columna la mancha
-     queda tan alta que se lee como un trámite; en dos entra de un vistazo.
-     Sólo donde hay ancho real: más angosto, cada columna baja de los 40
-     caracteres y el renglón se corta a cada rato. */
-  @media (min-width: 60rem) {
-    .carta {
-      display: block;
-      /* El tope de 106ch deja algo de papel libre a la derecha en pantallas
-         anchas, y está bien que lo deje: sin él cada columna se estira hasta
-         los setenta y pico de caracteres y el renglón se vuelve incómodo de
-         seguir. Dos columnas medidas antes que tres apretadas o dos anchas. */
-      max-width: min(100%, 106ch);
-      columns: 2;
-      column-gap: clamp(2.25rem, 4vw, 4.5rem);
-    }
+  /* La franja institucional cierra la carta, ahora dentro de la ventana. La
+     ola y los logos viven en el último cuarto de una imagen de 2600x1726, y
+     la imagen entra a ancho completo anclada abajo (`100% auto`, nunca
+     `cover`, que estiraría y recortaría los logos por los costados). Lo que
+     sobra por arriba es azul plano, continuado con `background-color` en el
+     mismo color exacto para que la unión no se vea.
 
-    /* Un párrafo partido al medio por el salto de columna obliga a subir la
-       vista para seguir leyendo. Enteros, se reparten tres y tres. Además el
-       `gap` del flex ya no aplica, así que la separación vuelve al margen. */
-    .carta > .cuerpo {
-      break-inside: avoid;
-      margin-block-end: 1.3rem;
-    }
-  }
-
-  /* La lámina institucional cierra la carta, debajo del texto y alineada a
-     su borde derecho: la carta ocupa el ancho completo con sus dos columnas,
-     así que al costado no queda lugar sin robarle medida a la lectura.
-
-     Va a 52rem y no más chica porque tiene texto adentro —"DESARROLLA E
-     IMPULSA", "PATROCINAN Y ACOMPAÑAN"— y ese texto tiene que leerse. A
-     400px la lámina se muestra al 27% de su tamaño y esos rótulos quedan en
-     seis píxeles de alto; a 832px llegan a doce, que es donde se leen. */
-  /* La franja institucional cierra la sección, a sangre. La ola y los logos
-     viven en el último cuarto de una imagen de 2600x1726: a ancho completo
-     ese cuarto mide 17vw, y ése es el alto de la banda. El resto es un
-     respiro de azul plano por encima, que continúa con `background-color`
-     en el mismo color exacto para que la unión no se vea.
-
-     La imagen se ancla abajo y a ancho completo (`100% auto`), nunca en
-     `cover`: con `cover`, una banda más alta la estira y recorta los logos
-     por los costados. */
-  .solapa {
+     Sale del margen del cuerpo con márgenes negativos: el texto respira a 48
+     px del borde, la placa toca los bordes del panel. */
+  .placa {
     position: relative;
-    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
-    margin-block-end: calc(-1 * var(--seccion));
-    /* El alto extra respecto de lo que mide la placa deja aire arriba para la
-       tarjeta de la Fundación. Como la imagen está anclada abajo, todo lo que
-       se agregue aparece como azul plano en la parte superior, y ahí es donde
-       la tarjeta deja de pisar al logo del Centro —que en la imagen está a
-       163px del pie, siempre—. */
-    min-block-size: calc(17vw + 9rem);
+    margin: clamp(2rem, 5vw, 2.75rem) calc(-1 * var(--panel-aire)) 0;
+    min-block-size: 236px;
     background-color: #2869e8;
     background-image: var(--placa);
     background-repeat: no-repeat;
@@ -475,40 +662,36 @@ const lista = espacios.map((e, i) => ({
     color: #ffffff;
   }
 
-  /* El logo de la Fundación se separó de la placa y ahora vive acá, arriba a
-     la izquierda y sobre el azul, en una tarjeta blanca como en la pieza del
-     cliente. La placa quedó con el arco limpio en ese lugar.
-
-     Esto es lo que permite moverlo: mientras estaba pintado dentro de la
-     imagen, cualquier cambio de posición era cirugía sobre un mapa de bits y
-     rompía o el logo, o el vecino, o el borde de la ola. */
-  .solapa__impulsa {
+  /* El logo de la Fundación vive acá, arriba a la izquierda y sobre el azul,
+     en una tarjeta blanca como en la pieza del cliente. La placa quedó con el
+     arco limpio en ese lugar: mientras estaba pintado dentro de la imagen,
+     cualquier cambio de posición era cirugía sobre un mapa de bits. */
+  .placa__impulsa {
     position: absolute;
-    inset-block-start: clamp(1rem, 2.4vw, 2rem);
-    inset-inline-start: calc(var(--rail) + var(--borde));
+    inset-block-start: 22px;
+    inset-inline-start: var(--panel-aire);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .solapa__tarjeta {
+  .placa__tarjeta {
     display: block;
-    padding: clamp(0.5rem, 1.1vw, 0.85rem) clamp(0.7rem, 1.5vw, 1.1rem);
+    padding: 14px 19px;
     background: #ffffff;
-    border-radius: clamp(0.5rem, 1.2vw, 0.9rem);
+    border-radius: 14px;
     box-shadow: 0 10px 26px -14px rgba(12, 30, 66, 0.5);
   }
 
-  .solapa__tarjeta :global(img) {
+  .placa__tarjeta :global(img) {
     display: block;
-    width: clamp(6.5rem, 11vw, 10rem);
+    width: 96px;
     height: auto;
   }
 
-  .solapa__rotulo {
+  .placa__rotulo {
     font-family: 'Montserrat', var(--sans);
-    font-size: clamp(0.58rem, 0.72vw, 0.78rem);
     font-weight: 500;
     letter-spacing: 0.14em;
     line-height: 1;
@@ -516,51 +699,33 @@ const lista = espacios.map((e, i) => ({
     white-space: nowrap;
   }
 
-  .solapa__rotulo--claro {
+  .placa__rotulo--claro {
+    font-size: 9.5px;
     color: rgba(255, 255, 255, 0.92);
   }
 
   /* El de los patrocinadores va sobre el blanco de la placa, y ahí sí depende
-     de la geometría de la imagen: la placa entra a ancho completo y anclada
-     abajo, así que su alto es el 66,4% del ancho de la ventana y un punto que
-     en ella está a la altura `f` cae a `(1 - f) x 66,4vw` del pie de la banda.
+     de la geometría de la imagen: entra a ancho completo y anclada abajo, así
+     que un punto de la imagen cae siempre a la misma fracción del ancho del
+     panel. Las cifras salieron de dibujar la caja sobre la placa y mirar
+     dónde caía, no de estimarla.
 
-     Las cifras salieron de dibujar la caja del texto sobre la placa y mirar
-     dónde caía, no de estimarla: el arco es una curva y a los lados del centro
-     del grupo sube bastante.
-
-     Por debajo de 78rem no se muestra: el hueco de blanco donde entra mide
-     33px a 1440 y se achica en proporción, así que más abajo el rótulo caería
-     por debajo de los nueve píxeles. */
-  .solapa__rotulo--patrocinan {
+     Se oculta cuando el panel se achica: el hueco de blanco donde entra se
+     encoge con él, y más abajo el rótulo caería encima de los logos. */
+  .placa__rotulo--patrocinan {
     display: none;
   }
 
-  @media (min-width: 78rem) {
-    .solapa__rotulo--patrocinan {
+  @media (min-width: 56rem) {
+    .placa__rotulo--patrocinan {
       display: block;
       position: absolute;
-      transform: translateX(-50%);
-      /* Encima de los logos, centrado sobre ellos, que es como está en la
-         pieza del cliente. Probamos ponerlo a la izquierda y en línea, para
-         aprovechar el blanco libre de esa mitad del arco, y no funcionó.
-
-         Las cifras salen de medir la placa: los logos ocupan del 70,1% al 87%
-         del ancho —centro en 78,5%— y su borde de arriba está en el 85,5% del
-         alto, que la banda traduce a (1 - 0,855) x 66,4vw del pie. */
       inset-inline-start: 78.5%;
-      inset-block-end: 10.8vw;
-      font-size: 0.72vw;
+      inset-block-end: 88px;
+      transform: translateX(-50%);
+      font-size: 7px;
       color: #3f4a5c;
     }
-  }
-
-  /* La línea del recorrido pasa por encima del azul: ahí se pone oscura, que
-     es lo que declara el `data-linea-tono`. El nodo de la calle necesita
-     fondo blanco para no perderse contra la banda. */
-  .solapa :global(.marca) {
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
   }
 
   /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega
@@ -583,11 +748,6 @@ const lista = espacios.map((e, i) => ({
   .firma__cargo {
     margin-block-start: 0.35rem;
     color: var(--tinta-3);
-  }
-
-  .solapa :global(.marca) {
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
   }
 
   /* ------------------------------------------------------------ espacios */
@@ -669,3 +829,44 @@ const lista = espacios.map((e, i) => ({
     margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
   }
 </style>
+
+<script>
+  const abre = document.querySelector<HTMLButtonElement>('[data-carta-abre]');
+  const ventana = document.querySelector<HTMLDialogElement>('[data-carta-ventana]');
+
+  if (abre && ventana) {
+    const raiz = document.documentElement;
+
+    /* Con la ventana abierta la página no se mueve detrás. El `<dialog>` ya
+       deja inerte al resto, pero no frena la rueda, y ver el fondo correrse
+       mientras se lee una carta es exactamente lo que rompe la ilusión de
+       estar en otra parte.
+
+       Al esconder la barra de scroll el documento se ensancha lo que ella
+       medía y todo salta unos píxeles a la derecha. Por eso se compensa con
+       el mismo ancho de relleno: la cuenta se hace antes de tapar nada. */
+    let relleno = '';
+
+    abre.addEventListener('click', () => {
+      relleno = raiz.style.paddingInlineEnd;
+      const barra = window.innerWidth - raiz.clientWidth;
+      if (barra > 0) raiz.style.paddingInlineEnd = `${barra}px`;
+      raiz.style.overflow = 'hidden';
+      ventana.showModal();
+    });
+
+    // El foco vuelve al botón que abrió: quien cerró la carta estaba ahí.
+    ventana.addEventListener('close', () => {
+      raiz.style.overflow = '';
+      raiz.style.paddingInlineEnd = relleno;
+      abre.focus({ preventScroll: true });
+    });
+
+    /* Clic en el velo. El diálogo ocupa la pantalla entera y el panel está
+       centrado adentro: si el clic cayó en el diálogo y no en el panel, cayó
+       al costado. */
+    ventana.addEventListener('click', (e) => {
+      if (e.target === ventana) ventana.close();
+    });
+  }
+</script>
