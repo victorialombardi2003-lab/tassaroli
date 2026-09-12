@@ -174,29 +174,35 @@ import {
         <p class="estado__desde">Funcionando desde {estado.desde}</p>
       </div>
 
-      <ol class="hitos revela-linea">
-        {/* El riel gris cruza los tres hitos. Encima, el tramo azul, que se
-            dibuja con el scroll y llega hasta el punto del hito en curso: su
-            medida la calcula el script contra los hitos reales, no un
-            porcentaje, así que sigue cayendo donde debe si cambian las
-            columnas o el ancho de la ventana. */}
+      {/* Sin `revela-linea`: el revelado genérico de la página escribe
+          `opacity` y `transform` en línea sobre los hijos, y acá cada hito lo
+          revela la propia línea a medida que le pasa por encima. Dos manos
+          sobre las mismas dos propiedades no se pueden repartir el trabajo. */}
+      <ol class="hitos">
+        {/* Tres piezas superpuestas: el riel tenue que cruza los tres hitos,
+            el trazo azul que lo barre con el scroll, y la marca vertical que
+            va en la punta del barrido mientras está en movimiento. Las tres
+            las mide y posiciona el script, contra los puntos reales. */}
         <span class="hitos__riel" aria-hidden="true"></span>
-        <span class="linea-avance" data-linea-avance aria-hidden="true"></span>
+        <span class="linea-avance" aria-hidden="true"></span>
+        <span class="linea-frente" aria-hidden="true"></span>
 
         {
           estado.hitos.map((h) => (
             <li class="hito" data-fase={h.fase}>
               <i class="hito__punto" aria-hidden="true" />
-              <span class="solo-lectores">
-                {h.fase === 'hecho' ? 'Hecho' : h.fase === 'en-curso' ? 'En curso' : 'Previsto'}
-              </span>
-              <h3 class="subtitulo hito__titulo">{h.titulo}</h3>
-              <p class="hito__cuerpo">{h.cuerpo}</p>
-              {'enlace' in h && h.enlace && (
-                <a class="hito__enlace" href={h.enlace.href}>
-                  {h.enlace.texto} <Flecha />
-                </a>
-              )}
+              <div class="hito__texto">
+                <span class="solo-lectores">
+                  {h.fase === 'hecho' ? 'Hecho' : h.fase === 'en-curso' ? 'En curso' : 'Previsto'}
+                </span>
+                <h3 class="subtitulo hito__titulo">{h.titulo}</h3>
+                <p class="hito__cuerpo">{h.cuerpo}</p>
+                {'enlace' in h && h.enlace && (
+                  <a class="hito__enlace" href={h.enlace.href}>
+                    {h.enlace.texto} <Flecha />
+                  </a>
+                )}
+              </div>
             </li>
           ))
         }
@@ -626,7 +632,7 @@ import {
      rieles van del primer punto al último y comparten la misma cuenta. */
   .hitos__riel {
     position: absolute;
-    background: var(--linea);
+    background: #eceef2;
   }
 
   /* El tramo dibujado. Va absoluto y no como celda de la grilla: su medida no
@@ -634,24 +640,34 @@ import {
      del hito en curso, que mide el script. `--avance` dice cuánto de esa
      medida está trazado, y el `transition` corto es lo que evita que el trazo
      tiemble con cada muesca de la rueda del mouse. */
-  /* El trazo dibujado. Acá va sólo lo que no cambia: la posición, la medida y
-     la escala se las fija el script, que es quien puede medir dónde caen los
-     puntos de verdad. Declararlas también acá las pondría a competir con lo
-     que el script escribe en línea. */
+  /* El trazo y la marca de su punta. Acá va sólo lo que no cambia: posición,
+     medida y eje los fija el script, que es quien puede medir dónde caen los
+     puntos de verdad. */
   .linea-avance {
     position: absolute;
     background: var(--azul-600);
-    transform: scaleX(0);
-    transition: transform 120ms linear;
     pointer-events: none;
   }
 
-  /* Sin movimiento el trazo no se dibuja: aparece entero desde el primer
-     cuadro, que es la información correcta. */
-  @media (prefers-reduced-motion: reduce) {
-    .linea-avance {
-      transition: none;
-    }
+  /* La punta del barrido. Se ve sólo mientras la línea está en movimiento: es
+     lo que dice que esto se está dibujando y no que ya estaba dibujado. */
+  .linea-frente {
+    position: absolute;
+    width: 1.5px;
+    height: 14px;
+    background: var(--azul-600);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms linear;
+  }
+
+  /* Cada hito lo revela la línea cuando le pasa por encima. La rampa la
+     calcula el script en función de cuánto avanzó el frente, así que el
+     easing es el scroll: acá sólo va el suavizado corto que evita que el
+     texto tiemble entre cuadro y cuadro. */
+  .hito__texto {
+    opacity: 0;
+    transition: opacity 120ms linear, transform 120ms linear;
   }
 
   /* Los hitos van colocados a mano en su columna. Los dos rieles son hijos de
@@ -677,6 +693,7 @@ import {
     grid-column: 3;
   }
 
+  /* Los puntos nacen en cero y crecen cuando la punta los toca. */
   .hito__punto {
     position: absolute;
     inset-block-start: 0;
@@ -685,29 +702,30 @@ import {
     height: 8px;
     border-radius: 50%;
     background: var(--acento);
+    transform: scale(0);
+    transition: transform 200ms ease-out, background-color 200ms ease-out,
+      box-shadow 200ms ease-out;
   }
 
-  /* El que está en curso es más grande y late. Es el único punto de la página
-     que se mueve solo, y por eso se encuentra sin leer nada.
+  .hito.alcanzado .hito__punto {
+    transform: scale(1);
+  }
 
-     Con el motor encendido arranca hueco y se llena cuando el trazo lo
-     alcanza: la línea llega y el hito se enciende. La condición del
-     `data-motion` no es un adorno —sin JavaScript, o con menos movimiento
-     pedido, el trazo aparece entero desde el principio y el punto tiene que
-     estar lleno desde el principio también, o quedaría hueco para siempre. */
+  /* El que está en curso es más grande. Arranca hueco como el previsto —la
+     línea todavía no llegó— y al ser alcanzado se llena y empieza a latir. */
   .hito[data-fase='en-curso'] .hito__punto {
     inset-block-start: -2px;
     inset-inline-start: -2px;
     width: 12px;
     height: 12px;
-    transition: background-color 200ms ease-out, box-shadow 200ms ease-out;
-    animation: hito-latido 2.4s ease-in-out infinite;
+    background: var(--papel);
+    box-shadow: inset 0 0 0 1.5px #c5cad4;
   }
 
-  :global([data-motion='on']) .hito[data-fase='en-curso']:not(.alcanzado) .hito__punto {
-    background: var(--papel);
-    box-shadow: inset 0 0 0 1.5px var(--linea);
-    animation: none;
+  .hito[data-fase='en-curso'].alcanzado .hito__punto {
+    background: var(--azul-600);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+    animation: hito-latido 2.4s ease-in-out infinite;
   }
 
   @keyframes hito-latido {
@@ -720,11 +738,24 @@ import {
     }
   }
 
-  /* Lo que todavía no pasó va hueco: el contorno dice que el lugar está
-     reservado y el relleno vacío, que no se ocupó. */
+  /* Lo que todavía no pasó queda hueco, incluso después de que la línea le
+     pase por encima: el trazo cuenta el recorrido, no que el hito esté hecho. */
   .hito[data-fase='previsto'] .hito__punto {
     background: var(--papel);
-    box-shadow: inset 0 0 0 1.5px var(--linea);
+    box-shadow: inset 0 0 0 1.5px #c5cad4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .linea-avance,
+    .linea-frente,
+    .hito__texto,
+    .hito__punto {
+      transition: none;
+    }
+
+    .hito[data-fase='en-curso'].alcanzado .hito__punto {
+      animation: none;
+    }
   }
 
   .hito__titulo {
@@ -763,35 +794,18 @@ import {
     transform: translateX(4px);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .hito[data-fase='en-curso'] .hito__punto {
-      animation: none;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
-    }
-  }
-
-  /* En una columna la línea se para: el riel horizontal no tiene sentido
-     cuando los hitos se apilan, así que pasa a ser el borde izquierdo de la
-     lista y los puntos se cuelgan de él. */
+  /* En una columna los hitos se apilan y el barrido se hace hacia abajo. La
+     línea sigue siendo la misma pieza: lo que cambia es el eje, y de eso se
+     encarga el script. */
   @media (max-width: 62rem) {
     .hitos {
       --sangria: clamp(1.5rem, 5vw, 2.25rem);
-      --hueco-fila: clamp(1.75rem, 4vw, 2.5rem);
       grid-template-columns: minmax(0, 1fr);
-      /* Las tres filas se declaran en vez de dejarlas implícitas: el riel
-         gris las cruza con `1 / -1`, y esa cuenta sólo mira las filas
-         explícitas. Sin declararlas, `-1` caía en la primera línea y el riel
-         quedaba de alto cero. */
       grid-template-rows: repeat(3, auto);
-      row-gap: var(--hueco-fila);
+      row-gap: clamp(1.75rem, 4vw, 2.5rem);
       padding-inline-start: var(--sangria);
     }
 
-
-
-    /* Y los hitos van colocados a mano también acá, por lo mismo que en
-       escritorio: los rieles ocupan la columna entera y el emplazamiento
-       automático no encontraría celda libre. */
     .hito {
       padding-block-start: 0;
     }
@@ -1099,113 +1113,105 @@ import {
 
 <script>
   /**
-   * La línea de tiempo del estado se dibuja con el scroll.
+   * La línea de tiempo del estado: el trazo barre y va revelando cada hito.
    *
-   * El trazo nace en el centro del primer punto y recorre la línea entera
-   * hasta el último. Empieza a dibujarse cuando el borde de arriba del `ol`
-   * entra por el 90% del alto de la ventana y se completa cuando llega al
-   * 45%. Al subir, retrocede.
+   * Antes del scroll sólo se ve el riel tenue. El trazo azul barre de
+   * izquierda a derecha —hacia abajo si los hitos están apilados— y cada hito
+   * aparece cuando la punta le pasa por encima: el punto crece y el texto sube
+   * desde catorce píxeles más abajo, a lo largo de una rampa de noventa
+   * píxeles de recorrido del frente. El easing es el scroll; las transiciones
+   * cortas del CSS sólo evitan que el texto tiemble entre cuadro y cuadro.
    *
-   * El hito en curso se enciende cuando el trazo lo cruza, que es a mitad de
-   * camino y no al final: el punto está donde está, y el trazo sigue de largo
-   * hacia el tercero.
+   * Es reversible: al subir, la línea retrocede y los hitos se apagan en el
+   * orden inverso.
    *
-   * La medida es la distancia entre los centros de los dos puntos, de punto a
-   * punto y no de hito a hito, que es lo que deja el trazo cayendo justo. Se
-   * calcula subiendo la cadena de offsets hasta el `ol`, así que no depende
-   * de cuál sea el `offsetParent` de cada pieza ni del relleno que el `ol`
-   * tenga en pantalla angosta.
-   *
-   * Se vuelve a medir cada vez que el layout puede haber cambiado —fuentes,
-   * `load`, resize, cambio de disposición— porque el largo del trazo es una
-   * distancia real y no un porcentaje.
+   * El frente corre noventa píxeles más allá del último punto a propósito: sin
+   * esa cola, el texto del tercer hito se quedaría a mitad de aparecer cuando
+   * el trazo ya llegó al final.
    */
   const ol = document.querySelector<HTMLElement>('.hitos');
-  const trazo = ol?.querySelector<HTMLElement>('.linea-avance');
   const riel = ol?.querySelector<HTMLElement>('.hitos__riel');
-  const puntos = ol ? Array.from(ol.querySelectorAll<HTMLElement>('.hito__punto')) : [];
-  const enCurso = ol?.querySelector<HTMLElement>('.hito[data-fase="en-curso"]');
-  const iEnCurso = enCurso ? Array.from(ol!.querySelectorAll('.hito')).indexOf(enCurso) : -1;
+  const trazo = ol?.querySelector<HTMLElement>('.linea-avance');
+  const marca = ol?.querySelector<HTMLElement>('.linea-frente');
+  const hitos = ol ? Array.from(ol.querySelectorAll<HTMLElement>('.hito')) : [];
+  const puntos = hitos.map((h) => h.querySelector<HTMLElement>('.hito__punto'));
+  const textos = hitos.map((h) => h.querySelector<HTMLElement>('.hito__texto'));
 
-  if (ol && trazo && puntos.length > 1 && iEnCurso > 0) {
+  if (ol && riel && trazo && marca && hitos.length > 1 && puntos.every(Boolean) && textos.every(Boolean)) {
     const quieto = matchMedia('(prefers-reduced-motion: reduce)');
     const angosto = matchMedia('(max-width: 62rem)');
 
-    /* Dónde empieza y dónde termina el dibujado, en fracción del alto de la
-       ventana contada desde arriba: el riel entra por abajo al 90% y el trazo
-       se completa cuando llegó al 45%. */
+    /* Cuánto recorrido del frente tarda un hito en aparecer del todo, y entre
+       qué alturas de la ventana ocurre todo el barrido. */
+    const RAMPA = 90;
     const INICIO = 0.9;
-    const FIN = 0.45;
+    const FIN = 0.3;
 
-    /* El centro de un punto, en coordenadas del `ol`.
-     *
-     * No sale de `getBoundingClientRect`, y la razón es concreta: el rect
-     * incluye las transformaciones, y los hitos arrancan con el
-     * `translateY(12px)` del revelado. Medido así, el trazo quedaba doce
-     * píxeles por debajo del riel hasta que el revelado terminaba.
-     *
-     * La cadena de `offsetParent` sí es de layout puro. Se sube sumando hasta
-     * llegar al `ol`, y por eso no importa cuál sea el `offsetParent` de cada
-     * pieza ni el relleno que tenga el `ol` en pantalla angosta: lo que se
-     * suma es el camino completo. */
-    const centro = (el: HTMLElement) => {
-      let x = el.offsetWidth / 2;
-      let y = el.offsetHeight / 2;
-      let nodo: HTMLElement | null = el;
-      while (nodo && nodo !== ol) {
-        x += nodo.offsetLeft;
-        y += nodo.offsetTop;
-        nodo = nodo.offsetParent as HTMLElement | null;
-      }
-      return { x, y };
-    };
+    const acotar = (v: number) => Math.min(1, Math.max(0, v));
 
-    /* En qué fracción del trazo cae el hito en curso. Con los tres puntos
-       repartidos es la mitad, pero se calcula y no se supone: si algún día
-       cambia cuál está en curso, o cuántos hitos hay, el encendido sigue
-       cayendo donde está el punto. */
-    let corte = 1;
+    /* Los centros de los puntos, en coordenadas del `ol` y en los dos ejes.
+       Hacen falta los dos: el barrido usa uno como eje de avance y el otro
+       para colocar el trazo a lo ancho. Guardar sólo el del avance —como si
+       en vertical alcanzara la `y`— deja el trazo apilado sobre el margen. */
+    let pos: { x: number; y: number }[] = [];
 
-    function aplicar(t: number) {
-      trazo!.style.transform = angosto.matches ? `scaleY(${t})` : `scaleX(${t})`;
-      // El hito en curso se enciende cuando el trazo lo cruza.
-      enCurso!.classList.toggle('alcanzado', t >= corte);
+    function medir() {
+      const caja = ol!.getBoundingClientRect();
+      pos = puntos.map((pt) => {
+        const r = pt!.getBoundingClientRect();
+        return {
+          x: r.left + r.width / 2 - caja.left,
+          y: r.top + r.height / 2 - caja.top,
+        };
+      });
+      pintar();
     }
 
     function pintar() {
-      // Quien pidió menos movimiento ve el trazo entero desde el primer cuadro.
-      if (quieto.matches) {
-        aplicar(1);
-        return;
-      }
-      const t = (innerHeight * INICIO - ol!.getBoundingClientRect().top) / (innerHeight * (INICIO - FIN));
-      aplicar(Math.min(1, Math.max(0, t)));
-    }
+      const vertical = angosto.matches;
+      // Quien pidió menos movimiento recibe todo puesto desde el primer cuadro.
+      const p = quieto.matches
+        ? 1
+        : acotar(
+            (innerHeight * INICIO - ol!.getBoundingClientRect().top) /
+              (innerHeight * (INICIO - FIN)),
+          );
 
-    /* La posición y el largo, del centro de un punto al centro del otro. El
-       `cssText` se reescribe entero a propósito: limpia lo de la medición
-       anterior, que con otra disposición podría dejar un `width` donde ahora
-       va un `height`. */
-    function medir() {
-      const a = centro(puntos[0]);
-      const b = centro(puntos[puntos.length - 1]);
-      const enc = centro(puntos[iEnCurso]);
-      const largo = angosto.matches ? b.y - a.y : b.x - a.x;
-      const hasta = angosto.matches ? enc.y - a.y : enc.x - a.x;
-      corte = largo > 0 ? hasta / largo : 1;
+      /* El eje de avance y el transversal. El transversal se toma del primer
+         punto: los tres están alineados sobre el riel. */
+      const avance = (i: number) => (vertical ? pos[i].y : pos[i].x);
+      const cruce = vertical ? pos[0].x : pos[0].y;
+      const desde = avance(0);
+      const hasta = avance(pos.length - 1);
 
-      /* Los dos rieles comparten caja: van del primer punto al último, de
-         punto a punto y no de borde a borde. El gris queda quieto y el azul
-         se dibuja encima. Lo mide el script y no la grilla porque es la misma
-         cuenta que el trazo, y tenerla en un solo lugar es lo que garantiza
-         que no se desalineen. */
-      const caja = angosto.matches
-        ? `left:${a.x - 0.75}px; top:${a.y}px; width:1.5px; height:${largo}px;`
-        : `left:${a.x}px; top:${a.y - 0.75}px; height:1.5px; width:${largo}px;`;
+      const frente = desde + p * (hasta - desde + RAMPA);
+      const largo = Math.max(0, Math.min(frente, hasta) - desde);
 
-      if (riel) riel.style.cssText = caja;
-      trazo!.style.cssText = `${caja} transform-origin:${angosto.matches ? 'top' : 'left'};`;
-      pintar();
+      const caja = vertical
+        ? `left:${cruce - 0.75}px; top:${desde}px; width:1.5px; height:`
+        : `left:${desde}px; top:${cruce - 0.75}px; height:1.5px; width:`;
+
+      riel!.style.cssText = `${caja}${hasta - desde}px;`;
+      trazo!.style.cssText = `${caja}${largo}px;`;
+
+      /* La marca de la punta, sólo mientras el trazo está en movimiento. Se
+         escribe de una sola vez y no con `+=`: `cssText` se lee y se reasigna
+         entero, así que sumarle declaraciones en cada cuadro hace crecer la
+         cadena para siempre. */
+      const punta = Math.min(frente, hasta);
+      const visible = p > 0 && frente < hasta ? 1 : 0;
+      marca!.style.cssText = vertical
+        ? `top:${punta - 0.75}px; left:${cruce - 7}px; width:14px; height:1.5px; opacity:${visible};`
+        : `left:${punta - 0.75}px; top:${cruce - 7}px; width:1.5px; height:14px; opacity:${visible};`;
+
+      pos.forEach((_, i) => {
+        // Los seis píxeles de adelanto hacen que el hito empiece a aparecer
+        // cuando la punta lo está tocando, no después de pasarlo.
+        const r = acotar((frente - avance(i) + 6) / RAMPA);
+        textos[i]!.style.opacity = String(r);
+        textos[i]!.style.transform = `translateY(${Math.round((1 - r) * 14)}px)`;
+        hitos[i].classList.toggle('alcanzado', i === 0 ? p > 0 : r > 0);
+      });
     }
 
     medir();
