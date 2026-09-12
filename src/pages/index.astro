@@ -175,14 +175,13 @@ import {
       </div>
 
       <ol class="hitos revela-linea">
-        {/* Dos rieles superpuestos: el gris cruza los tres hitos y el azul
-            llega hasta el que está en curso. El azul no lleva un porcentaje
-            calculado a mano —se desacomodaría con cualquier cambio de
-            columnas—: ocupa la primera columna y se estira sobre el hueco
-            siguiente con un margen negativo, así que termina exactamente
-            sobre el segundo punto mida lo que mida la ventana. */}
+        {/* El riel gris cruza los tres hitos. Encima, el tramo azul, que se
+            dibuja con el scroll y llega hasta el punto del hito en curso: su
+            medida la calcula el script contra los hitos reales, no un
+            porcentaje, así que sigue cayendo donde debe si cambian las
+            columnas o el ancho de la ventana. */}
         <span class="hitos__riel" aria-hidden="true"></span>
-        <span class="hitos__riel hitos__riel__andado" aria-hidden="true"></span>
+        <span class="linea-avance" data-linea-avance aria-hidden="true"></span>
 
         {
           estado.hitos.map((h) => (
@@ -633,24 +632,33 @@ import {
     background: var(--linea);
   }
 
-  /* El tramo andado llega hasta el segundo punto: ocupa la primera columna,
-     cruza el hueco con un margen negativo y suma los cuatro píxeles del radio
-     del punto, que es donde está su centro. Sin esos cuatro, el azul moría en
-     el borde del punto en vez de en el punto —medido, 461 contra 465. */
-  .hitos__riel__andado {
-    grid-column: 1 / 2;
-    margin-inline-end: calc(-1 * var(--hueco) - 4px);
-    background: var(--acento);
-    /* Lo que el scroll dibuja. La medida final la sigue poniendo la grilla
-       —el tramo termina sobre el segundo punto mida lo que mida la ventana—
-       y `--avance` sólo dice cuánto de esa medida está trazado. El eje lo
-       elige cada disposición: horizontal acá, vertical en una columna.
-
-       El valor por defecto es 1, o sea entero: si el script no corre —sin
-       JavaScript, o con menos movimiento pedido— la línea aparece completa,
-       que es la información correcta, y no vacía. */
-    transform: scaleX(var(--avance, 1));
+  /* El tramo dibujado. Va absoluto y no como celda de la grilla: su medida no
+     sale de las columnas sino de la distancia real entre el primer punto y el
+     del hito en curso, que mide el script. `--avance` dice cuánto de esa
+     medida está trazado, y el `transition` corto es lo que evita que el trazo
+     tiemble con cada muesca de la rueda del mouse. */
+  .linea-avance {
+    position: absolute;
+    inset-block-start: 3px;
+    inset-inline-start: 4px;
+    width: 0;
+    height: 1.5px;
+    background: var(--azul-600);
+    transform: scaleX(var(--avance, 0));
     transform-origin: left;
+    transition: transform 120ms linear;
+  }
+
+  /* Sin movimiento el trazo no se dibuja: aparece entero desde el primer
+     cuadro, que es la información correcta. */
+  @media (prefers-reduced-motion: reduce) {
+    .hitos {
+      --avance: 1;
+    }
+
+    .linea-avance {
+      transition: none;
+    }
   }
 
   /* Los hitos van colocados a mano en su columna. Los dos rieles son hijos de
@@ -801,17 +809,20 @@ import {
       margin-inline-start: calc(-1 * var(--sangria) - 0.75px);
     }
 
-    /* Hasta el segundo punto: ocupa la primera fila y cruza el hueco de
-       abajo, igual que en escritorio pero en el otro eje. */
-    .hitos__riel__andado {
-      grid-row: 1 / 2;
-      grid-column: 1;
-      margin-inline-end: 0;
-      /* Hasta el centro del segundo punto: el hueco de la fila, más lo que
-         el punto baja dentro de su hito (0.45rem) y su radio. Sin los dos
-         últimos, el trazo moría siete píxeles antes —medido. */
-      margin-block-end: calc(-1 * var(--hueco-fila) - 0.45rem - 4px);
-      transform: scaleY(var(--avance, 1));
+    /* El mismo trazo, en el otro eje: la medida se la sigue dando el script,
+       que acá mide hacia abajo. El origen pasa a arriba y lo que escala es la
+       altura. */
+    .linea-avance {
+      inset-block-start: calc(0.45rem + 4px);
+      /* Sólo el medio grosor del riel, no la sangría entera: al ser absoluto,
+         su referencia es la caja de relleno del `ol` —que empieza donde el
+         riel gris— y no el inicio de la columna, que está una sangría más a
+         la derecha. Con la sangría restada, el trazo caía veinticuatro
+         píxeles a la izquierda de los puntos. */
+      inset-inline-start: -0.75px;
+      width: 1.5px;
+      height: 0;
+      transform: scaleY(var(--avance, 0));
       transform-origin: top;
     }
 
@@ -1122,3 +1133,68 @@ import {
     margin-block-start: clamp(1.75rem, 4vw, 2.75rem);
   }
 </style>
+
+<script>
+  /**
+   * La línea de tiempo del estado se dibuja con el scroll.
+   *
+   * El trazo empieza cuando el riel entra por el 90% del alto de la ventana y
+   * se completa cuando llega al 45%. Al subir, retrocede: no es una entrada
+   * de una sola vez, es una lectura de dónde está la página.
+   *
+   * La medida del trazo no es un porcentaje: es la distancia real entre el
+   * primer hito y el que está en curso, medida contra el DOM. Por eso se
+   * recalcula al cargar y en cada `resize` —cambiar el ancho de la ventana
+   * cambia las columnas, y con ellas esa distancia.
+   */
+  const hitos = document.querySelector<HTMLElement>('.hitos');
+  const avance = hitos?.querySelector<HTMLElement>('[data-linea-avance]');
+
+  if (hitos && avance) {
+    const quieto = matchMedia('(prefers-reduced-motion: reduce)');
+    const angosto = matchMedia('(max-width: 62rem)');
+    const partes = Array.from(hitos.querySelectorAll<HTMLElement>('.hito'));
+    const enCurso = hitos.querySelector<HTMLElement>('.hito[data-fase="en-curso"]');
+
+    /* De dónde a dónde llega el trazo. Se mide sobre los `li` y no sobre los
+       puntos: el punto está posicionado dentro de su hito, así que su
+       `offsetLeft` es cero en todos y la resta daría cero. La distancia entre
+       hitos es la misma que entre sus puntos, que es la que importa. */
+    function medir() {
+      if (!partes.length || !enCurso) return;
+      const vertical = angosto.matches;
+      const desde = vertical ? partes[0].offsetTop : partes[0].offsetLeft;
+      const hasta = vertical ? enCurso.offsetTop : enCurso.offsetLeft;
+      const largo = Math.max(hasta - desde, 0);
+      avance!.style.width = vertical ? '' : `${largo}px`;
+      avance!.style.height = vertical ? `${largo}px` : '';
+    }
+
+    function pintar() {
+      const caja = hitos!.getBoundingClientRect();
+      const t = (innerHeight * 0.9 - caja.top) / (innerHeight * 0.45);
+      const acotado = Math.min(Math.max(t, 0), 1);
+      hitos!.style.setProperty('--avance', String(acotado));
+      // El hito en curso se enciende cuando el trazo lo alcanza.
+      enCurso?.classList.toggle('alcanzado', acotado >= 1);
+    }
+
+    /* Con menos movimiento pedido el trazo aparece entero y no se mueve: el
+       CSS ya deja `--avance` en 1, así que acá sólo hay que medirlo y no
+       escribir nada más. */
+    medir();
+    if (!quieto.matches) {
+      pintar();
+      addEventListener('scroll', pintar, { passive: true });
+    }
+
+    addEventListener('resize', () => {
+      medir();
+      if (!quieto.matches) pintar();
+    });
+
+    // Las fuentes cambian el alto de los títulos, y con él la distancia entre
+    // hitos cuando están apilados.
+    document.fonts?.ready.then(medir);
+  }
+</script>
