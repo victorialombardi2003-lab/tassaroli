@@ -2,14 +2,14 @@
 interface Props {
   /** Nombre del archivo en `public/clips`, sin extensión. */
   nombre: string;
-  /** Nombre del espacio, para el rótulo y la descripción accesible. */
+  /** Título del espacio. Va sobre el video: es su encabezado. */
   espacio: string;
 }
 
 const { nombre, espacio } = Astro.props;
 
 /**
- * El recorrido filmado de un espacio.
+ * El recorrido filmado de un espacio, a sangre y con el título encima.
  *
  * No es un GIF, aunque se comporte como uno: arranca solo, en silencio y sin
  * controles. Un GIF del mismo clip pesaba 23 MB contra 1 MB de esto —medido—
@@ -30,77 +30,246 @@ const { nombre, espacio } = Astro.props;
  */
 ---
 
-<figure class="clip" data-clip>
+<figure class="filmado" data-clip>
   <video
-    class="clip__video"
+    class="filmado__video"
     data-clip-video
     src={`/clips/${nombre}.mp4`}
     poster={`/clips/${nombre}.webp`}
     preload="none"
     muted
     playsinline
-    aria-label={`Recorrido filmado de ${espacio}`}
-  ></video>
+    aria-label={`Recorrido filmado de ${espacio}`}></video>
 
-  {/* Un control para volver a verlo. El clip corre una sola vez, así que sin
-      esto la única manera de repetirlo es recargar la página. Aparece recién
-      cuando terminó: antes no tiene nada que hacer. */}
-  <button class="clip__repetir" type="button" data-clip-repetir hidden>
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" focusable="false">
-      <path
-        d="M11.5 6.5a5 5 0 1 1-1.6-3.7M11.8 1v3h-3"
-        stroke="currentColor"
-        stroke-width="1.4"
-        stroke-linecap="square"
-      />
-    </svg>
-    <span>Repetir</span>
-  </button>
+  <span class="filmado__velo" aria-hidden="true"></span>
+
+  <figcaption class="filmado__pie">
+    <div>
+      <p class="filmado__rotulo">
+        {/* El punto se enciende mientras corre el video. Es la única señal de
+            que esto es un recorrido y no una foto grande, para quien llega
+            con el clip ya terminado. */}
+        <i class="filmado__punto" aria-hidden="true"></i>
+        <span>Recorrido filmado</span>
+      </p>
+      <h3 class="filmado__titulo">{espacio}</h3>
+    </div>
+
+    <button class="filmado__boton" type="button" data-clip-boton>
+      <span class="filmado__aro" aria-hidden="true">
+        <svg width="8" height="10" viewBox="0 0 8 10" fill="none" focusable="false">
+          <path d="M1 0.6 7.2 5 1 9.4Z" fill="currentColor" />
+        </svg>
+      </span>
+      <span data-clip-rotulo>Ver el recorrido</span>
+    </button>
+  </figcaption>
+
+  {/* Cuánto queda. Con el video sin controles, es lo único que dice que esto
+      dura algo y cuánto. */}
+  <span class="filmado__pista" aria-hidden="true">
+    <span class="filmado__avance" data-clip-avance></span>
+  </span>
 </figure>
 
 <style>
-  .clip {
+  /* Arranca donde arranca el texto de la calle y se va hasta el borde de la
+     ventana. Ese corte a la derecha es lo que lo vuelve un recorrido y no una
+     lámina más: se sale del margen que ordena toda la página. */
+  .filmado {
     position: relative;
-    margin: clamp(0.75rem, 1.8vw, 1.25rem) 0 0;
+    margin: 0 0 0 calc(var(--rail) + var(--borde));
+    aspect-ratio: 21 / 9;
     overflow: hidden;
-    border-radius: 2px;
     background: var(--azul-900);
-    line-height: 0;
   }
 
-  .clip__video {
+  .filmado__video {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
   }
 
-  .clip__repetir {
+  .filmado__velo {
     position: absolute;
-    inset-block-end: 12px;
-    inset-inline-end: 12px;
-    display: inline-flex;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 55%, rgba(20, 33, 61, 0.7) 100%);
+  }
+
+  .filmado__pie {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: clamp(1rem, 3vw, 2.5rem);
+    padding: 0 var(--borde) 28px 40px;
+    color: #ffffff;
+  }
+
+  .filmado__rotulo {
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.7rem;
-    background: color-mix(in srgb, var(--azul-900) 72%, transparent);
-    backdrop-filter: blur(6px);
-    border: none;
-    border-radius: 2px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    gap: 0.6rem;
+    margin: 0;
     font-family: var(--mono);
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.14em;
-    line-height: 1;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.86);
-    cursor: pointer;
-    transition: color 160ms ease-out, box-shadow 160ms ease-out;
+    color: rgba(255, 255, 255, 0.8);
   }
 
-  .clip__repetir:hover {
+  .filmado__punto {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transition: background-color 240ms ease-out;
+  }
+
+  .filmado[data-corriendo] .filmado__punto {
+    background: var(--azul-400);
+  }
+
+  /* El título del espacio vive acá y no en la columna de texto: sobre su
+     propio recorrido es donde se lee como encabezado y no como epígrafe. */
+  .filmado__titulo {
+    margin: 0.75rem 0 0;
+    font-family: var(--sans);
+    /* El spec fija 40px; acá va con ese techo y un piso más abajo, que a
+       tamaño fijo un título largo se sale del marco en un teléfono. */
+    font-size: clamp(1.375rem, 0.9rem + 2vw, 2.5rem);
+    font-weight: 620;
+    line-height: 1.02;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+  }
+
+  .filmado__boton {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 12px 18px 12px 14px;
+    background: color-mix(in srgb, var(--azul-900) 55%, transparent);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-transform: uppercase;
     color: #ffffff;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: background-color 180ms ease-out, color 180ms ease-out,
+      box-shadow 180ms ease-out;
+  }
+
+  /* Mientras el video corre no hay nada que ofrecer: el botón se va y deja
+     ver el recorrido, que es de lo que se trata. */
+  .filmado[data-corriendo] .filmado__boton {
+    visibility: hidden;
+  }
+
+  .filmado__boton:hover {
+    background: #ffffff;
+    color: var(--azul-900);
+    box-shadow: inset 0 0 0 1px #ffffff;
+  }
+
+  .filmado__aro {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    /* El triángulo corrido un pelo a la derecha: centrado por caja, un
+       triángulo se ve siempre caído hacia la izquierda. */
+    padding-inline-start: 2px;
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  /* El mismo latido que el botón del hero: un aro que sale del contorno y se
+     desvanece. Es lo que hace que el ojo lo encuentre sobre una imagen. */
+  .filmado__aro::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px currentColor;
+    animation: filmado-latido 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  .filmado__boton:hover .filmado__aro::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  @keyframes filmado-latido {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    60% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+
+  .filmado__pista {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .filmado__avance {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: #ffffff;
+    transition: width 200ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .filmado__aro::after {
+      animation: none;
+    }
+
+    .filmado__avance {
+      transition: none;
+    }
+  }
+
+  /* En teléfono el pie se apila: el título y el botón uno arriba del otro no
+     entran en una fila de 375px sin que el título quede en cinco renglones. */
+  @media (max-width: 48rem) {
+    .filmado {
+      aspect-ratio: 3 / 2;
+      margin-inline-start: var(--borde);
+    }
+
+    .filmado__pie {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0 var(--borde) 20px var(--borde);
+    }
   }
 </style>
 
@@ -112,58 +281,58 @@ const { nombre, espacio } = Astro.props;
 
     for (const caja of clips) {
       const video = caja.querySelector<HTMLVideoElement>('[data-clip-video]');
-      const repetir = caja.querySelector<HTMLButtonElement>('[data-clip-repetir]');
-      if (!video || !repetir) continue;
-
-      /* Quien pidió menos movimiento no recibe un video que arranca solo. Se
-         queda con el póster y el botón para verlo si quiere. */
-      const solo = !quieto.matches;
+      const boton = caja.querySelector<HTMLButtonElement>('[data-clip-boton]');
+      const rotulo = caja.querySelector<HTMLElement>('[data-clip-rotulo]');
+      const avance = caja.querySelector<HTMLElement>('[data-clip-avance]');
+      if (!video || !boton) continue;
 
       /* Si terminó, vuelve a empezar; si quedó a mitad de camino, sigue desde
          donde estaba. Un botón que reinicia un clip pausado a los ocho
          segundos hace perder los ocho. */
-      repetir.addEventListener('click', () => {
+      boton.addEventListener('click', () => {
         if (video.ended) video.currentTime = 0;
         void video.play();
       });
 
-      /* El botón aparece con cualquier parada, no sólo al terminar. El
+      const nombrar = () => {
+        if (rotulo) rotulo.textContent = video.ended ? 'Repetir' : 'Ver el recorrido';
+      };
+
+      video.addEventListener('play', () => {
+        caja.dataset.corriendo = '';
+      });
+
+      /* El botón vuelve con cualquier parada, no sólo al terminar. El
          navegador pausa el video por su cuenta en más casos de los que uno
          piensa —una pestaña que pasa al fondo, un sistema que ahorra
          batería—, y sin esto el clip quedaría congelado sin manera de
          seguirlo. */
-      const rotulo = repetir.querySelector('[data-clip-rotulo]');
-      const nombrar = () => {
-        if (rotulo) rotulo.textContent = video.ended ? 'Repetir' : 'Ver';
+      const parar = () => {
+        delete caja.dataset.corriendo;
+        nombrar();
       };
+      video.addEventListener('pause', parar);
+      video.addEventListener('ended', parar);
 
-      video.addEventListener('pause', () => {
-        nombrar();
-        repetir.hidden = false;
-      });
-      video.addEventListener('ended', () => {
-        nombrar();
-        repetir.hidden = false;
-      });
-      video.addEventListener('play', () => {
-        repetir.hidden = true;
+      video.addEventListener('timeupdate', () => {
+        if (avance && video.duration) {
+          avance.style.width = `${(video.currentTime / video.duration) * 100}%`;
+        }
       });
 
-      if (!solo) {
-        repetir.hidden = false;
-        continue;
-      }
+      /* Quien pidió menos movimiento no recibe un video que arranca solo. Se
+         queda con el póster y el botón para verlo si quiere. */
+      if (quieto.matches) continue;
 
       /* Arranca cuando el espacio está de verdad a la vista, no cuando
-         asoma: con el umbral en la mitad, el clip no se gasta mientras alguien
-         pasa de largo scrolleando rápido. Y corre una sola vez. */
+         asoma: con el umbral en la mitad, el clip no se gasta mientras
+         alguien pasa de largo scrolleando rápido. Y corre una sola vez. */
       new IntersectionObserver(
         (entradas, obs) => {
           if (!entradas.some((e) => e.isIntersecting)) return;
           obs.disconnect();
           void video.play().catch(() => {
             // Si el navegador se niega a arrancarlo solo, queda el botón.
-            repetir.hidden = false;
           });
         },
         { threshold: 0.5 },

@@ -1,0 +1,228 @@
+---
+import Render from './Render.astro';
+
+interface Props {
+  renders: readonly string[];
+  alt: string;
+  titulo: string;
+  fig: string;
+  ratio?: string;
+}
+
+const { renders, alt, titulo, fig, ratio = '3 / 2' } = Astro.props;
+const total = renders.length;
+
+/**
+ * Las vistas de un espacio, con miniaturas y una vista grande.
+ *
+ * Es la alternativa al carrusel para los espacios que tienen recorrido
+ * filmado. El carrusel se recorre de a uno y esconde lo que viene; acá el
+ * conjunto está a la vista de entrada, que es lo que corresponde cuando el
+ * video ya se llevó la atención: las vistas pasan a ser el detalle que uno
+ * revisa, no el hilo que uno sigue.
+ *
+ * Las imágenes se cargan todas —son de la misma página y ya venían así en el
+ * carrusel—, y el cambio es sólo de opacidad, así que no hay espera entre una
+ * vista y la otra.
+ */
+---
+
+<div class="galeria" data-galeria>
+  {
+    total > 1 && (
+      <div
+        class:list={['galeria__minis', total > 6 && 'galeria__minis--pista']}
+        style={`--columnas: ${Math.min(total, 6)}`}
+        role="group"
+        aria-label={`Vistas de ${titulo}`}
+      >
+        {renders.map((nombre, i) => (
+          <button
+            class="galeria__mini"
+            type="button"
+            data-galeria-mini={i}
+            aria-current={i === 0 ? 'true' : undefined}
+          >
+            <Render
+              nombre={nombre}
+              alt={`${alt}, vista ${i + 1}`}
+              ratio="3 / 2"
+              sizes="(min-width: 62rem) 8rem, 22vw"
+            />
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  <div class="galeria__marco" style={`--ratio: ${ratio}`}>
+    {
+      renders.map((nombre, i) => (
+        <div class="galeria__vista" data-galeria-vista={i} aria-hidden={i === 0 ? undefined : 'true'}>
+          <Render
+            nombre={nombre}
+            alt={i === 0 ? alt : `${alt}, vista ${i + 1}`}
+            ratio={ratio}
+            sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+          />
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="galeria__pie">
+    <p class="epigrafe galeria__epigrafe">
+      <span class="dato">Fig. {fig}</span>
+      <span>
+        {titulo}
+        {total > 1 && <span data-galeria-cual>, vista 1</span>}
+      </span>
+    </p>
+    {total > 1 && (
+      <p class="dato galeria__contador">
+        <span data-galeria-n>1</span> / {total}
+      </p>
+    )}
+  </div>
+</div>
+
+<style>
+  .galeria {
+    min-width: 0;
+  }
+
+  .galeria__minis {
+    display: grid;
+    grid-template-columns: repeat(var(--columnas), minmax(0, 1fr));
+    gap: 12px;
+    margin-block-end: 12px;
+  }
+
+  /* Con más de seis vistas la fila deja de repartirse y pasa a ser una pista
+     que se arrastra, igual que la del carrusel: repartidas, doce miniaturas
+     quedarían de sesenta píxeles y no se vería qué hay en cada una. */
+  .galeria__minis--pista {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(5.5rem, 1fr);
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    padding-block-end: 4px;
+  }
+
+  .galeria__minis--pista .galeria__mini {
+    scroll-snap-align: start;
+  }
+
+  .galeria__mini {
+    display: block;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 2px;
+    overflow: hidden;
+    line-height: 0;
+    cursor: pointer;
+    opacity: 0.72;
+    transition: opacity 180ms ease-out, box-shadow 180ms ease-out;
+  }
+
+  .galeria__mini:hover {
+    opacity: 1;
+  }
+
+  .galeria__mini[aria-current='true'] {
+    opacity: 1;
+    box-shadow: inset 0 0 0 2px var(--azul-600);
+  }
+
+  /* Todas las vistas apiladas en la misma celda: el cambio es de opacidad y
+     no de posición, así que no hay reflujo ni salto de alto entre una y la
+     siguiente. */
+  .galeria__marco {
+    display: grid;
+    aspect-ratio: var(--ratio);
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--azul-900);
+  }
+
+  .galeria__vista {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+
+  .galeria__vista[aria-hidden='true'] {
+    /* Fuera del alcance del puntero y del lector: no se ve y no se toca. */
+    pointer-events: none;
+  }
+
+  .galeria__vista:not([aria-hidden='true']) {
+    opacity: 1;
+  }
+
+  .galeria__vista :global(.lamina),
+  .galeria__vista :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .galeria__pie {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-start: 12px;
+  }
+
+  .galeria__epigrafe {
+    margin: 0;
+    padding: 0;
+  }
+
+  .galeria__contador {
+    flex: none;
+    color: var(--tinta-3);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<script>
+  for (const caja of document.querySelectorAll<HTMLElement>('[data-galeria]')) {
+    const minis = Array.from(caja.querySelectorAll<HTMLButtonElement>('[data-galeria-mini]'));
+    const vistas = Array.from(caja.querySelectorAll<HTMLElement>('[data-galeria-vista]'));
+    const cual = caja.querySelector<HTMLElement>('[data-galeria-cual]');
+    const n = caja.querySelector<HTMLElement>('[data-galeria-n]');
+    if (minis.length < 2) continue;
+
+    function ir(i: number) {
+      minis.forEach((m, k) => {
+        if (k === i) m.setAttribute('aria-current', 'true');
+        else m.removeAttribute('aria-current');
+      });
+      vistas.forEach((v, k) => {
+        if (k === i) v.removeAttribute('aria-hidden');
+        else v.setAttribute('aria-hidden', 'true');
+      });
+      if (cual) cual.textContent = `, vista ${i + 1}`;
+      if (n) n.textContent = String(i + 1);
+    }
+
+    minis.forEach((m, i) => m.addEventListener('click', () => ir(i)));
+
+    // Las flechas recorren la fila, como en cualquier grupo de pestañas.
+    caja.addEventListener('keydown', (e) => {
+      const i = minis.indexOf(document.activeElement as HTMLButtonElement);
+      if (i < 0) return;
+      const paso = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!paso) return;
+      e.preventDefault();
+      const destino = (i + paso + minis.length) % minis.length;
+      minis[destino].focus();
+      ir(destino);
+    });
+  }
+</script>

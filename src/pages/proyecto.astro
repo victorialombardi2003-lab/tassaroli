@@ -4,6 +4,7 @@ import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
 import Clip from '../components/Clip.astro';
+import Galeria from '../components/Galeria.astro';
 import Flecha from '../components/Flecha.astro';
 import Escudo from '../components/Escudo.astro';
 import { sitio, espacios, proposito } from '../data/contenido';
@@ -118,59 +119,78 @@ const lista = espacios.map((e, i) => ({
     </div>
 
     {
-      lista.map((e) => (
-        <article class="espacio" data-seccion>
-          <div class="calle espacio__par">
-            <div class="espacio__texto">
-              <Nodo texto={e.nodo} recorrido={e.recorrido} />
-              <div class="revela-linea">
-                <h3 class="subtitulo">{e.titulo}</h3>
-                <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
+      lista.map((e) =>
+        'clip' in e && e.clip ? (
+          /* Espacio con recorrido filmado. El video manda: va a sangre y
+             arriba, con el título del espacio encima, y recién debajo entran
+             el texto y las vistas. El nodo sale de la columna de texto y se
+             cuelga del artículo, para quedar en el carril a la altura del
+             video y no a media página de él. */
+          <article class="espacio espacio--filmado" data-seccion>
+            <Nodo texto={e.nodo} recorrido={e.recorrido} />
+
+            <div class="revela">
+              <Clip nombre={e.clip} espacio={e.titulo} />
+            </div>
+
+            <div class="calle espacio__par espacio__par--filmado">
+              <p class="cuerpo espacio__cuerpo revela-linea">{e.cuerpo}</p>
+
+              <div class="revela">
+                <Galeria
+                  renders={e.renders}
+                  alt={e.alt}
+                  titulo={e.titulo}
+                  fig={e.fig}
+                  ratio={e.ratio}
+                />
               </div>
             </div>
-
-            {/* Las vistas y, debajo, el recorrido filmado si el espacio
-                tiene uno. Van envueltos en una sola columna de la grilla: si
-                el clip fuera hermano del texto, caería en la fila siguiente y
-                se despegaría de las imágenes a las que pertenece. */}
-            <div class="espacio__vistas">
-              {e.renders.length > 1 ? (
-                <div class="espacio__carrusel revela">
-                  <Carrusel
-                    renders={e.renders}
-                    alt={e.alt}
-                    titulo={e.titulo}
-                    fig={e.fig}
-                    ratio={e.ratio}
-                    ancho="par"
-                  />
+          </article>
+        ) : (
+          <article class="espacio" data-seccion>
+            <div class="calle espacio__par">
+              <div class="espacio__texto">
+                <Nodo texto={e.nodo} recorrido={e.recorrido} />
+                <div class="revela-linea">
+                  <h3 class="subtitulo">{e.titulo}</h3>
+                  <p class="cuerpo espacio__cuerpo">{e.cuerpo}</p>
                 </div>
-              ) : (
-                <figure class="espacio__lamina revela">
-                  <div class="marco-imagen" data-paralaje>
-                    <Render
-                      nombre={e.renders[0]}
+              </div>
+
+              <div class="espacio__vistas">
+                {e.renders.length > 1 ? (
+                  <div class="espacio__carrusel revela">
+                    <Carrusel
+                      renders={e.renders}
                       alt={e.alt}
+                      titulo={e.titulo}
+                      fig={e.fig}
                       ratio={e.ratio}
-                      sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+                      ancho="par"
                     />
                   </div>
-                  <figcaption class="epigrafe">
-                    <span class="dato">Fig. {e.fig}</span>
-                    <span>{e.titulo}</span>
-                  </figcaption>
-                </figure>
-              )}
-
-              {'clip' in e && e.clip && (
-                <div class="revela">
-                  <Clip nombre={e.clip} espacio={e.titulo} />
-                </div>
-              )}
+                ) : (
+                  <figure class="espacio__lamina revela">
+                    <div class="marco-imagen" data-paralaje>
+                      <Render
+                        nombre={e.renders[0]}
+                        alt={e.alt}
+                        ratio={e.ratio}
+                        sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+                      />
+                    </div>
+                    <figcaption class="epigrafe">
+                      <span class="dato">Fig. {e.fig}</span>
+                      <span>{e.titulo}</span>
+                    </figcaption>
+                  </figure>
+                )}
+              </div>
             </div>
-          </div>
-        </article>
-      ))
+          </article>
+        ),
+      )
     }
   </section>
 
@@ -381,6 +401,32 @@ const lista = espacios.map((e, i) => ({
 
   .espacio__cuerpo {
     margin-block-start: 0.85rem;
+  }
+
+  /* El nodo se cuelga del artículo y no de la calle, que es lo que lo deja
+     en el carril a la altura del video. `.nodo` se posiciona contra el
+     ancestro posicionado más cercano, así que el artículo tiene que serlo. */
+  .espacio--filmado {
+    position: relative;
+  }
+
+  /* Debajo del video el texto ya no compite con un título: empieza arriba de
+     todo, alineado con la primera miniatura. */
+  .espacio__par--filmado {
+    align-items: start;
+    padding-block-start: clamp(1.75rem, 3.5vw, 2.75rem);
+  }
+
+  /* Sin esto la pista de miniaturas estira su columna y se lleva la fila
+     entera: un hijo de grilla mide por defecto `min-width: auto`, o sea lo
+     que pida su contenido, y diecinueve miniaturas piden 1888px. Medido en
+     una ventana de 375, la galería y el párrafo se salían del borde. */
+  .espacio__par--filmado > * {
+    min-width: 0;
+  }
+
+  .espacio__par--filmado .espacio__cuerpo {
+    margin-block-start: 0;
   }
 
   .espacio__par {
