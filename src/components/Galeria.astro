@@ -7,9 +7,13 @@ interface Props {
   titulo: string;
   fig: string;
   ratio?: string;
+  /** Número de la primera vista. Los espacios sin recorrido filmado ponen su
+      primera vista en la cabecera, así que acá la cuenta arranca en dos y el
+      epígrafe no promete una vista que no está. */
+  inicio?: number;
 }
 
-const { renders, alt, titulo, fig, ratio = '3 / 2' } = Astro.props;
+const { renders, alt, titulo, fig, ratio = '3 / 2', inicio = 1 } = Astro.props;
 const total = renders.length;
 
 /**
@@ -45,7 +49,7 @@ const total = renders.length;
           >
             <Render
               nombre={nombre}
-              alt={`${alt}, vista ${i + 1}`}
+              alt={`${alt}, vista ${i + inicio}`}
               ratio="3 / 2"
               sizes="(min-width: 62rem) 8rem, 22vw"
             />
@@ -61,7 +65,7 @@ const total = renders.length;
         <div class="galeria__vista" data-galeria-vista={i} aria-hidden={i === 0 ? undefined : 'true'}>
           <Render
             nombre={nombre}
-            alt={i === 0 ? alt : `${alt}, vista ${i + 1}`}
+            alt={i === 0 && inicio === 1 ? alt : `${alt}, vista ${i + inicio}`}
             ratio={ratio}
             sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
           />
@@ -75,12 +79,12 @@ const total = renders.length;
       <span class="dato">Fig. {fig}</span>
       <span>
         {titulo}
-        {total > 1 && <span data-galeria-cual>, vista 1</span>}
+        {total > 1 && <span data-galeria-cual>, vista {inicio}</span>}
       </span>
     </p>
     {total > 1 && (
       <p class="dato galeria__contador">
-        <span data-galeria-n>1</span> / {total}
+        <span data-galeria-n>{inicio}</span> / {total + inicio - 1}
       </p>
     )}
   </div>
@@ -196,6 +200,7 @@ const total = renders.length;
     const vistas = Array.from(caja.querySelectorAll<HTMLElement>('[data-galeria-vista]'));
     const cual = caja.querySelector<HTMLElement>('[data-galeria-cual]');
     const n = caja.querySelector<HTMLElement>('[data-galeria-n]');
+    const inicio = Number(caja.dataset.inicio ?? 1);
     if (minis.length < 2) continue;
 
     function ir(i: number) {
@@ -207,8 +212,8 @@ const total = renders.length;
         if (k === i) v.removeAttribute('aria-hidden');
         else v.setAttribute('aria-hidden', 'true');
       });
-      if (cual) cual.textContent = `, vista ${i + 1}`;
-      if (n) n.textContent = String(i + 1);
+      if (cual) cual.textContent = `, vista ${i + inicio}`;
+      if (n) n.textContent = String(i + inicio);
     }
 
     minis.forEach((m, i) => m.addEventListener('click', () => ir(i)));

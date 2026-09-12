@@ -1,75 +1,106 @@
 ---
+import Render from './Render.astro';
+
 interface Props {
-  /** Nombre del archivo en `public/clips`, sin extensión. */
-  nombre: string;
-  /** Título del espacio. Va sobre el video: es su encabezado. */
+  /** Título del espacio. Va sobre la pieza: es su encabezado. */
   espacio: string;
+  /** Recorrido filmado: nombre del archivo en `public/clips`, sin extensión. */
+  clip?: string;
+  /** Render de portada, para los espacios que no tienen recorrido filmado. */
+  render?: string;
+  alt: string;
 }
 
-const { nombre, espacio } = Astro.props;
+const { espacio, clip, render, alt } = Astro.props;
 
 /**
- * El recorrido filmado de un espacio, a sangre y con el título encima.
+ * La cabecera de un espacio: su recorrido filmado o, si no lo tiene, una
+ * vista de portada. En los dos casos va a sangre, en 21:9, con el título del
+ * espacio encima.
  *
- * No es un GIF, aunque se comporte como uno: arranca solo, en silencio y sin
- * controles. Un GIF del mismo clip pesaba 23 MB contra 1 MB de esto —medido—
- * y encima con bandas de color en los degradados, que es la mitad de lo que
- * tiene un render de arquitectura.
+ * Que los doce espacios abran igual es lo que los vuelve una serie. Cinco
+ * tienen video y siete no, y sin esto la sección se leería como dos secciones
+ * pegadas: unos espacios encabezados por una pieza ancha y otros arrancando
+ * directo en un párrafo.
  *
- * Se reproduce una sola vez, al entrar en pantalla, y queda en el último
- * cuadro. No va en bucle a propósito: los clips del estudio son travellings
- * de cámara que terminan en otro lugar del que arrancaron —el salto entre el
- * primer y el último cuadro se midió entre 52 y 74 sobre 255—, así que en
- * bucle darían un corte duro cada pocos segundos. Y varios tienen gente
- * caminando, con lo cual el ping-pong tampoco: caminarían para atrás.
+ * Sobre el video —no sobre la imagen— hay además un rótulo con un punto que
+ * se enciende mientras corre, el botón de ver o repetir, y una barra de
+ * avance. Sin controles, esa barra es lo único que dice que la pieza dura
+ * algo y cuánto.
  *
- * `preload="none"` es lo que hace que esto no le cueste nada a quien no baja
- * hasta acá: hasta que el espacio se acerca a la pantalla lo único que pesa
+ * El clip no es un GIF, aunque se comporte como uno: un GIF del mismo
+ * recorrido pesaba 23 MB contra 1 MB de esto —medido— y con bandas de color
+ * en los degradados. Se reproduce una sola vez, al entrar en pantalla, y
+ * queda en el último cuadro: los clips del estudio son travellings que
+ * terminan en otro lugar del que arrancaron —el salto entre el primer y el
+ * último cuadro se midió entre 52 y 74 sobre 255—, así que en bucle darían un
+ * corte duro cada pocos segundos, y como varios tienen gente caminando el
+ * ping-pong tampoco sirve.
+ *
+ * `preload="none"` es lo que hace que el video no le cueste nada a quien no
+ * baja hasta el espacio: hasta que se acerca a la pantalla lo único que pesa
  * es el póster, y el póster es el primer cuadro del propio clip, así que
  * cuando arranca no se ve ningún salto.
  */
 ---
 
-<figure class="filmado" data-clip>
-  <video
-    class="filmado__video"
-    data-clip-video
-    src={`/clips/${nombre}.mp4`}
-    poster={`/clips/${nombre}.webp`}
-    preload="none"
-    muted
-    playsinline
-    aria-label={`Recorrido filmado de ${espacio}`}></video>
+<figure class:list={['filmado', !clip && 'filmado--quieta']} data-clip={clip ? '' : undefined}>
+  {
+    clip ? (
+      <video
+        class="filmado__video"
+        data-clip-video
+        src={`/clips/${clip}.mp4`}
+        poster={`/clips/${clip}.webp`}
+        preload="none"
+        muted
+        playsinline
+        aria-label={`Recorrido filmado de ${espacio}`}
+      />
+    ) : (
+      <Render nombre={render!} alt={alt} ratio="21 / 9" sizes="100vw" />
+    )
+  }
 
   <span class="filmado__velo" aria-hidden="true"></span>
 
   <figcaption class="filmado__pie">
     <div>
-      <p class="filmado__rotulo">
-        {/* El punto se enciende mientras corre el video. Es la única señal de
-            que esto es un recorrido y no una foto grande, para quien llega
-            con el clip ya terminado. */}
-        <i class="filmado__punto" aria-hidden="true"></i>
-        <span>Recorrido filmado</span>
-      </p>
+      {
+        clip && (
+          <p class="filmado__rotulo">
+            {/* El punto se enciende mientras corre el video. Es la única
+                señal de que esto es un recorrido y no una foto grande, para
+                quien llega con el clip ya terminado. */}
+            <i class="filmado__punto" aria-hidden="true" />
+            <span>Recorrido filmado</span>
+          </p>
+        )
+      }
       <h3 class="filmado__titulo">{espacio}</h3>
     </div>
 
-    <button class="filmado__boton" type="button" data-clip-boton>
-      <span class="filmado__aro" aria-hidden="true">
-        <svg width="8" height="10" viewBox="0 0 8 10" fill="none" focusable="false">
-          <path d="M1 0.6 7.2 5 1 9.4Z" fill="currentColor" />
-        </svg>
-      </span>
-      <span data-clip-rotulo>Ver el recorrido</span>
-    </button>
+    {
+      clip && (
+        <button class="filmado__boton" type="button" data-clip-boton>
+          <span class="filmado__aro" aria-hidden="true">
+            <svg width="8" height="10" viewBox="0 0 8 10" fill="none" focusable="false">
+              <path d="M1 0.6 7.2 5 1 9.4Z" fill="currentColor" />
+            </svg>
+          </span>
+          <span data-clip-rotulo>Ver el recorrido</span>
+        </button>
+      )
+    }
   </figcaption>
 
   {/* Cuánto queda. Con el video sin controles, es lo único que dice que esto
       dura algo y cuánto. */}
-  <span class="filmado__pista" aria-hidden="true">
-    <span class="filmado__avance" data-clip-avance></span>
-  </span>
+  {clip && (
+    <span class="filmado__pista" aria-hidden="true">
+      <span class="filmado__avance" data-clip-avance />
+    </span>
+  )}
 </figure>
 
 <style>
@@ -89,6 +120,21 @@ const { nombre, espacio } = Astro.props;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  /* El render de portada llena el marco igual que el video: recortado a 21:9
+     y no encajado dentro, que dejaría bandas a los costados. */
+  .filmado--quieta :global(.lamina),
+  .filmado--quieta :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Sin video el pie no tiene rótulo ni botón, así que el título puede
+     respirar un poco más contra el borde. */
+  .filmado--quieta .filmado__pie {
+    padding-block-end: 24px;
   }
 
   .filmado__velo {
