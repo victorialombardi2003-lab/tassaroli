@@ -1,0 +1,173 @@
+---
+interface Props {
+  /** Nombre del archivo en `public/clips`, sin extensión. */
+  nombre: string;
+  /** Nombre del espacio, para el rótulo y la descripción accesible. */
+  espacio: string;
+}
+
+const { nombre, espacio } = Astro.props;
+
+/**
+ * El recorrido filmado de un espacio.
+ *
+ * No es un GIF, aunque se comporte como uno: arranca solo, en silencio y sin
+ * controles. Un GIF del mismo clip pesaba 23 MB contra 1 MB de esto —medido—
+ * y encima con bandas de color en los degradados, que es la mitad de lo que
+ * tiene un render de arquitectura.
+ *
+ * Se reproduce una sola vez, al entrar en pantalla, y queda en el último
+ * cuadro. No va en bucle a propósito: los clips del estudio son travellings
+ * de cámara que terminan en otro lugar del que arrancaron —el salto entre el
+ * primer y el último cuadro se midió entre 52 y 74 sobre 255—, así que en
+ * bucle darían un corte duro cada pocos segundos. Y varios tienen gente
+ * caminando, con lo cual el ping-pong tampoco: caminarían para atrás.
+ *
+ * `preload="none"` es lo que hace que esto no le cueste nada a quien no baja
+ * hasta acá: hasta que el espacio se acerca a la pantalla lo único que pesa
+ * es el póster, y el póster es el primer cuadro del propio clip, así que
+ * cuando arranca no se ve ningún salto.
+ */
+---
+
+<figure class="clip" data-clip>
+  <video
+    class="clip__video"
+    data-clip-video
+    src={`/clips/${nombre}.mp4`}
+    poster={`/clips/${nombre}.webp`}
+    preload="none"
+    muted
+    playsinline
+    aria-label={`Recorrido filmado de ${espacio}`}
+  ></video>
+
+  {/* Un control para volver a verlo. El clip corre una sola vez, así que sin
+      esto la única manera de repetirlo es recargar la página. Aparece recién
+      cuando terminó: antes no tiene nada que hacer. */}
+  <button class="clip__repetir" type="button" data-clip-repetir hidden>
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d="M11.5 6.5a5 5 0 1 1-1.6-3.7M11.8 1v3h-3"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="square"
+      />
+    </svg>
+    <span>Repetir</span>
+  </button>
+</figure>
+
+<style>
+  .clip {
+    position: relative;
+    margin: clamp(0.75rem, 1.8vw, 1.25rem) 0 0;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--azul-900);
+    line-height: 0;
+  }
+
+  .clip__video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .clip__repetir {
+    position: absolute;
+    inset-block-end: 12px;
+    inset-inline-end: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.7rem;
+    background: color-mix(in srgb, var(--azul-900) 72%, transparent);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.86);
+    cursor: pointer;
+    transition: color 160ms ease-out, box-shadow 160ms ease-out;
+  }
+
+  .clip__repetir:hover {
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+</style>
+
+<script>
+  const clips = document.querySelectorAll<HTMLElement>('[data-clip]');
+
+  if (clips.length) {
+    const quieto = matchMedia('(prefers-reduced-motion: reduce)');
+
+    for (const caja of clips) {
+      const video = caja.querySelector<HTMLVideoElement>('[data-clip-video]');
+      const repetir = caja.querySelector<HTMLButtonElement>('[data-clip-repetir]');
+      if (!video || !repetir) continue;
+
+      /* Quien pidió menos movimiento no recibe un video que arranca solo. Se
+         queda con el póster y el botón para verlo si quiere. */
+      const solo = !quieto.matches;
+
+      /* Si terminó, vuelve a empezar; si quedó a mitad de camino, sigue desde
+         donde estaba. Un botón que reinicia un clip pausado a los ocho
+         segundos hace perder los ocho. */
+      repetir.addEventListener('click', () => {
+        if (video.ended) video.currentTime = 0;
+        void video.play();
+      });
+
+      /* El botón aparece con cualquier parada, no sólo al terminar. El
+         navegador pausa el video por su cuenta en más casos de los que uno
+         piensa —una pestaña que pasa al fondo, un sistema que ahorra
+         batería—, y sin esto el clip quedaría congelado sin manera de
+         seguirlo. */
+      const rotulo = repetir.querySelector('[data-clip-rotulo]');
+      const nombrar = () => {
+        if (rotulo) rotulo.textContent = video.ended ? 'Repetir' : 'Ver';
+      };
+
+      video.addEventListener('pause', () => {
+        nombrar();
+        repetir.hidden = false;
+      });
+      video.addEventListener('ended', () => {
+        nombrar();
+        repetir.hidden = false;
+      });
+      video.addEventListener('play', () => {
+        repetir.hidden = true;
+      });
+
+      if (!solo) {
+        repetir.hidden = false;
+        continue;
+      }
+
+      /* Arranca cuando el espacio está de verdad a la vista, no cuando
+         asoma: con el umbral en la mitad, el clip no se gasta mientras alguien
+         pasa de largo scrolleando rápido. Y corre una sola vez. */
+      new IntersectionObserver(
+        (entradas, obs) => {
+          if (!entradas.some((e) => e.isIntersecting)) return;
+          obs.disconnect();
+          void video.play().catch(() => {
+            // Si el navegador se niega a arrancarlo solo, queda el botón.
+            repetir.hidden = false;
+          });
+        },
+        { threshold: 0.5 },
+      ).observe(caja);
+    }
+  }
+</script>

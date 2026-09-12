@@ -291,9 +291,14 @@ export const carta = {
   cargo: 'Presidenta, Fundación Tassaroli',
 };
 
+/* `clip` es el recorrido filmado del espacio, si lo hay: cinco de los doce
+   lo tienen. El archivo vive en `public/clips/<clip>.mp4` con su póster al
+   lado, y los arma `herramientas/sumar-clips.mjs` desde los originales del
+   estudio. */
 export const espacios = [
   {
     nodo: 'Exteriores',
+    clip: 'exteriores',
     titulo: 'Exteriores',
     cuerpo:
       'El objetivo es que el Master Plan construya la idea de un parque de aprendizaje donde, naturalmente, existe un edificio. La experiencia educativa, cultural, tecnológica y humana comienza desde el primer paso dentro del predio y acompaña al visitante a lo largo de todo el recorrido hasta el acceso principal. El exterior se concibe como una extensión activa del Centro Tecnológico, un espacio de encuentro, trabajo, contemplación, creatividad e inspiración, donde naturaleza y conocimiento conviven de manera integrada. El visitante no debe sentir que llega simplemente a un edificio, sino que ingresa a una experiencia que transmite desde el primer momento los valores de innovación, curiosidad, conocimiento, creatividad, bienestar y encuentro humano, convirtiendo al paisaje en una de las principales señas de identidad del Centro Tecnológico Carlos José Tassaroli.',
@@ -322,6 +327,7 @@ export const espacios = [
   },
   {
     nodo: 'Espacios comunes',
+    clip: 'espacios-comunes',
     titulo: 'Espacios comunes',
     cuerpo:
       'Un entorno flexible diseñado para fomentar encuentros espontáneos, conversaciones productivas y nuevas conexiones. La combinación de mobiliario modular, mesas comunitarias, barras de trabajo y rincones de conversación permite adaptar el espacio a distintas formas de uso: descansar, trabajar, reunirse o intercambiar ideas. Una propuesta dinámica y abierta que promueve la colaboración, la interacción y la construcción de comunidad.',
@@ -338,6 +344,7 @@ export const espacios = [
   },
   {
     nodo: 'Taller',
+    clip: 'taller',
     titulo: 'Taller',
     cuerpo:
       'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnología de fabricación avanzada y áreas de ensayo, articuladas en un espacio de doble altura que conecta aulas y áreas prácticas. Su resolución en estructura metálica liviana refuerza una arquitectura flexible, contemporánea y preparada para acompañar el crecimiento y la evolución tecnológica.',
@@ -406,6 +413,7 @@ export const espacios = [
   },
   {
     nodo: 'Coworking',
+    clip: 'coworking',
     titulo: 'Coworking',
     cuerpo:
       'Un espacio concebido como una extensión natural de la creatividad y la innovación del Centro Tecnológico. Un entorno flexible y colaborativo donde las ideas se desarrollan tanto en el trabajo individual como en los encuentros espontáneos y alrededor de una mesa de café. La tecnología acompaña y potencia la experiencia, pero las personas son el centro, favoreciendo el intercambio, la conexión y la generación de nuevas ideas. Un ecosistema vivo donde conocimiento, creatividad, colaboración e innovación conviven de manera natural.',
@@ -436,6 +444,7 @@ export const espacios = [
   },
   {
     nodo: 'Circulaciones',
+    clip: 'circulaciones',
     titulo: 'Circulaciones',
     cuerpo:
       'La circulación del edificio se organiza como una red de recorridos que conecta los principales nodos de actividad: Talleres, Aulas, Laboratorios, Cowork e IDI. Se propone un sistema de orientación integrado a la arquitectura mediante líneas, texturas o iluminación, inspirado en circuitos tecnológicos y ondas sonoras. Cada recorrido tendrá una identidad propia, guiando intuitivamente a las personas y reforzando la idea de una red de conocimiento en movimiento, sin competir visualmente con el espacio ni interferir con la conexión hacia el parque. La señalización se integra al lenguaje arquitectónico como parte de la experiencia, evitando la percepción de una señalética tradicional.',

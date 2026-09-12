@@ -38,6 +38,12 @@ renders-originales/
 /C. F. TSA .mp4
 *.master.mp4
 
+# Clips en crudo del estudio: 416 MB de recorridos exportados casi sin
+# comprimir. Al sitio van las versiones de public/clips/, que pesan 7 MB en
+# total y las arma herramientas/sumar-clips.mjs desde acá. Los crudos se
+# guardan aparte: de un historial de git no salen más.
+/WEB/
+
 # Artefactos del skill de diseño
 .impeccable/
 

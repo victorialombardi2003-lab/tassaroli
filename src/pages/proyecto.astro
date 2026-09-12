@@ -1,14 +1,12 @@
 ---
-import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
 import Carrusel from '../components/Carrusel.astro';
+import Clip from '../components/Clip.astro';
 import Flecha from '../components/Flecha.astro';
 import Escudo from '../components/Escudo.astro';
-import placa from '../assets/placa-fondo.webp';
-import logoFundacion from '../assets/logos/fundacion.png';
-import { sitio, carta, espacios, proposito } from '../data/contenido';
+import { sitio, espacios, proposito } from '../data/contenido';
 
 /**
  * El ritmo del recorrido: los espacios grandes ocupan el ancho completo,
@@ -109,83 +107,8 @@ const lista = espacios.map((e, i) => ({
     </div>
   </section>
 
-  {/* --------------------------------------------------------------- carta */}
-  {/* En la página queda la tapa; la carta entera se lee en una ventana. El
-      texto es el mismo, sólo cambió dónde se lee: en la página era la mancha
-      más alta del sitio y el cliente pidió acortarla. */}
-  <section class="seccion banda carta-seccion" id="recorrido" data-seccion>
-    <div class="calle">
-      <Nodo texto="Carta de la presidenta" recorrido="publico" />
-
-      <div class="carta-tapa revela-linea">
-        <div>
-          <p class="dato carta-tapa__num">{carta.numero}</p>
-          <h2 class="titulo carta-tapa__titulo">{carta.titulo}</h2>
-          <p class="rotulo carta-tapa__marca">{sitio.fundacion}</p>
-        </div>
-
-        <div class="carta-tapa__accion">
-          <button class="accion" type="button" data-carta-abre>
-            {carta.abrir} <Flecha />
-          </button>
-          <span class="dato carta-tapa__lectura">{carta.lectura}</span>
-        </div>
-      </div>
-    </div>
-
-    {/* Un <dialog> nativo: la tecla Escape, el foco atrapado adentro y el
-        resto de la página inerte los resuelve el navegador sin una línea
-        nuestra. */}
-    <dialog class="carta-ventana" data-carta-ventana aria-label={`${carta.titulo}, ${sitio.fundacion}`}>
-      <article class="carta-panel">
-        <header class="carta-panel__cab">
-          <span class="carta-panel__id">
-            <span class="dato carta-panel__num">{carta.numero}</span>
-            <span class="rotulo carta-panel__rotulo">{carta.titulo} · {sitio.fundacion}</span>
-          </span>
-
-          <form method="dialog">
-            <button class="carta-panel__cerrar" type="submit">
-              <span>Cerrar</span>
-              <span aria-hidden="true">×</span>
-            </button>
-          </form>
-        </header>
-
-        <div class="carta-panel__cuerpo">
-          <blockquote class="carta__epigrafe">
-            <p>{carta.epigrafe}</p>
-          </blockquote>
-
-          <div class="carta">
-            {carta.parrafos.map((p) => <p class="cuerpo">{p}</p>)}
-          </div>
-
-          <div class="firma">
-            <p class="firma__nombre">{carta.firma}</p>
-            <p class="rotulo firma__cargo">{carta.cargo}</p>
-          </div>
-
-          {/* La placa institucional cierra la carta. Sale del margen del
-              cuerpo para ocupar el ancho entero del panel, como en la pieza
-              del cliente. */}
-          <div class="placa" style={`--placa: url(${placa.src})`}>
-            <div class="placa__impulsa">
-              <p class="placa__rotulo placa__rotulo--claro">Desarrolla e impulsa</p>
-              <span class="placa__tarjeta">
-                <Image src={logoFundacion} alt="Fundación Tassaroli" width={281} height={166} densities={[1, 2]} loading="lazy" />
-              </span>
-            </div>
-
-            <p class="placa__rotulo placa__rotulo--patrocinan">Patrocinan y acompañan</p>
-          </div>
-        </div>
-      </article>
-    </dialog>
-  </section>
-
   {/* ------------------------------------------------------------ espacios */}
-  <section class="seccion espacios" data-seccion>
+  <section class="seccion espacios" id="recorrido" data-seccion>
     <div class="calle">
       <Nodo texto="El recorrido" recorrido="parque" />
       <h2 class="titulo revela">Espacio por espacio</h2>
@@ -206,33 +129,45 @@ const lista = espacios.map((e, i) => ({
               </div>
             </div>
 
-            {e.renders.length > 1 ? (
-              <div class="espacio__carrusel revela">
-                <Carrusel
-                  renders={e.renders}
-                  alt={e.alt}
-                  titulo={e.titulo}
-                  fig={e.fig}
-                  ratio={e.ratio}
-                  ancho="par"
-                />
-              </div>
-            ) : (
-              <figure class="espacio__lamina revela">
-                <div class="marco-imagen" data-paralaje>
-                  <Render
-                    nombre={e.renders[0]}
+            {/* Las vistas y, debajo, el recorrido filmado si el espacio
+                tiene uno. Van envueltos en una sola columna de la grilla: si
+                el clip fuera hermano del texto, caería en la fila siguiente y
+                se despegaría de las imágenes a las que pertenece. */}
+            <div class="espacio__vistas">
+              {e.renders.length > 1 ? (
+                <div class="espacio__carrusel revela">
+                  <Carrusel
+                    renders={e.renders}
                     alt={e.alt}
+                    titulo={e.titulo}
+                    fig={e.fig}
                     ratio={e.ratio}
-                    sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+                    ancho="par"
                   />
                 </div>
-                <figcaption class="epigrafe">
-                  <span class="dato">Fig. {e.fig}</span>
-                  <span>{e.titulo}</span>
-                </figcaption>
-              </figure>
-            )}
+              ) : (
+                <figure class="espacio__lamina revela">
+                  <div class="marco-imagen" data-paralaje>
+                    <Render
+                      nombre={e.renders[0]}
+                      alt={e.alt}
+                      ratio={e.ratio}
+                      sizes="(min-width: 62rem) min(46rem, 44vw), 100vw"
+                    />
+                  </div>
+                  <figcaption class="epigrafe">
+                    <span class="dato">Fig. {e.fig}</span>
+                    <span>{e.titulo}</span>
+                  </figcaption>
+                </figure>
+              )}
+
+              {'clip' in e && e.clip && (
+                <div class="revela">
+                  <Clip nombre={e.clip} espacio={e.titulo} />
+                </div>
+              )}
+            </div>
           </div>
         </article>
       ))
@@ -423,333 +358,6 @@ const lista = espacios.map((e, i) => ({
     }
   }
 
-  /* ---------------------------------------------------------- carta: tapa */
-
-  /* Lo que queda en la página: numeral, título, marca y el botón que abre.
-     Sin resumen ni extracto a propósito —un extracto de una carta obliga a
-     leerla dos veces, la primera en falso. */
-  .carta-tapa {
-    display: grid;
-    gap: clamp(1.75rem, 4vw, 3.1875rem);
-    align-items: end;
-  }
-
-  @media (min-width: 56rem) {
-    .carta-tapa {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    .carta-tapa__accion {
-      justify-content: flex-end;
-    }
-  }
-
-  .carta-tapa__num {
-    color: var(--acento);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .carta-tapa__titulo {
-    margin-block-start: 0.875rem;
-  }
-
-  .carta-tapa__marca {
-    margin-block-start: 0.875rem;
-    color: var(--tinta-3);
-  }
-
-  .carta-tapa__accion {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.25rem;
-  }
-
-  .carta-tapa__lectura {
-    color: var(--tinta-3);
-  }
-
-  /* -------------------------------------------------------- carta: ventana */
-
-  /* El <dialog> trae medidas y borde propios del navegador; se los sacamos
-     para que sea la pantalla entera y el panel se centre adentro. */
-  .carta-ventana {
-    --panel-aire: clamp(1.5rem, 4vw, 3rem);
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    max-height: 100%;
-    padding: 24px;
-    border: none;
-    background: transparent;
-    overscroll-behavior: contain;
-  }
-
-  .carta-ventana[open] {
-    display: grid;
-    place-items: center;
-  }
-
-  /* El velo va en color literal: las variables de :root no llegan a
-     ::backdrop en todos los navegadores todavía. Es el --azul-900 del sitio
-     al 58 %, como pide la pieza. */
-  .carta-ventana::backdrop {
-    background: rgba(20, 33, 61, 0.58);
-    animation: carta-velo 300ms ease-out;
-  }
-
-  @keyframes carta-velo {
-    from {
-      opacity: 0;
-    }
-  }
-
-  .carta-panel {
-    display: flex;
-    flex-direction: column;
-    width: 820px;
-    max-width: 100%;
-    max-height: 100%;
-    background: var(--papel);
-    border-radius: 4px;
-    box-shadow: 0 40px 90px -30px rgba(20, 33, 61, 0.65);
-    overflow: hidden;
-    animation: carta-panel 520ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes carta-panel {
-    from {
-      opacity: 0;
-      transform: translateY(24px) scale(0.98);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .carta-ventana::backdrop,
-    .carta-panel {
-      animation: none;
-    }
-  }
-
-  /* La cabecera no scrollea: dice dónde se está y cómo salir, y las dos cosas
-     tienen que estar a mano en cualquier punto de la carta. */
-  .carta-panel__cab {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 22px var(--panel-aire);
-    border-block-end: 1px solid var(--linea);
-    background: var(--papel);
-  }
-
-  .carta-panel__id {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    min-width: 0;
-  }
-
-  .carta-panel__num {
-    color: var(--acento);
-    letter-spacing: 0.08em;
-  }
-
-  .carta-panel__rotulo {
-    color: var(--tinta-3);
-  }
-
-  .carta-panel__cerrar {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    border-radius: 2px;
-    box-shadow: inset 0 0 0 1px var(--linea-fuerte);
-    font-family: var(--sans);
-    font-stretch: 88%;
-    font-weight: 620;
-    font-size: 11px;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    color: var(--tinta);
-    cursor: pointer;
-    transition: color 160ms ease-out, box-shadow 160ms ease-out;
-  }
-
-  .carta-panel__cerrar:hover {
-    color: var(--acento);
-    box-shadow: inset 0 0 0 1px var(--acento);
-  }
-
-  .carta-panel__cerrar span:last-child {
-    font-size: 15px;
-    line-height: 1;
-  }
-
-  .carta-panel__cuerpo {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: clamp(1.75rem, 4vw, 2.75rem) var(--panel-aire) 0;
-  }
-
-  /* --------------------------------------------------------------- carta */
-  /* La cita abre la carta y tiene que leerse como una frase, no como una
-     columna angosta apilada en seis renglones contra el margen izquierdo con
-     media página vacía al lado.
-     La medida va en `rem` y no en `ch` a propósito: `ch` se resuelve con el
-     tamaño de fuente del elemento donde se declara —el del cuerpo, no el de
-     la cita, que es el doble—, así que daba una caja mucho más angosta de lo
-     que parecía. */
-  .carta__epigrafe {
-    margin: 0 0 clamp(1.75rem, 3.5vw, 2.75rem);
-    max-width: min(60rem, 100%);
-    border-inline-start: 2px solid var(--acento);
-    padding-inline-start: clamp(1.1rem, 2.5vw, 1.75rem);
-  }
-
-  .carta__epigrafe p {
-    font-size: clamp(1.25rem, 1rem + 1.9vw, 2.375rem);
-    font-weight: 520;
-    line-height: 1.25;
-    letter-spacing: -0.024em;
-    color: var(--tinta);
-    text-wrap: pretty;
-  }
-
-  /* Una sola columna. En la página la carta iba en dos porque tenía el ancho
-     entero; adentro del panel, que mide 820px menos márgenes, dos columnas
-     dejarían renglones de cuarenta caracteres y se leería a los saltos. */
-  .carta {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .carta .cuerpo:first-child {
-    font-size: clamp(1.125rem, 1.05rem + 0.55vw, 1.3125rem);
-    color: var(--tinta);
-  }
-
-
-  /* La franja institucional cierra la carta, ahora dentro de la ventana. La
-     ola y los logos viven en el último cuarto de una imagen de 2600x1726, y
-     la imagen entra a ancho completo anclada abajo (`100% auto`, nunca
-     `cover`, que estiraría y recortaría los logos por los costados). Lo que
-     sobra por arriba es azul plano, continuado con `background-color` en el
-     mismo color exacto para que la unión no se vea.
-
-     Sale del margen del cuerpo con márgenes negativos: el texto respira a 48
-     px del borde, la placa toca los bordes del panel. */
-  .placa {
-    position: relative;
-    margin: clamp(2rem, 5vw, 2.75rem) calc(-1 * var(--panel-aire)) 0;
-    min-block-size: 236px;
-    background-color: #2869e8;
-    background-image: var(--placa);
-    background-repeat: no-repeat;
-    background-position: center bottom;
-    background-size: 100% auto;
-    color: #ffffff;
-  }
-
-  /* El logo de la Fundación vive acá, arriba a la izquierda y sobre el azul,
-     en una tarjeta blanca como en la pieza del cliente. La placa quedó con el
-     arco limpio en ese lugar: mientras estaba pintado dentro de la imagen,
-     cualquier cambio de posición era cirugía sobre un mapa de bits. */
-  .placa__impulsa {
-    position: absolute;
-    inset-block-start: 22px;
-    inset-inline-start: var(--panel-aire);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .placa__tarjeta {
-    display: block;
-    padding: 14px 19px;
-    background: #ffffff;
-    border-radius: 14px;
-    box-shadow: 0 10px 26px -14px rgba(12, 30, 66, 0.5);
-  }
-
-  .placa__tarjeta :global(img) {
-    display: block;
-    width: 96px;
-    height: auto;
-  }
-
-  .placa__rotulo {
-    font-family: 'Montserrat', var(--sans);
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    line-height: 1;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .placa__rotulo--claro {
-    font-size: 9.5px;
-    color: rgba(255, 255, 255, 0.92);
-  }
-
-  /* El de los patrocinadores va sobre el blanco de la placa, y ahí sí depende
-     de la geometría de la imagen: entra a ancho completo y anclada abajo, así
-     que un punto de la imagen cae siempre a la misma fracción del ancho del
-     panel. Las cifras salieron de dibujar la caja sobre la placa y mirar
-     dónde caía, no de estimarla.
-
-     Se oculta cuando el panel se achica: el hueco de blanco donde entra se
-     encoge con él, y más abajo el rótulo caería encima de los logos. */
-  .placa__rotulo--patrocinan {
-    display: none;
-  }
-
-  @media (min-width: 56rem) {
-    .placa__rotulo--patrocinan {
-      display: block;
-      position: absolute;
-      inset-inline-start: 78.5%;
-      inset-block-end: 88px;
-      transform: translateX(-50%);
-      font-size: 7px;
-      color: #3f4a5c;
-    }
-  }
-
-  /* La firma va sobre el papel y no sobre el azul. Quien lee la carta llega
-     al nombre de quien la escribe antes de entrar en la placa institucional,
-     que es de la Fundacion y no de ella. */
-  .firma {
-    margin-block-start: clamp(1.75rem, 4vw, 2.5rem);
-    padding-block-start: 1.35rem;
-    border-block-start: 1px solid var(--linea-fuerte);
-  }
-
-  .firma__nombre {
-    font-stretch: 102%;
-    font-weight: 640;
-    font-size: 1.1875rem;
-    letter-spacing: -0.02em;
-    color: var(--tinta);
-  }
-
-  .firma__cargo {
-    margin-block-start: 0.35rem;
-    color: var(--tinta-3);
-  }
-
   /* ------------------------------------------------------------ espacios */
   .espacios__bajada {
     margin-block-start: 0.85rem;
@@ -761,6 +369,10 @@ const lista = espacios.map((e, i) => ({
 
   .espacio__lamina {
     margin: 0;
+  }
+
+  .espacio__vistas {
+    min-width: 0;
   }
 
   .espacio__texto {
@@ -829,44 +441,3 @@ const lista = espacios.map((e, i) => ({
     margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
   }
 </style>
-
-<script>
-  const abre = document.querySelector<HTMLButtonElement>('[data-carta-abre]');
-  const ventana = document.querySelector<HTMLDialogElement>('[data-carta-ventana]');
-
-  if (abre && ventana) {
-    const raiz = document.documentElement;
-
-    /* Con la ventana abierta la página no se mueve detrás. El `<dialog>` ya
-       deja inerte al resto, pero no frena la rueda, y ver el fondo correrse
-       mientras se lee una carta es exactamente lo que rompe la ilusión de
-       estar en otra parte.
-
-       Al esconder la barra de scroll el documento se ensancha lo que ella
-       medía y todo salta unos píxeles a la derecha. Por eso se compensa con
-       el mismo ancho de relleno: la cuenta se hace antes de tapar nada. */
-    let relleno = '';
-
-    abre.addEventListener('click', () => {
-      relleno = raiz.style.paddingInlineEnd;
-      const barra = window.innerWidth - raiz.clientWidth;
-      if (barra > 0) raiz.style.paddingInlineEnd = `${barra}px`;
-      raiz.style.overflow = 'hidden';
-      ventana.showModal();
-    });
-
-    // El foco vuelve al botón que abrió: quien cerró la carta estaba ahí.
-    ventana.addEventListener('close', () => {
-      raiz.style.overflow = '';
-      raiz.style.paddingInlineEnd = relleno;
-      abre.focus({ preventScroll: true });
-    });
-
-    /* Clic en el velo. El diálogo ocupa la pantalla entera y el panel está
-       centrado adentro: si el clic cayó en el diálogo y no en el panel, cayó
-       al costado. */
-    ventana.addEventListener('click', (e) => {
-      if (e.target === ventana) ventana.close();
-    });
-  }
-</script>
