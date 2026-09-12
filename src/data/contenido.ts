@@ -92,26 +92,43 @@ export const activo = {
  * Fundación, no promesas: distinguirlas es lo que separa este proyecto de
  * un render bonito.
  */
-export const estado = [
-  {
-    marca: 'Construido',
-    titulo: 'Centro de Formación Profesional Carlos José Tassaroli',
-    cuerpo:
-      'Funcionando hace tres años junto a escuelas técnicas, universidades, empresas y organismos públicos. El modelo de aprender haciendo ya demostró que transforma oportunidades en empleo.',
-  },
-  {
-    marca: 'Dibujado',
-    titulo: 'Anteproyecto del Centro Tecnológico',
-    cuerpo:
-      'Memoria técnica, verificación normativa, criterios sustentables, informe de demanda y documentación gráfica completa. El proyecto está documentado, no enunciado.',
-  },
-  {
-    marca: 'Comprometido',
-    titulo: 'Nueve hectáreas',
-    cuerpo:
-      'La Fundación Tassaroli destinó nueve hectáreas propias para el futuro Polo Científico, Tecnológico, Educativo y de Innovación del Sur de Mendoza.',
-  },
-];
+/**
+ * Dónde está el proyecto hoy, en tres hitos.
+ *
+ * El Centro de Formación ya no es un hito de la línea: es el piso desde el
+ * que arranca todo, y como tal se dice una sola vez en la cabecera —
+ * «Funcionando desde 2023»— en vez de ocupar un tercio del recorrido. Así los
+ * tres hitos que quedan son los del Centro Tecnológico, que es de lo que
+ * habla la página.
+ *
+ * `fase` no se muestra: ordena el dibujo —punto lleno, punto que late, punto
+ * hueco— y viaja al lector de pantalla, que no ve el dibujo. Cuando el
+ * proyecto de ejecución termine, pasa a 'hecho' y el hito siguiente a
+ * 'en-curso'; el tramo azul del riel se corre solo.
+ */
+export const estado = {
+  desde: 2023,
+  hitos: [
+    {
+      titulo: 'Anteproyecto del Centro Tecnológico',
+      cuerpo:
+        'Memoria técnica, verificación normativa, criterios sustentables, informe de demanda y documentación gráfica completa.',
+      fase: 'hecho',
+    },
+    {
+      titulo: 'Proyecto de ejecución',
+      cuerpo: 'Documentación técnica para licitar y construir la obra.',
+      fase: 'en-curso',
+    },
+    {
+      titulo: 'Nueve hectáreas en Parque Norte',
+      cuerpo:
+        'La Fundación tiene como propósito destinar 9 hectáreas para la construcción del Centro Tecnológico Carlos José Tassaroli como nodo central y spin-off de lo que conformará, impulsará y desarrollará un futuro polo científico, tecnológico y de innovación, de la mano de la Universidad Tecnológica Nacional (UTN) y la Facultad de Ciencias Aplicadas a la Industria (UNCuyo).',
+      fase: 'previsto',
+      enlace: { texto: 'Ver el terreno en el mapa', href: '#ubicacion' },
+    },
+  ],
+} as const;
 
 export const areas = [
   {
@@ -443,6 +460,14 @@ export const espacios = [
     alt: 'Render de la sala de reuniones suspendida sobre el parque',
   },
   {
+    nodo: 'Salas de encuentro',
+    titulo: 'Salas de encuentro',
+    cuerpo:
+      'Pequeños espacios de reunión distribuidos estratégicamente en el recorrido entre la cocina, el cowork y el área de IDI, diseñados para acompañar la dinámica cotidiana del proyecto. Estas cápsulas ofrecen un entorno flexible para reuniones rápidas, conversaciones privadas, definiciones operativas, videoconferencias y cierre de acuerdos, optimizando el uso de los espacios formales y favoreciendo una cultura de trabajo ágil, colaborativa y conectada.',
+    renders: ['esp-salas-encuentro-01', 'esp-salas-encuentro-02'],
+    alt: 'Render de las cápsulas de reunión distribuidas en el recorrido',
+  },
+  {
     nodo: 'Circulaciones',
     clip: 'circulaciones',
     titulo: 'Circulaciones',
@@ -457,14 +482,6 @@ export const espacios = [
       'esp-circulaciones-06',
     ],
     alt: 'Render de las circulaciones con el sistema de orientación integrado a la arquitectura',
-  },
-  {
-    nodo: 'Salas de encuentro',
-    titulo: 'Salas de encuentro',
-    cuerpo:
-      'Pequeños espacios de reunión distribuidos estratégicamente en el recorrido entre la cocina, el cowork y el área de IDI, diseñados para acompañar la dinámica cotidiana del proyecto. Estas cápsulas ofrecen un entorno flexible para reuniones rápidas, conversaciones privadas, definiciones operativas, videoconferencias y cierre de acuerdos, optimizando el uso de los espacios formales y favoreciendo una cultura de trabajo ágil, colaborativa y conectada.',
-    renders: ['esp-salas-encuentro-01', 'esp-salas-encuentro-02'],
-    alt: 'Render de las cápsulas de reunión distribuidas en el recorrido',
   },
   {
     nodo: 'Baño y vestuarios',

@@ -77,10 +77,9 @@ const total = renders.length;
   <div class="galeria__pie">
     <p class="epigrafe galeria__epigrafe">
       <span class="dato">Fig. {fig}</span>
-      <span>
-        {titulo}
-        {total > 1 && <span data-galeria-cual>, vista {inicio}</span>}
-      </span>
+      {/* Sin el `Fragment` en una sola línea, el salto entre el título y la
+          vista deja un espacio antes de la coma: «Aulas , vista 2». */}
+      <span>{titulo}{total > 1 && <span data-galeria-cual>, vista {inicio}</span>}</span>
     </p>
     {total > 1 && (
       <p class="dato galeria__contador">

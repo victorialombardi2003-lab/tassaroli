@@ -168,19 +168,36 @@ import {
   <section class="seccion" data-seccion>
     <div class="calle">
       <Nodo texto="Estado del proyecto" recorrido="publico" />
-      <h2 class="titulo revela">Dónde está hoy</h2>
-      <ol class="hiladas revela-linea">
+
+      <div class="estado__cab revela">
+        <h2 class="titulo">Dónde estamos hoy</h2>
+        <p class="estado__desde">Funcionando desde {estado.desde}</p>
+      </div>
+
+      <ol class="hitos revela-linea">
+        {/* Dos rieles superpuestos: el gris cruza los tres hitos y el azul
+            llega hasta el que está en curso. El azul no lleva un porcentaje
+            calculado a mano —se desacomodaría con cualquier cambio de
+            columnas—: ocupa la primera columna y se estira sobre el hueco
+            siguiente con un margen negativo, así que termina exactamente
+            sobre el segundo punto mida lo que mida la ventana. */}
+        <span class="hitos__riel" aria-hidden="true"></span>
+        <span class="hitos__riel hitos__riel__andado" aria-hidden="true"></span>
+
         {
-          estado.map((h) => (
-            <li class="hilada">
-              <div class="hilada__marca">
-                <i class="hilada__punto" aria-hidden="true" />
-                <span class="solo-lectores">{h.marca}</span>
-              </div>
-              <div>
-                <h3 class="subtitulo">{h.titulo}</h3>
-                <p class="cuerpo hilada__cuerpo">{h.cuerpo}</p>
-              </div>
+          estado.hitos.map((h) => (
+            <li class="hito" data-fase={h.fase}>
+              <i class="hito__punto" aria-hidden="true" />
+              <span class="solo-lectores">
+                {h.fase === 'hecho' ? 'Hecho' : h.fase === 'en-curso' ? 'En curso' : 'Previsto'}
+              </span>
+              <h3 class="subtitulo hito__titulo">{h.titulo}</h3>
+              <p class="hito__cuerpo">{h.cuerpo}</p>
+              {'enlace' in h && h.enlace && (
+                <a class="hito__enlace" href={h.enlace.href}>
+                  {h.enlace.texto} <Flecha />
+                </a>
+              )}
             </li>
           ))
         }
@@ -189,7 +206,7 @@ import {
   </section>
 
   {/* --------------------------------------------------------------- ubicación */}
-  <section class="seccion banda" data-seccion>
+  <section class="seccion banda" id="ubicacion" data-seccion>
     <div class="calle">
       <Nodo texto="Ubicación" recorrido="parque" />
       <div class="ubicacion__cab revela-linea">
@@ -574,6 +591,196 @@ import {
     }
   }
 
+  /* --------------------------------------------------------------- estado */
+
+  .estado__cab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+  }
+
+  .estado__desde {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tinta-3);
+  }
+
+  /* La tercera columna es más ancha porque lleva el párrafo largo: repartidas
+     en tres iguales, ese texto queda el doble de alto que sus vecinos y la
+     línea deja de leerse como una línea. */
+  .hitos {
+    --hueco: 40px;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
+    column-gap: var(--hueco);
+    margin-block-start: clamp(2.25rem, 5vw, 3.5rem);
+    padding: 0;
+    list-style: none;
+  }
+
+  .hitos__riel {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    align-self: start;
+    height: 1.5px;
+    margin-block-start: 3px;
+    margin-inline-start: 4px;
+    background: var(--linea);
+  }
+
+  /* El tramo andado llega hasta el segundo punto: ocupa la primera columna,
+     cruza el hueco con un margen negativo y suma los cuatro píxeles del radio
+     del punto, que es donde está su centro. Sin esos cuatro, el azul moría en
+     el borde del punto en vez de en el punto —medido, 461 contra 465. */
+  .hitos__riel__andado {
+    grid-column: 1 / 2;
+    margin-inline-end: calc(-1 * var(--hueco) - 4px);
+    background: var(--acento);
+  }
+
+  /* Los hitos van colocados a mano en su columna. Los dos rieles son hijos de
+     la misma grilla y ocupan la fila entera, así que sin esto el emplazamiento
+     automático no encuentra celda libre y manda los hitos a columnas
+     implícitas detrás del tercero: medido, el primer punto caía en x=261 en vez
+     de x=141 y los rieles quedaban de 76px. */
+  .hito {
+    grid-row: 1;
+    position: relative;
+    padding-block-start: 32px;
+  }
+
+  .hito:nth-of-type(1) {
+    grid-column: 1;
+  }
+
+  .hito:nth-of-type(2) {
+    grid-column: 2;
+  }
+
+  .hito:nth-of-type(3) {
+    grid-column: 3;
+  }
+
+  .hito__punto {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--acento);
+  }
+
+  /* El que está en curso es más grande y late. Es el único punto de la página
+     que se mueve solo, y por eso se encuentra sin leer nada. */
+  .hito[data-fase='en-curso'] .hito__punto {
+    inset-block-start: -2px;
+    inset-inline-start: -2px;
+    width: 12px;
+    height: 12px;
+    animation: hito-latido 2.4s ease-in-out infinite;
+  }
+
+  @keyframes hito-latido {
+    0%,
+    100% {
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+    }
+    50% {
+      box-shadow: 0 0 0 9px rgba(37, 99, 235, 0.06);
+    }
+  }
+
+  /* Lo que todavía no pasó va hueco: el contorno dice que el lugar está
+     reservado y el relleno vacío, que no se ocupó. */
+  .hito[data-fase='previsto'] .hito__punto {
+    background: var(--papel);
+    box-shadow: inset 0 0 0 1.5px var(--linea);
+  }
+
+  .hito__titulo {
+    margin: 0;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .hito__cuerpo {
+    margin-block-start: 0.75rem;
+    font-size: 0.96875rem;
+    line-height: 1.62;
+    color: var(--tinta-2);
+    text-wrap: pretty;
+  }
+
+  .hito__enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-block-start: 1rem;
+    font-family: var(--sans);
+    font-stretch: 88%;
+    font-weight: 620;
+    font-size: 0.75rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--acento);
+  }
+
+  .hito__enlace :global(.flecha) {
+    transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hito__enlace:hover :global(.flecha) {
+    transform: translateX(4px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hito[data-fase='en-curso'] .hito__punto {
+      animation: none;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+    }
+  }
+
+  /* En una columna la línea se para: el riel horizontal no tiene sentido
+     cuando los hitos se apilan, así que pasa a ser el borde izquierdo de la
+     lista y los puntos se cuelgan de él. */
+  @media (max-width: 62rem) {
+    .hitos {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: clamp(1.75rem, 4vw, 2.5rem);
+      border-inline-start: 1.5px solid var(--linea);
+      padding-inline-start: clamp(1.5rem, 5vw, 2.25rem);
+    }
+
+    .hitos__riel {
+      display: none;
+    }
+
+    .hito,
+    .hito:nth-of-type(1),
+    .hito:nth-of-type(2),
+    .hito:nth-of-type(3) {
+      grid-row: auto;
+      grid-column: 1;
+      padding-block-start: 0;
+    }
+
+    .hito__punto {
+      inset-block-start: 0.45rem;
+      inset-inline-start: calc(-1 * clamp(1.5rem, 5vw, 2.25rem) - 4.75px);
+    }
+
+    .hito[data-fase='en-curso'] .hito__punto {
+      inset-block-start: calc(0.45rem - 2px);
+      inset-inline-start: calc(-1 * clamp(1.5rem, 5vw, 2.25rem) - 6.75px);
+    }
+  }
+
   /* ------------------------------------------------------------ ubicación */
 
   /* El título a la izquierda y el párrafo al lado, como la cabecera de
@@ -748,66 +955,7 @@ import {
   }
 
   /* -------------------------------------------------------------- estado */
-  .hiladas {
-    list-style: none;
-    padding: 0;
-    margin: clamp(1.75rem, 3.5vw, 2.75rem) 0 0;
-    border-block-start: 2px solid var(--tinta);
-  }
 
-  .hilada {
-    display: grid;
-    gap: 0.85rem clamp(1.25rem, 3.5vw, 3rem);
-    padding-block: clamp(1.5rem, 3vw, 2.5rem);
-    border-block-end: 1px solid var(--linea);
-  }
-
-  /* La columna de la marca era de 12rem porque llevaba el rótulo del estado
-     —CONSTRUIDO, DIBUJADO, COMPROMETIDO—. Ahora sólo lleva la viñeta, así que
-     se achica a lo que mide: dejarla ancha dejaba un punto flotando lejos del
-     texto, sin nada que lo explicara.
-
-     El rótulo no desaparece, pasa a `solo-lectores`: en pantalla no está,
-     pero quien navega con lector de pantalla sigue oyendo en qué estado está
-     cada cosa, que es la única información que el punto no da. */
-  @media (min-width: 52rem) {
-    .hilada {
-      grid-template-columns: auto minmax(0, 1fr);
-      column-gap: clamp(0.9rem, 2vw, 1.5rem);
-      align-items: start;
-    }
-  }
-
-  .hilada__marca {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    color: var(--acento);
-  }
-
-  /* Una sola viñeta para los tres estados, y es el mismo punto que marca cada
-     parada de la línea del recorrido: siete píxeles, redondo, en el azul de
-     acento, con el halo que llevan los nodos. Antes cada estado tenía su
-     propio rectángulo —lleno, punteado y tramado—, y esas tres formas no
-     decían nada que el rótulo de al lado no dijera mejor. */
-  .hilada__punto {
-    flex: none;
-    /* Alineado con la primera línea del título, no con el borde de la caja. */
-    margin-block-start: 0.62em;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: currentColor;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 14%, transparent);
-  }
-
-  .hilada__marca .rotulo {
-    color: var(--tinta);
-  }
-
-  .hilada__cuerpo {
-    margin-block-start: 0.6rem;
-  }
 
   /* ------------------------------------------------------------ programa */
   .areas {
