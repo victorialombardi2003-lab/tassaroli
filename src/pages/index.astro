@@ -622,13 +622,10 @@ import {
     list-style: none;
   }
 
+  /* La posición y la medida se las fija el script, igual que al trazo: los dos
+     rieles van del primer punto al último y comparten la misma cuenta. */
   .hitos__riel {
-    grid-row: 1;
-    grid-column: 1 / -1;
-    align-self: start;
-    height: 1.5px;
-    margin-block-start: 3px;
-    margin-inline-start: 4px;
+    position: absolute;
     background: var(--linea);
   }
 
@@ -790,20 +787,6 @@ import {
       padding-inline-start: var(--sangria);
     }
 
-    /* Los rieles se paran en vez de esconderse: el trazo sigue siendo el
-       mismo elemento, así que el scroll lo dibuja igual que en escritorio,
-       nada más que hacia abajo. Antes esto era un `border` de la lista, y un
-       borde no se puede dibujar por partes. */
-    .hitos__riel {
-      grid-row: 1 / -1;
-      grid-column: 1;
-      justify-self: start;
-      align-self: stretch;
-      width: 1.5px;
-      height: auto;
-      margin-block-start: 0.45rem;
-      margin-inline-start: calc(-1 * var(--sangria) - 0.75px);
-    }
 
 
     /* Y los hitos van colocados a mano también acá, por lo mismo que en
@@ -1118,11 +1101,14 @@ import {
   /**
    * La línea de tiempo del estado se dibuja con el scroll.
    *
-   * El trazo nace en el centro del primer punto y termina en el centro del
-   * punto del hito en curso: nunca llega al tercero, porque eso todavía no
-   * pasó. Empieza a dibujarse cuando el borde de arriba del `ol` entra por el
-   * 90% del alto de la ventana y se completa cuando llega al 45%. Al subir,
-   * retrocede.
+   * El trazo nace en el centro del primer punto y recorre la línea entera
+   * hasta el último. Empieza a dibujarse cuando el borde de arriba del `ol`
+   * entra por el 90% del alto de la ventana y se completa cuando llega al
+   * 45%. Al subir, retrocede.
+   *
+   * El hito en curso se enciende cuando el trazo lo cruza, que es a mitad de
+   * camino y no al final: el punto está donde está, y el trazo sigue de largo
+   * hacia el tercero.
    *
    * La medida es la distancia entre los centros de los dos puntos, de punto a
    * punto y no de hito a hito, que es lo que deja el trazo cayendo justo. Se
@@ -1136,6 +1122,7 @@ import {
    */
   const ol = document.querySelector<HTMLElement>('.hitos');
   const trazo = ol?.querySelector<HTMLElement>('.linea-avance');
+  const riel = ol?.querySelector<HTMLElement>('.hitos__riel');
   const puntos = ol ? Array.from(ol.querySelectorAll<HTMLElement>('.hito__punto')) : [];
   const enCurso = ol?.querySelector<HTMLElement>('.hito[data-fase="en-curso"]');
   const iEnCurso = enCurso ? Array.from(ol!.querySelectorAll('.hito')).indexOf(enCurso) : -1;
@@ -1173,10 +1160,16 @@ import {
       return { x, y };
     };
 
+    /* En qué fracción del trazo cae el hito en curso. Con los tres puntos
+       repartidos es la mitad, pero se calcula y no se supone: si algún día
+       cambia cuál está en curso, o cuántos hitos hay, el encendido sigue
+       cayendo donde está el punto. */
+    let corte = 1;
+
     function aplicar(t: number) {
       trazo!.style.transform = angosto.matches ? `scaleY(${t})` : `scaleX(${t})`;
-      // El hito en curso se enciende cuando el trazo lo alcanza.
-      enCurso!.classList.toggle('alcanzado', t >= 1);
+      // El hito en curso se enciende cuando el trazo lo cruza.
+      enCurso!.classList.toggle('alcanzado', t >= corte);
     }
 
     function pintar() {
@@ -1195,16 +1188,23 @@ import {
        va un `height`. */
     function medir() {
       const a = centro(puntos[0]);
-      const b = centro(puntos[iEnCurso]);
-      if (angosto.matches) {
-        trazo!.style.cssText =
-          `left:${a.x - 0.75}px; top:${a.y}px;` +
-          ` width:1.5px; height:${b.y - a.y}px; transform-origin:top;`;
-      } else {
-        trazo!.style.cssText =
-          `left:${a.x}px; top:${a.y - 0.75}px;` +
-          ` height:1.5px; width:${b.x - a.x}px; transform-origin:left;`;
-      }
+      const b = centro(puntos[puntos.length - 1]);
+      const enc = centro(puntos[iEnCurso]);
+      const largo = angosto.matches ? b.y - a.y : b.x - a.x;
+      const hasta = angosto.matches ? enc.y - a.y : enc.x - a.x;
+      corte = largo > 0 ? hasta / largo : 1;
+
+      /* Los dos rieles comparten caja: van del primer punto al último, de
+         punto a punto y no de borde a borde. El gris queda quieto y el azul
+         se dibuja encima. Lo mide el script y no la grilla porque es la misma
+         cuenta que el trazo, y tenerla en un solo lugar es lo que garantiza
+         que no se desalineen. */
+      const caja = angosto.matches
+        ? `left:${a.x - 0.75}px; top:${a.y}px; width:1.5px; height:${largo}px;`
+        : `left:${a.x}px; top:${a.y - 0.75}px; height:1.5px; width:${largo}px;`;
+
+      if (riel) riel.style.cssText = caja;
+      trazo!.style.cssText = `${caja} transform-origin:${angosto.matches ? 'top' : 'left'};`;
       pintar();
     }
 
