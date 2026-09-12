@@ -623,12 +623,17 @@ html:not([data-motion='on']) .marca {
    Los estados previos sólo existen con el motor encendido. Sin JS, o con
    «prefers-reduced-motion», todo se lee desde el primer frame.            */
 
-[data-motion='on'] .revela {
+/* Lo decorativo queda afuera del estado previo, igual que queda afuera del
+   revelado: si se esconde acá y nadie lo revela después, no vuelve nunca. Y
+   no puede revelarse, porque el revelado escribe `transform` en línea y eso
+   pisa la transformación que esos elementos usan para lo suyo —el trazo de
+   la línea de tiempo se dibuja con un `scale`. */
+[data-motion='on'] .revela:not([aria-hidden='true']) {
   opacity: 0;
   transform: translateY(16px);
 }
 
-[data-motion='on'] .revela-linea > * {
+[data-motion='on'] .revela-linea > *:not([aria-hidden='true']) {
   opacity: 0;
   transform: translateY(12px);
 }
