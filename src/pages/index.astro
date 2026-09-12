@@ -641,6 +641,16 @@ import {
     grid-column: 1 / 2;
     margin-inline-end: calc(-1 * var(--hueco) - 4px);
     background: var(--acento);
+    /* Lo que el scroll dibuja. La medida final la sigue poniendo la grilla
+       —el tramo termina sobre el segundo punto mida lo que mida la ventana—
+       y `--avance` sólo dice cuánto de esa medida está trazado. El eje lo
+       elige cada disposición: horizontal acá, vertical en una columna.
+
+       El valor por defecto es 1, o sea entero: si el script no corre —sin
+       JavaScript, o con menos movimiento pedido— la línea aparece completa,
+       que es la información correcta, y no vacía. */
+    transform: scaleX(var(--avance, 1));
+    transform-origin: left;
   }
 
   /* Los hitos van colocados a mano en su columna. Los dos rieles son hijos de
@@ -751,33 +761,81 @@ import {
      lista y los puntos se cuelgan de él. */
   @media (max-width: 62rem) {
     .hitos {
+      --sangria: clamp(1.5rem, 5vw, 2.25rem);
+      --hueco-fila: clamp(1.75rem, 4vw, 2.5rem);
       grid-template-columns: minmax(0, 1fr);
-      row-gap: clamp(1.75rem, 4vw, 2.5rem);
-      border-inline-start: 1.5px solid var(--linea);
-      padding-inline-start: clamp(1.5rem, 5vw, 2.25rem);
+      /* Las tres filas se declaran en vez de dejarlas implícitas: el riel
+         gris las cruza con `1 / -1`, y esa cuenta sólo mira las filas
+         explícitas. Sin declararlas, `-1` caía en la primera línea y el riel
+         quedaba de alto cero. */
+      grid-template-rows: repeat(3, auto);
+      row-gap: var(--hueco-fila);
+      padding-inline-start: var(--sangria);
     }
 
+    /* Los rieles se paran en vez de esconderse: el trazo sigue siendo el
+       mismo elemento, así que el scroll lo dibuja igual que en escritorio,
+       nada más que hacia abajo. Antes esto era un `border` de la lista, y un
+       borde no se puede dibujar por partes. */
     .hitos__riel {
-      display: none;
+      grid-row: 1 / -1;
+      grid-column: 1;
+      justify-self: start;
+      align-self: stretch;
+      width: 1.5px;
+      height: auto;
+      margin-block-start: 0.45rem;
+      margin-inline-start: calc(-1 * var(--sangria) - 0.75px);
     }
 
-    .hito,
-    .hito:nth-of-type(1),
-    .hito:nth-of-type(2),
-    .hito:nth-of-type(3) {
-      grid-row: auto;
+    /* Hasta el segundo punto: ocupa la primera fila y cruza el hueco de
+       abajo, igual que en escritorio pero en el otro eje. */
+    .hitos__riel__andado {
+      grid-row: 1 / 2;
       grid-column: 1;
+      margin-inline-end: 0;
+      /* Hasta el centro del segundo punto: el hueco de la fila, más lo que
+         el punto baja dentro de su hito (0.45rem) y su radio. Sin los dos
+         últimos, el trazo moría siete píxeles antes —medido. */
+      margin-block-end: calc(-1 * var(--hueco-fila) - 0.45rem - 4px);
+      transform: scaleY(var(--avance, 1));
+      transform-origin: top;
+    }
+
+    /* Y los hitos van colocados a mano también acá, por lo mismo que en
+       escritorio: los rieles ocupan la columna entera y el emplazamiento
+       automático no encontraría celda libre. */
+    .hito {
       padding-block-start: 0;
+    }
+
+    /* La columna se repite en cada `nth-of-type` y no una vez en `.hito`
+       porque las reglas de escritorio son `nth-of-type` también: más
+       específicas, le ganarían a una sola declaración suelta y los hitos
+       seguirían repartidos en tres columnas. */
+    .hito:nth-of-type(1) {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .hito:nth-of-type(2) {
+      grid-row: 2;
+      grid-column: 1;
+    }
+
+    .hito:nth-of-type(3) {
+      grid-row: 3;
+      grid-column: 1;
     }
 
     .hito__punto {
       inset-block-start: 0.45rem;
-      inset-inline-start: calc(-1 * clamp(1.5rem, 5vw, 2.25rem) - 4.75px);
+      inset-inline-start: calc(-1 * var(--sangria) - 4.75px);
     }
 
     .hito[data-fase='en-curso'] .hito__punto {
       inset-block-start: calc(0.45rem - 2px);
-      inset-inline-start: calc(-1 * clamp(1.5rem, 5vw, 2.25rem) - 6.75px);
+      inset-inline-start: calc(-1 * var(--sangria) - 6.75px);
     }
   }
 

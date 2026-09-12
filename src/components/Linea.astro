@@ -120,9 +120,16 @@
     return d;
   }
 
+  /* Lo que se revela al entrar una sección. Se excluye lo decorativo —lo que
+     está marcado `aria-hidden`— porque el revelado escribe `transform` en
+     línea, y eso pisa a cualquier transformación que ese elemento necesite
+     para lo suyo. Concretamente: los rieles de la línea de tiempo se dibujan
+     con un `scaleX`, y el revelado se los borraba. */
+  const REVELABLES = '.revela:not([aria-hidden="true"]), .revela-linea > *:not([aria-hidden="true"])';
+
   /** Red de seguridad: nada queda invisible, pase lo que pase. */
   function mostrarTodo() {
-    document.querySelectorAll<HTMLElement>('.revela, .revela-linea > *').forEach((el) => {
+    document.querySelectorAll<HTMLElement>(REVELABLES).forEach((el) => {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
@@ -366,7 +373,7 @@
 
     // --- Las secciones aparecen cuando entran en pantalla -----------------
     document.querySelectorAll<HTMLElement>('[data-seccion]').forEach((seccion) => {
-      const partes = Array.from(seccion.querySelectorAll<HTMLElement>('.revela, .revela-linea > *'));
+      const partes = Array.from(seccion.querySelectorAll<HTMLElement>(REVELABLES));
       if (partes.length === 0) return;
 
       disparadores.push(
@@ -440,6 +447,41 @@
         }),
       );
     });
+
+    /* --- La línea de tiempo del estado se dibuja con el scroll -----------
+     *
+     * El tramo azul no aparece puesto: se traza a medida que la sección
+     * pasa, y termina donde tiene que terminar —sobre el hito en curso—
+     * cuando la sección terminó de entrar. Es la misma idea que el trazo del
+     * recorrido que cruza la página, en chico.
+     *
+     * Lo que se anima es `--avance`, no un ancho: la medida final la sigue
+     * calculando la grilla, y de qué eje se trata lo decide el CSS, que es
+     * quien sabe si está en tres columnas o en una. Acá sólo se dice cuánto
+     * de ese tramo está dibujado.
+     *
+     * `scrub: 0.5` y no `true`: con el enganche duro, el trazo tiembla con
+     * cada rueda del mouse. Medio segundo de inercia lo vuelve un
+     * movimiento y no una reacción.
+     */
+    const hitos = document.querySelector<HTMLElement>('.hitos');
+    if (hitos) {
+      const avance = gsap.fromTo(
+        hitos,
+        { '--avance': 0 },
+        {
+          '--avance': 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: hitos,
+            start: 'top 78%',
+            end: 'bottom 72%',
+            scrub: 0.5,
+          },
+        },
+      );
+      if (avance.scrollTrigger) disparadores.push(avance.scrollTrigger);
+    }
   }
 
   /**
