@@ -687,13 +687,26 @@ import {
   }
 
   /* El que está en curso es más grande y late. Es el único punto de la página
-     que se mueve solo, y por eso se encuentra sin leer nada. */
+     que se mueve solo, y por eso se encuentra sin leer nada.
+
+     Con el motor encendido arranca hueco y se llena cuando el trazo lo
+     alcanza: la línea llega y el hito se enciende. La condición del
+     `data-motion` no es un adorno —sin JavaScript, o con menos movimiento
+     pedido, el trazo aparece entero desde el principio y el punto tiene que
+     estar lleno desde el principio también, o quedaría hueco para siempre. */
   .hito[data-fase='en-curso'] .hito__punto {
     inset-block-start: -2px;
     inset-inline-start: -2px;
     width: 12px;
     height: 12px;
+    transition: background-color 200ms ease-out, box-shadow 200ms ease-out;
     animation: hito-latido 2.4s ease-in-out infinite;
+  }
+
+  :global([data-motion='on']) .hito[data-fase='en-curso']:not(.alcanzado) .hito__punto {
+    background: var(--papel);
+    box-shadow: inset 0 0 0 1.5px var(--linea);
+    animation: none;
   }
 
   @keyframes hito-latido {

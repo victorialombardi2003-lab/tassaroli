@@ -460,12 +460,22 @@
      * quien sabe si está en tres columnas o en una. Acá sólo se dice cuánto
      * de ese tramo está dibujado.
      *
-     * `scrub: 0.5` y no `true`: con el enganche duro, el trazo tiembla con
-     * cada rueda del mouse. Medio segundo de inercia lo vuelve un
-     * movimiento y no una reacción.
+     * El trazo empieza cuando el riel entra por el 90% del alto de la
+     * ventana y se completa cuando llega al 45%: casi media pantalla de
+     * recorrido, que es lo que hace que se lea como un trazo y no como algo
+     * que aparece. Al subir, retrocede.
+     *
+     * `scrub` corto y no enganche duro: sin nada de inercia el trazo tiembla
+     * con cada muesca de la rueda del mouse.
      */
     const hitos = document.querySelector<HTMLElement>('.hitos');
     if (hitos) {
+      /* Cuando el trazo llega al final, el punto del hito en curso se llena y
+         arranca a latir. Es la recompensa del recorrido: la línea llega y el
+         hito se enciende, en vez de estar encendido desde antes de que la
+         línea salga. */
+      const enCurso = hitos.querySelector<HTMLElement>('.hito[data-fase="en-curso"]');
+
       const avance = gsap.fromTo(
         hitos,
         { '--avance': 0 },
@@ -474,9 +484,10 @@
           ease: 'none',
           scrollTrigger: {
             trigger: hitos,
-            start: 'top 78%',
-            end: 'bottom 72%',
-            scrub: 0.5,
+            start: 'top 90%',
+            end: 'top 45%',
+            scrub: 0.12,
+            onUpdate: (self) => enCurso?.classList.toggle('alcanzado', self.progress > 0.995),
           },
         },
       );
