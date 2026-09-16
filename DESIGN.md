@@ -231,6 +231,13 @@ contraseña de los PDF alojados en Drive se administran por separado.
 Verificación local, con `npm run dev` activo:
 `node herramientas/verificar-acceso.mjs`.
 
+La configuración de producción permite los dominios exactos del proyecto
+para que Astro reconozca el origen HTTPS detrás del proxy de Vercel, sin
+desactivar CSRF. Las imágenes usan `imageService: true` del adaptador, también
+en la página dinámica de documentación. Tras compilar, ejecutar
+`node herramientas/verificar-produccion.mjs`: prueba el bundle serverless
+con proxy simulado, sesión segura y las imágenes de las tres páginas.
+
 ## Carrusel
 
 Un espacio con más de un render se muestra en carrusel. En `contenido.ts`
