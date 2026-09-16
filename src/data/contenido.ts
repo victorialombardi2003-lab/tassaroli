@@ -509,16 +509,23 @@ export const proposito = {
 /* --------------------------------------------------------- documentación */
 
 
-// Enlaces directos a los documentos disponibles en Google Drive.
-const DRIVE_ARCHIVO = 'https://drive.google.com/file/d/';
-const DRIVE_CARPETA = 'https://drive.google.com/drive/folders/';
+/* Acá no hay enlaces, y no es un olvido.
+
+   El repositorio es público y los PDF de Drive ya no llevan contraseña
+   propia, así que el enlace es el documento: quien lo tenga se lo baja sin
+   pasar por la puerta del sitio. Viven en la variable ACCESO_ENLACES, junto
+   a la contraseña, y los lee `enlaces()` en src/lib/acceso.ts —sólo en el
+   servidor, y sólo se escriben en la página con la sesión abierta.
+
+   Lo que queda acá es el índice: qué informe es cada uno y de qué trata. Eso
+   es texto del sitio, no un secreto. El `slug` amarra cada fila con su
+   enlace. */
 
 export type Documento = {
   slug: string;
   lema: string;
   bajada: string;
   titulo: string;
-  drive: string;
 };
 
 export const documentos: Documento[] = [
@@ -528,35 +535,30 @@ export const documentos: Documento[] = [
     bajada:
       'La memoria técnica reúne las decisiones, sistemas y estrategias que transforman la idea proyectual en una obra posible.',
     titulo: 'Memoria técnica',
-    drive: `${DRIVE_ARCHIVO}17SjwW9n3_pYq-qWTMGLSxXam8HQvDXDA/view`,
   },
   {
     slug: 'restricciones',
     lema: 'Las reglas del proyecto',
     bajada: 'Condiciones, restricciones y oportunidades que determinan las decisiones proyectuales.',
     titulo: 'Listado de restricciones y condicionantes',
-    drive: `${DRIVE_ARCHIVO}12qTEn00-NKr6SjxgUewq5n1Ia0XQt8UM/view`,
   },
   {
     slug: 'esquemas-conceptuales',
     lema: 'De la idea a la forma',
     bajada: 'Esquemas conceptuales que muestran la evolución de las primeras ideas hacia una propuesta definida.',
     titulo: 'Listado de opciones o esquemas conceptuales',
-    drive: `${DRIVE_ARCHIVO}1obpXv7Owah-YDwIv-8WOPGjNviyunGnh/view`,
   },
   {
     slug: 'informe-fotografico',
     lema: 'Conocer el sitio',
     bajada: 'Un registro del lugar y su contexto a través de imágenes, datos y documentación catastral.',
     titulo: 'Informe fotográfico y plano catastral',
-    drive: `${DRIVE_ARCHIVO}16V9wI3-8jrxhtBPK1S5unOT_gJPZpXp6/view`,
   },
   {
     slug: 'situacion-legal',
     lema: 'Validar para proyectar',
     bajada: 'La revisión legal y normativa como base para garantizar la viabilidad del proyecto.',
     titulo: 'Informe de situación legal y verificación normativa',
-    drive: `${DRIVE_ARCHIVO}1lofIC6RjEuJ6xSk9P7G1EMvUYhkDC9Ke/view`,
   },
   {
     slug: 'criterios-sustentables',
@@ -564,28 +566,24 @@ export const documentos: Documento[] = [
     bajada:
       'Estrategias sustentables que integran las condiciones del entorno, los recursos y el funcionamiento del proyecto.',
     titulo: 'Informe de criterios sustentables',
-    drive: `${DRIVE_ARCHIVO}1YwaBgCKtfcUnvtVKOZvQB2CaloFhRx2T/view`,
   },
   {
     slug: 'compatibilidad',
     lema: 'Intervenir con criterio',
     bajada: 'Análisis de compatibilidad para garantizar una intervención integrada y respetuosa con su entorno.',
     titulo: 'Informe de compatibilidad patrimonial y ambiental',
-    drive: `${DRIVE_ARCHIVO}1iB9PHVU-VJ9-BXjLQKFY3_zsVYoEZ2Lj/view`,
   },
   {
     slug: 'demanda-potencial',
     lema: 'Oportunidad y demanda',
     bajada: 'Análisis del contexto comercial y de los potenciales usuarios de la propuesta.',
     titulo: 'Informe comercial o de demanda potencial',
-    drive: `${DRIVE_ARCHIVO}1Nv5pSgwu18Gw6qh9dR7-zHsBK9StF3WJ/view`,
   },
   {
     slug: 'documento-tecnico',
     lema: 'El proyecto en detalle',
     bajada: 'Una descripción integral de los espacios, materiales, sistemas y criterios que conforman el proyecto.',
     titulo: 'Documento técnico descriptivo',
-    drive: `${DRIVE_ARCHIVO}1kBIWopSubDF1oBtoySbgzJLIombzhVcK/view`,
   },
 ];
 
@@ -593,7 +591,6 @@ export const planos = {
   titulo: 'Anteproyecto',
   bajada:
     'Representación gráfica de la propuesta arquitectónica, donde se definen la organización espacial, distribución de los usos, circulaciones y principales decisiones de diseño.',
-  carpeta: `${DRIVE_CARPETA}1cVeEjfFg76UYbVsje7UMW2X2V21jPx_6`,
   laminas: [
     'Planta nivel 0.00m',
     'Planta nivel +3.00m',

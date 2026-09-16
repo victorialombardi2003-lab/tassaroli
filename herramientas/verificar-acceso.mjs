@@ -9,6 +9,10 @@ const post = (valor, opciones = {}) => fetch(`${origen}/api/acceso`, {
   headers: { Origin: origen, Accept: 'application/json', ...opciones },
   body: new URLSearchParams({ clave: valor }),
 });
+// El repositorio es publico: que los enlaces no vuelvan a colarse ahi.
+const datos = readFileSync('src/data/contenido.ts', 'utf8');
+assert(!datos.includes('drive.google.com'), 'Los enlaces no deben estar en el repositorio.');
+
 const pagina = await fetch(`${origen}/documentacion`);
 assert.equal(pagina.status, 200);
 assert.match(pagina.headers.get('cache-control'), /no-store/);

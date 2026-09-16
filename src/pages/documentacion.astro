@@ -7,10 +7,15 @@ import isotipo from '../assets/marca-tassaroli.png';
 import placa from '../assets/placa-fondo.webp';
 import logoFundacion from '../assets/logos/fundacion.png';
 import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
-import { COOKIE, cookieValida } from '../lib/acceso';
+import { COOKIE, cookieValida, enlaces } from '../lib/acceso';
 
 export const prerender = false;
 const autorizado = await cookieValida(Astro.cookies.get(COOKIE)?.value);
+/* Los enlaces llegan de la variable de entorno, no del repositorio, que es
+   público. Se leen igual para todos pero sólo se escriben en el HTML dentro
+   de la rama autorizada: sin sesión, la página no los nombra ni una vez. */
+const enlacesDrive = enlaces();
+const sinEnlaces = Object.keys(enlacesDrive).length === 0;
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 Astro.response.headers.set('X-Robots-Tag', 'noindex');
 const error = Astro.url.searchParams.get('error');
@@ -163,7 +168,11 @@ const mensajes: Record<string, string> = {
     ) : (
       <div data-archivos>
         <div class="calle acceso__sesion">
-          <p class="cuerpo">Acceso habilitado. Seleccioná el documento que querés consultar.</p>
+          <p class="cuerpo">
+            {sinEnlaces
+              ? 'El archivo no está disponible en este momento. Escribinos y lo resolvemos.'
+              : 'Acceso habilitado. Seleccioná el documento que querés consultar.'}
+          </p>
           <form method="post" action="/api/salir"><button class="acceso__salir" type="submit">Cerrar acceso</button></form>
         </div>
   {/* ------------------------------------------------------------- índice */}
@@ -180,14 +189,14 @@ const mensajes: Record<string, string> = {
               <div>
                 <p class="legajo__lema">{d.lema}</p>
                 <h3 class="legajo__titulo">
-                  <a class="legajo__enlace" href={d.drive} target="_blank" rel="noopener">
+                  <a class="legajo__enlace" href={enlacesDrive[d.slug]} target="_blank" rel="noopener">
                     {d.titulo}
                   </a>
                 </h3>
                 <p class="legajo__bajada">{d.bajada}</p>
               </div>
               <div class="legajo__accion">
-                <a class="descarga" href={d.drive} target="_blank" rel="noopener" tabindex="-1">
+                <a class="descarga" href={enlacesDrive[d.slug]} target="_blank" rel="noopener" tabindex="-1">
                   <span class="rotulo">Abrir</span>
                   <span class="dato descarga__peso">PDF · Drive</span>
                 </a>
@@ -211,7 +220,7 @@ const mensajes: Record<string, string> = {
       </ul>
 
       <div class="planos__accion">
-        <a class="accion" href={planos.carpeta} target="_blank" rel="noopener">
+        <a class="accion" href={enlacesDrive.planos} target="_blank" rel="noopener">
           Acceder a los planos <Flecha />
         </a>
       </div>

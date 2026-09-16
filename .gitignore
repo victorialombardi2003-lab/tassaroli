@@ -11,6 +11,11 @@ node_modules/
 .env.production
 .env.local
 
+# Los enlaces de Drive en claro, para poder pegarlos en ACCESO_ENLACES.
+# El repositorio es público: acá no entran.
+enlaces-drive-actuales.json
+acceso-enlaces.txt
+
 # PDF de la documentacion: los originales que se van a proteger y las
 # copias ya encriptadas. Ninguno de los dos entra al repositorio.
 documentos-a-proteger/
