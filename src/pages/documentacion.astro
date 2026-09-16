@@ -7,6 +7,19 @@ import isotipo from '../assets/marca-tassaroli.png';
 import placa from '../assets/placa-fondo.webp';
 import logoFundacion from '../assets/logos/fundacion.png';
 import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
+import { COOKIE, cookieValida } from '../lib/acceso';
+
+export const prerender = false;
+const autorizado = await cookieValida(Astro.cookies.get(COOKIE)?.value);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+const error = Astro.url.searchParams.get('error');
+const mensajes: Record<string, string> = {
+  clave: 'La contraseña no es correcta. Volvé a intentarlo.',
+  config: 'El acceso no está disponible en este momento.',
+  limite: 'Se alcanzó el límite de intentos. Probá de nuevo en 15 minutos.',
+  origen: 'No se pudo validar la solicitud. Recargá la página.',
+};
 ---
 
 <Base
@@ -115,26 +128,51 @@ import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
     </dialog>
   </section>
 
-  {/* --------------------------------------------------------------- acceso */}
-  <section class="seccion banda" data-seccion>
-    <div class="calle">
-      <Nodo texto="Acceso" recorrido="publico" />
-      <div class="acceso revela">
-        <div>
-          <h2 class="subtitulo">{acceso.titulo}</h2>
-          <p class="cuerpo acceso__cuerpo">{acceso.cuerpo}</p>
+  <details class="documentacion-acceso" id="documentacion-acceso" data-documentacion open={autorizado || Boolean(error)}>
+    <summary class="acceso">
+      <span class="acceso__sello" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      <span class="acceso__texto">
+        <span class="rotulo acceso__etiqueta">Archivo del proyecto · Acceso privado</span>
+        <span class="acceso__titulo">{acceso.titulo}</span>
+        <span class="acceso__descripcion">Informes técnicos, memorias y planos del Centro Tecnológico.</span>
+      </span>
+      <span class="acceso__circulo" aria-hidden="true">
+        <svg class="acceso__icono" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.5" /></svg>
+      </span>
+    </summary>
+    <div class="acceso__panel" data-documentacion-contenido>
+    {!autorizado ? (
+      <div class="acceso-formulario calle">
+        <div class="acceso-formulario__intro">
+          <span class="rotulo">Documentación reservada</span>
+          <h2 class="subtitulo">El proyecto, en detalle.</h2>
+          <p class="cuerpo">Ingresá la contraseña para consultar los documentos y acceder a cada archivo.</p>
         </div>
+        <form class="acceso-formulario__form" action="/api/acceso" method="post" data-acceso-form>
+          <label for="clave-documentacion">Contraseña de acceso</label>
+          <div class="acceso-formulario__campo">
+            <input id="clave-documentacion" name="clave" type="password" autocomplete="current-password" required maxlength="256" placeholder="Ingresá tu contraseña" aria-describedby="acceso-error" aria-invalid={error === 'clave' ? 'true' : undefined} />
+            <button class="acceso-formulario__mostrar" type="button" aria-controls="clave-documentacion" aria-pressed="false" data-mostrar-clave>Mostrar</button>
+          </div>
+          <p class="acceso-formulario__error" id="acceso-error" role="alert">{error ? mensajes[error] ?? mensajes.origen : ''}</p>
+          <button class="accion acceso-formulario__enviar" type="submit"><span data-enviar-texto>Ingresar a los archivos</span><Flecha /></button>
+        </form>
       </div>
-    </div>
-  </section>
-
+    ) : (
+      <div data-archivos>
+        <div class="calle acceso__sesion">
+          <p class="cuerpo">Acceso habilitado. Seleccioná el documento que querés consultar.</p>
+          <form method="post" action="/api/salir"><button class="acceso__salir" type="submit">Cerrar acceso</button></form>
+        </div>
   {/* ------------------------------------------------------------- índice */}
   <section class="seccion" data-seccion>
     <div class="calle">
       <Nodo texto="Informes" recorrido="investigacion" />
-      <h2 class="titulo revela">Documentación integral del proyecto</h2>
+      <h2 class="titulo">Documentación integral del proyecto</h2>
 
-      <ol class="legajo revela-linea">
+      <ol class="legajo">
         {
           documentos.map((d, i) => (
             <li class="legajo__fila">
@@ -165,20 +203,24 @@ import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
   <section class="seccion banda planos" data-seccion>
     <div class="calle">
       <Nodo texto="Anteproyecto" recorrido="investigacion" />
-      <h2 class="titulo revela">{planos.titulo}</h2>
-      <p class="cuerpo revela bloque__cuerpo">{planos.bajada}</p>
+      <h2 class="titulo">{planos.titulo}</h2>
+      <p class="cuerpo bloque__cuerpo">{planos.bajada}</p>
 
-      <ul class="laminas revela-linea">
+      <ul class="laminas">
         {planos.laminas.map((l) => <li class="lamina-fila">{l}</li>)}
       </ul>
 
-      <div class="planos__accion revela">
+      <div class="planos__accion">
         <a class="accion" href={planos.carpeta} target="_blank" rel="noopener">
           Acceder a los planos <Flecha />
         </a>
       </div>
     </div>
   </section>
+      </div>
+    )}
+    </div>
+  </details>
 </Base>
 
 <style>
@@ -275,21 +317,82 @@ import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
   }
 
   /* -------------------------------------------------------------- acceso */
-  .acceso {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem 2.5rem;
-    padding: clamp(1.25rem, 3vw, 1.85rem);
-    background: var(--papel);
-    border: 1px solid var(--linea);
-    border-radius: 3px;
+  .documentacion-acceso {
+    margin-block: 1rem clamp(3rem, 6vw, 6rem);
+    scroll-margin-top: 7rem;
   }
-
-  .acceso__cuerpo {
-    margin-block-start: 0.75rem;
-    max-width: 58ch;
+  .acceso {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+    margin-inline: calc(var(--rail) + var(--borde)) var(--borde);
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+    color: white;
+    background: linear-gradient(115deg, var(--azul-900), #163f78);
+    border: 1px solid #315485;
+    border-radius: 8px;
+    cursor: pointer;
+    list-style: none;
+    box-shadow: 0 14px 36px -24px var(--azul-900);
+    transition: box-shadow 300ms ease, border-color 300ms ease;
+  }
+  .acceso::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 28rem;
+    height: 28rem;
+    right: -10rem;
+    top: -16rem;
+    border: 1px solid #ffffff20;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3rem #ffffff05, 0 0 0 6rem #ffffff05;
+    transition: transform 650ms ease;
+  }
+  .acceso:hover::before { transform: translate(-2rem, 1rem); }
+  .acceso:hover { border-color: #7096ca; box-shadow: 0 20px 40px -24px var(--azul-900); }
+  .acceso::-webkit-details-marker { display: none; }
+  .acceso:focus-visible { outline: 3px solid var(--acento); outline-offset: 5px; }
+  .acceso__sello, .acceso__circulo { display: grid; place-items: center; flex-shrink: 0; }
+  .acceso__sello { width: 4rem; height: 4rem; border: 1px solid #ffffff40; border-radius: 16px; background: #ffffff0a; }
+  .acceso__texto { display: grid; gap: 0.75rem; flex: 1; min-width: 0; }
+  .acceso__etiqueta { color: #c2d8f6; font-size: 0.6875rem; line-height: 1.6; }
+  .acceso__titulo { font-size: clamp(1.5rem, 2.8vw, 2.5rem); font-weight: 560; line-height: 1.12; letter-spacing: -0.025em; }
+  .acceso__descripcion { color: #d3e0f2; font-size: 0.9375rem; line-height: 1.5; }
+  .acceso__circulo { width: 3rem; height: 3rem; border: 1px solid #ffffff60; border-radius: 50%; transition: background 200ms ease; }
+  .acceso:hover .acceso__circulo { background: #ffffff18; }
+  .acceso__icono { transition: transform 350ms ease; }
+  .documentacion-acceso[open] .acceso__icono { transform: rotate(180deg); }
+  .acceso__panel { overflow: hidden; }
+  .acceso-formulario { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 7rem); padding-block: clamp(2rem, 4vw, 4rem); }
+  .acceso-formulario__intro .rotulo { color: var(--acento); }
+  .acceso-formulario__intro h2 { margin-block: 1rem; }
+  .acceso-formulario__intro p { max-width: 43ch; }
+  .acceso-formulario__form { width: 100%; max-width: 32rem; align-self: center; }
+  .acceso-formulario__form label { display: block; margin-block-end: 0.7rem; font-weight: 600; font-size: 0.9375rem; }
+  .acceso-formulario__campo { display: flex; border: 1px solid var(--linea-fuerte); border-radius: 4px; background: white; }
+  .acceso-formulario__campo:focus-within { border-color: var(--acento); outline: 2px solid var(--azul-50); }
+  .acceso-formulario__campo input { flex: 1; width: 0; min-width: 0; padding: 1rem; border: 0; background: transparent; font: inherit; font-size: 1rem; color: var(--tinta); }
+  .acceso-formulario__mostrar { padding-inline: 1rem; min-height: 48px; background: transparent; border: 0; color: var(--acento); cursor: pointer; font: inherit; font-size: 0.8125rem; }
+  .acceso-formulario__error { color: #a12626; font-size: 0.875rem; line-height: 1.5; margin-block: 0.65rem; }
+  .acceso-formulario__error:empty { display: none; }
+  .acceso-formulario__enviar { margin-block-start: 1rem; width: 100%; justify-content: space-between; }
+  .acceso-formulario__enviar:disabled { opacity: 0.65; cursor: wait; }
+  .acceso__sesion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding-block-start: 2rem; }
+  .acceso__salir { color: var(--acento); background: transparent; border: 0; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; font: inherit; cursor: pointer; }
+  @media (max-width: 48rem) {
+    .acceso { display: grid; grid-template-columns: 1fr auto; gap: 1.25rem; }
+    .acceso__sello { width: 2.75rem; height: 2.75rem; border-radius: 10px; }
+    .acceso__texto { grid-column: 1 / -1; grid-row: 2; }
+    .acceso__circulo { grid-column: 2; grid-row: 1; width: 2.75rem; height: 2.75rem; }
+    .acceso-formulario { grid-template-columns: 1fr; }
+    .acceso-formulario__form { max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .acceso, .acceso::before, .acceso__icono, .acceso__circulo { transition: none; }
   }
 
   /* -------------------------------------------------------------- índice */
@@ -752,6 +855,110 @@ import { sitio, carta, documentos, planos, acceso } from '../data/contenido';
 </style>
 
 <script>
+  import gsap from 'gsap';
+
+  const detalle = document.querySelector<HTMLDetailsElement>('[data-documentacion]');
+  const resumen = detalle?.querySelector('summary');
+  const panel = detalle?.querySelector<HTMLElement>('[data-documentacion-contenido]');
+  const reduceMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const actualizarRecorrido = () => window.dispatchEvent(new Event('resize'));
+  let desplegado = Boolean(detalle?.open);
+
+  if (detalle && resumen && panel) {
+    resumen.addEventListener('click', (event) => {
+      event.preventDefault();
+      desplegado = !desplegado;
+      gsap.killTweensOf(panel);
+      if (reduceMovimiento.matches) {
+        detalle.open = desplegado;
+        gsap.set(panel, { clearProps: 'height,opacity,transform' });
+        actualizarRecorrido();
+        return;
+      }
+      if (desplegado) {
+        const estabaAbierto = detalle.open;
+        detalle.open = true;
+        if (!estabaAbierto) gsap.set(panel, { height: 0, opacity: 0 });
+        gsap.to(panel, {
+          height: panel.scrollHeight, opacity: 1, duration: 0.5, ease: 'power3.out',
+          onComplete: () => { gsap.set(panel, { clearProps: 'height,opacity' }); actualizarRecorrido(); },
+        });
+        gsap.fromTo(panel.querySelectorAll('.acceso-formulario__intro, .acceso-formulario__form'),
+          { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.08, overwrite: true, clearProps: 'transform,opacity' });
+      } else {
+        gsap.to(panel, { height: 0, opacity: 0, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+          detalle.open = false;
+          gsap.set(panel, { clearProps: 'height,opacity' });
+          actualizarRecorrido();
+        } });
+      }
+    });
+
+    detalle.addEventListener('click', (event) => {
+      const boton = (event.target as Element).closest<HTMLButtonElement>('[data-mostrar-clave]');
+      const campo = detalle.querySelector<HTMLInputElement>('#clave-documentacion');
+      if (!boton || !campo) return;
+      const mostrar = campo.type === 'password';
+      campo.type = mostrar ? 'text' : 'password';
+      boton.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      boton.setAttribute('aria-pressed', String(mostrar));
+    });
+
+    detalle.addEventListener('submit', async (event) => {
+      const form = event.target as HTMLFormElement;
+      if (!form.matches('[data-acceso-form]')) return;
+      event.preventDefault();
+      const boton = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+      const texto = form.querySelector<HTMLElement>('[data-enviar-texto]')!;
+      const error = form.querySelector<HTMLElement>('[role="alert"]')!;
+      const campo = form.querySelector<HTMLInputElement>('[name="clave"]')!;
+      if (boton.disabled) return;
+      boton.disabled = true;
+      texto.textContent = 'Validando acceso…';
+      form.setAttribute('aria-busy', 'true');
+      error.textContent = '';
+      campo.removeAttribute('aria-invalid');
+      try {
+        const respuesta = await fetch(form.action, {
+          method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' },
+        });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok || !resultado.ok) {
+          const mensajes: Record<string, string> = {
+            clave: 'La contraseña no es correcta. Volvé a intentarlo.',
+            limite: 'Se alcanzó el límite de intentos. Probá de nuevo en 15 minutos.',
+            config: 'El acceso no está disponible en este momento.',
+          };
+          error.textContent = mensajes[resultado.error] ?? 'No se pudo ingresar. Volvé a intentarlo.';
+          if (resultado.error === 'clave') { campo.setAttribute('aria-invalid', 'true'); campo.focus(); campo.select(); }
+          return;
+        }
+        const pagina = await fetch('/documentacion', { cache: 'no-store' });
+        if (!pagina.ok) throw new Error('No se pudo cargar la documentación');
+        const html = new DOMParser().parseFromString(await pagina.text(), 'text/html');
+        const contenido = html.querySelector('[data-documentacion-contenido]');
+        if (!contenido?.querySelector('[data-archivos]')) throw new Error('Sesión no disponible');
+        gsap.killTweensOf(panel);
+        gsap.set(panel, { clearProps: 'height,opacity' });
+        panel.replaceChildren(...Array.from(contenido.childNodes));
+        const titulo = panel.querySelector<HTMLElement>('h2');
+        titulo?.setAttribute('tabindex', '-1');
+        titulo?.focus({ preventScroll: true });
+        if (!reduceMovimiento.matches) {
+          gsap.fromTo(panel.querySelectorAll('.acceso__sesion, .legajo__fila'),
+            { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.04, clearProps: 'transform,opacity' });
+        }
+        actualizarRecorrido();
+      } catch {
+        error.textContent = 'No se pudo conectar. Revisá tu conexión y volvé a intentarlo.';
+      } finally {
+        boton.disabled = false;
+        texto.textContent = 'Ingresar a los archivos';
+        form.removeAttribute('aria-busy');
+      }
+    });
+  }
+
   const abre = document.querySelector<HTMLButtonElement>('[data-carta-abre]');
   const ventana = document.querySelector<HTMLDialogElement>('[data-carta-ventana]');
 

@@ -50,3 +50,6 @@ renders-originales/
 # Cache de Python
 __pycache__/
 *.pyc
+
+# Build local del adaptador Vercel
+.vercel/

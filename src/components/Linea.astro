@@ -582,6 +582,8 @@
     }, 160);
   };
 
+  document.querySelector('[data-documentacion]')?.addEventListener('toggle', recalcular);
+
   // La entrada no espera a las imágenes; la geometría de la línea sí, porque
   // necesita la altura definitiva del documento.
   document.documentElement.dataset.motion = reduce.matches ? 'off' : 'on';

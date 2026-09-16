@@ -509,18 +509,7 @@ export const proposito = {
 /* --------------------------------------------------------- documentación */
 
 
-/**
- * La proteccion viaja con el archivo, no con el link.
- *
- * Cada PDF esta encriptado con AES-256 y no abre sin la clave. Se eligio
- * asi, y no una contrasena en el sitio, porque una contrasena en el sitio
- * solo cuida el camino hasta la descarga: una vez bajado, el archivo queda
- * suelto. Encriptado sigue cerrado aunque alguien lo reenvie.
- *
- * Los links de Drive pueden entonces quedar como estan; lo que se controla
- * es a quien se le da la clave. Se generan con herramientas/proteger-pdf.py.
- */
-
+// Enlaces directos a los documentos disponibles en Google Drive.
 const DRIVE_ARCHIVO = 'https://drive.google.com/file/d/';
 const DRIVE_CARPETA = 'https://drive.google.com/drive/folders/';
 
@@ -615,7 +604,7 @@ export const planos = {
 };
 
 export const acceso = {
-  titulo: 'La documentación está protegida',
+  titulo: 'Ingresá a la documentación',
   cuerpo:
-    'Los documentos se descargan desde Google Drive, pero están protegidos con contraseña: para abrirlos hace falta una clave que entrega la Fundación a quien la solicite.',
+    'Consultá los informes y planos del proyecto. Seleccioná un documento para abrirlo.',
 };

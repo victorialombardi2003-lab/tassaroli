@@ -208,14 +208,28 @@ nodo van en blanco (`--red-alto`), y vuelven al azul en la sección siguiente.
 
 ## Documentación
 
-**No hay contraseña en el sitio.** Los documentos se enlazan a Google Drive y
-el permiso lo gestiona la Fundación desde ahí: quien no tenga acceso ve la
-pantalla de «Solicitar acceso» de Google. Es más seguro que una clave en el
-sitio —no hay nada que circule ni que se filtre— y no necesita servidor: las
-tres páginas son estáticas.
+Una solapa azul despliega el ingreso con contraseña. GSAP anima la apertura,
+el formulario y la aparición escalonada de los informes; se respeta
+`prefers-reduced-motion`. Sin JavaScript funcionan el desplegable y el formulario.
 
-La versión anterior, con contraseña y endpoint autenticado, quedó guardada en
-`descartado/acceso-por-contrasena/` por si hace falta volver.
+La página se renderiza en servidor con el adaptador de Vercel. La clave se
+valida en `/api/acceso`; los enlaces a Drive solo se envían después de validar
+una cookie firmada HttpOnly. La respuesta privada usa `Cache-Control: no-store`.
+
+Configurar `ACCESO_PASSWORD` y `ACCESO_SECRET` en las variables privadas del
+entorno (ver `.env.example`). Localmente se usa `.env.local`, excluido de Git.
+La sesión dura 12 horas por defecto (`ACCESO_HORAS`). El límite de intentos
+es por instancia; para un despliegue distribuido complementar con el firewall.
+Antes de publicar, configurar estas variables también en Vercel.
+La revisión de dependencias detectó avisos en Astro 5, el adaptador Vercel 8
+y dependencias transitivas. Resolver la actualización compatible antes de
+habilitar este acceso en producción; los cambios actuales son para revisión local.
+
+Esto controla el acceso al listado del sitio. Los permisos y cualquier
+contraseña de los PDF alojados en Drive se administran por separado.
+
+Verificación local, con `npm run dev` activo:
+`node herramientas/verificar-acceso.mjs`.
 
 ## Carrusel
 
