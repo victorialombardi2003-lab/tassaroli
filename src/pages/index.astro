@@ -321,8 +321,11 @@ import {
       <Nodo texto="Documentación" recorrido="publico" />
       <p class="display cierre__lema revela">{cierre.lema}</p>
       <div class="cierre__acciones revela">
-        <a class="accion" href="/documentacion">Ver la documentación <Flecha /></a>
-        <a class="accion accion--linea" href="/proyecto">Recorrer el proyecto <Flecha /></a>
+        {/* El relleno se queda en el primer botón, no viaja con el rótulo:
+            un botón macizo en segundo lugar y uno de contorno adelante se lee
+            como un error de armado, no como una jerarquía. */}
+        <a class="accion" href="/proyecto">Recorrer el proyecto <Flecha /></a>
+        <a class="accion accion--linea" href="/documentacion">Ver la documentación <Flecha /></a>
       </div>
     </div>
   </section>
