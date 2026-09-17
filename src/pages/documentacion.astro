@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { ANCHOS } from '../lib/anchos-imagen.mjs';
 import Base from '../layouts/Base.astro';
 import Nodo from '../components/Nodo.astro';
 import Flecha from '../components/Flecha.astro';
@@ -42,7 +43,8 @@ const mensajes: Record<string, string> = {
         alt=""
         width={900}
         height={900}
-        densities={[1, 1.5]}
+        widths={ANCHOS.filter((a) => a <= 1350)}
+        sizes="min(46rem, 58vw)"
         loading="eager"
         fetchpriority="high"
         decoding="sync"

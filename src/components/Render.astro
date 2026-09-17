@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { ANCHOS } from '../lib/anchos-imagen.mjs';
 
 /**
  * Un render del anteproyecto.
@@ -42,13 +43,16 @@ const imagen = catalogo.get(nombre);
 /**
  * Los anchos del `srcset` se cortan en el ancho real del archivo. Pedir más
  * que eso no agrega detalle: agranda, y un render agrandado se ve blando.
- * El último escalón es siempre la medida nativa, para que en una pantalla
- * retina se entregue todo lo que la imagen tiene.
+ *
+ * La escalera no se elige acá: es la misma que `astro.config.mjs` le declara
+ * al optimizador de Vercel, porque Vercel sólo sirve los anchos que figuran
+ * en esa lista y descarta el resto sin avisar. Un ancho que se pida acá y no
+ * esté allá simplemente no existe. Ver src/lib/anchos-imagen.mjs.
+ *
+ * Por eso tampoco se agrega el ancho nativo del archivo al final, como se
+ * hacía antes: cada archivo tiene el suyo y ninguno estaría declarado.
  */
-const escalones = [480, 640, 960, 1280, 1600, 2000, 2400, 3200];
-const anchos = imagen
-  ? [...escalones.filter((a) => a < imagen.width), imagen.width]
-  : undefined;
+const anchos = imagen ? ANCHOS.filter((a) => a <= imagen.width) : undefined;
 ---
 
 {

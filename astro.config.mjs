@@ -3,6 +3,8 @@ import { defineConfig } from 'astro/config';
 
 import vercel from '@astrojs/vercel';
 
+import { ANCHOS } from './src/lib/anchos-imagen.mjs';
+
 // Vercel comunica el dominio público a Astro mediante cabeceras del proxy.
 const dominiosVercel = [...new Set([
   'tassaroli.vercel.app',
@@ -24,7 +26,11 @@ export default defineConfig({
      dominio y se acabó. */
   site: 'https://tassaroli.vercel.app',
   output: 'static',
-  adapter: vercel({ imageService: true }),
+  /* El optimizador de Vercel sólo sirve los anchos que se declaran acá:
+     cualquier otro que pida el `srcset` lo ignora. Con la lista por defecto
+     el único ancho en común con el componente era 640, y los renders de
+     pantalla completa salían a 640px. Ver src/lib/anchos-imagen.mjs. */
+  adapter: vercel({ imageService: true, imagesConfig: { sizes: ANCHOS } }),
   security: {
     allowedDomains: dominiosVercel.map((hostname) => ({ protocol: 'https', hostname })),
   },
