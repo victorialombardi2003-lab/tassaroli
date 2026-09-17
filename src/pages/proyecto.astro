@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Nodo from '../components/Nodo.astro';
 import Render from '../components/Render.astro';
@@ -6,7 +7,8 @@ import Cabecera from '../components/Cabecera.astro';
 import Galeria from '../components/Galeria.astro';
 import Flecha from '../components/Flecha.astro';
 import Escudo from '../components/Escudo.astro';
-import { sitio, espacios, proposito } from '../data/contenido';
+import mapa from '../assets/mapa-mendoza.webp';
+import { sitio, espacios, proposito, demanda } from '../data/contenido';
 
 /**
  * El ritmo del recorrido: los espacios grandes ocupan el ancho completo,
@@ -107,6 +109,84 @@ const lista = espacios.map((e, i) => ({
     </div>
   </section>
 
+  {/* ------------------------------------------------------------ propósito */}
+  {/* Abre la página: antes de recorrer los doce espacios, para qué existen.
+      Estaba al final y el cliente la pidió adelante. */}
+  <section class="seccion proposito" data-seccion>
+    <div class="calle">
+      <Nodo texto="Propósito" recorrido="publico" />
+
+      <div class="proposito__arriba">
+        <div class="proposito__columna">
+          <blockquote class="proposito__cita revela">
+            <p>
+              <span class="proposito__liviano">{proposito.cita.liviano}</span>{' '}
+              <span class="proposito__fuerte">{proposito.cita.fuerte}</span>
+            </p>
+            <cite class="rotulo proposito__fuente">Fundación Tassaroli</cite>
+          </blockquote>
+
+          <div class="proposito__texto revela-linea">
+            <h2 class="titulo">{proposito.titulo}</h2>
+            <p class="cuerpo bloque__cuerpo">{proposito.cuerpo}</p>
+          </div>
+        </div>
+
+        {/* El texto alternativo no es decorativo: los dos rótulos están
+            dibujados dentro del mapa, así que quien no lo ve no tiene de
+            dónde sacarlos. */}
+        <figure class="proposito__mapa revela">
+          <Image
+            src={mapa}
+            alt="Mapa de Mendoza: los proyectos mineros en el norte de la provincia y la Formación Vaca Muerta en el sur."
+            width={458}
+            height={858}
+            densities={[1, 2]}
+            loading="lazy"
+          />
+        </figure>
+
+        {/* Las cifras van apiladas al costado del mapa, como en la pieza del
+            cliente, y de paso el alto del mapa deja de ser espacio vacío.
+            Los números se cuentan desde cero al entrar en pantalla: el
+            mecanismo es el mismo `data-contador` de las fichas del inicio. */}
+        <div class="demanda revela-linea">
+          {
+            demanda.sectores.map((s) => (
+              <div class="demanda__bloque">
+                <p class="demanda__rotulo">
+                  {s.nombre},<br />
+                  {s.bajada}
+                </p>
+                <p class="demanda__concepto">{s.concepto}</p>
+                {/* Flex y no una línea sola de texto: entre dos elementos de
+                    un contenedor flex el espacio en blanco del código no
+                    cuenta, así que la barra queda pegada a los números sin
+                    tener que escribir todo apretado en un renglón. */}
+                <p class="demanda__cifra">
+                  <span class="demanda__n" data-contador>{s.directo}</span>
+                  <span class="demanda__barra">/</span>
+                  <span class="demanda__n" data-contador>{s.indirecto}</span>
+                </p>
+              </div>
+            ))
+          }
+
+            <div class="demanda__bloque">
+              <p class="demanda__rotulo">{demanda.rotulo}</p>
+              <ul class="demanda__oficios">
+                {demanda.oficios.map((o) => <li>{o}</li>)}
+              </ul>
+            </div>
+        </div>
+      </div>
+
+      <div class="proposito__accion revela">
+        <a class="accion" href="/documentacion">Ver la documentación <Flecha /></a>
+      </div>
+    </div>
+  </section>
+
   {/* ------------------------------------------------------------ espacios */}
   <section class="seccion espacios" id="recorrido" data-seccion>
     <div class="calle">
@@ -160,25 +240,6 @@ const lista = espacios.map((e, i) => ({
     }
   </section>
 
-  {/* ------------------------------------------------------------ propósito */}
-  <section class="seccion proposito" data-seccion>
-    <div class="calle">
-      <Nodo texto="Propósito" recorrido="publico" />
-      <blockquote class="proposito__cita revela">
-        <p>{proposito.cita}</p>
-        <cite class="rotulo proposito__fuente">Fundación Tassaroli</cite>
-      </blockquote>
-
-      <div class="proposito__texto revela-linea">
-        <h2 class="titulo">{proposito.titulo}</h2>
-        <p class="cuerpo bloque__cuerpo">{proposito.cuerpo}</p>
-      </div>
-
-      <div class="proposito__accion revela">
-        <a class="accion" href="/documentacion">Ver la documentación <Flecha /></a>
-      </div>
-    </div>
-  </section>
 </Base>
 
 <style>
@@ -393,30 +454,46 @@ const lista = espacios.map((e, i) => ({
   }
 
   /* ----------------------------------------------------------- propósito */
+  /* Ahora abre la página, así que el filete va abajo: arriba tiene la
+     apertura oscura, que ya separa sola. */
   .proposito {
     background: var(--azul-50);
-    border-block-start: 1px solid var(--linea);
-    margin-block-start: clamp(4rem, 9vw, 7rem);
+    border-block-end: 1px solid var(--linea);
   }
 
-  /* En rem y no en ch: la unidad ch se mide contra el tamaño de letra del
+  /* La frase va en Montserrat y no en Archivo, que es la del resto del
+     sitio, porque es la tipografía de la pieza del cliente y esto es una
+     cita de esa pieza. Ya viene cargada para el escudo, así que no cuesta
+     una descarga más.
+
+     En rem y no en ch: la unidad ch se mide contra el tamaño de letra del
      elemento donde se declara, y acá ese elemento es el blockquote, que
      hereda los 17px del cuerpo. Las "24ch" daban 204px y partían la frase
-     en seis renglones de dos palabras. La frase entra en dos líneas, que es
-     como se lee una afirmación de este tipo. */
+     en seis renglones de dos palabras. */
   .proposito__cita {
     margin: 0 0 clamp(2rem, 4.5vw, 3.25rem);
-    max-width: min(100%, 50rem);
+    max-width: min(100%, 52rem);
   }
 
   .proposito__cita p {
-    font-size: clamp(1.625rem, 1.1rem + 2.3vw, 3rem);
-    font-weight: 650;
-    font-stretch: 102%;
-    line-height: 1.08;
+    font-family: 'Montserrat', var(--sans);
+    font-size: clamp(1.75rem, 1.05rem + 2.1vw, 2.75rem);
+    line-height: 1.12;
     letter-spacing: -0.03em;
-    color: var(--acento-fuerte);
     text-wrap: balance;
+  }
+
+  /* El dato en gris y liviano, el plazo en azul y sólido, como en la pieza.
+     El gris es --tinta-3, el más claro del sitio que sigue siendo legible:
+     4,9:1 sobre el papel, y acá encima es texto grande. */
+  .proposito__liviano {
+    font-weight: 300;
+    color: var(--tinta-3);
+  }
+
+  .proposito__fuerte {
+    font-weight: 700;
+    color: var(--acento);
   }
 
   .proposito__fuente {
@@ -424,6 +501,153 @@ const lista = espacios.map((e, i) => ({
     margin-block-start: 0.9rem;
     font-style: normal;
     color: var(--tinta-3);
+  }
+
+  /* El par de arriba: el argumento a la izquierda, el mapa a la derecha.
+     El corte va en 60rem y no en las 52rem del resto de la página porque el
+     mapa no se puede angostar sin volverse ilegible: antes de ese ancho, las
+     dos columnas no entran y conviene apilarlas. */
+  .proposito__arriba {
+    display: grid;
+    gap: clamp(1.75rem, 3.5vw, 3rem);
+    align-items: start;
+  }
+
+  /* Paso intermedio: el argumento ocupa el ancho entero y abajo van el mapa
+     y las cifras, que es el par que se lee junto. Tres columnas no entran
+     todavía; apilar las tres sería tirar el alto del mapa a la basura. */
+  @media (min-width: 46rem) {
+    .proposito__arriba {
+      grid-template-columns: min(38%, 19rem) minmax(0, 1fr);
+    }
+
+    .proposito__columna {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Y con ancho de sobra, las tres en fila. El mapa mide 1716px de alto
+     contra 916 de ancho, así que es lo más alto de la sección: poner las
+     cifras a su lado, en vez de debajo, es lo que la acorta a la mitad.
+
+     La columna del mapa lleva medida propia y no `auto`. Con `auto` la
+     columna se mide por su contenido y el contenido —una imagen al 100%— se
+     mide por la columna: la cuenta se muerde la cola y el navegador la
+     resuelve en cero. La imagen desaparecía sin dejar rastro ni error. */
+  @media (min-width: 72rem) {
+    .proposito__arriba {
+      grid-template-columns: minmax(0, 1.05fr) min(25%, 19rem) minmax(0, 0.82fr);
+    }
+
+    .proposito__columna {
+      grid-column: auto;
+    }
+  }
+
+  /* El mapa trae los rótulos dibujados adentro, así que el ancho al que se
+     muestre decide si se leen o no. Medido sobre el original: un renglón de
+     rótulo ocupa 37px de los 916 de ancho, o sea que por debajo de unos
+     340px el texto cae de 14px y deja de leerse. De ahí el piso de 23rem, y
+     de ahí que el mapa quede alto —son 1716px contra 916— y que la columna
+     de texto se centre a su lado en vez de alinearse arriba. */
+  .proposito__mapa {
+    margin: 0;
+  }
+
+  .proposito__mapa :global(img) {
+    display: block;
+    inline-size: 100%;
+    /* El tope vale para cuando las columnas se apilan: ahí la figura ocupa
+       todo el ancho y sin esto el mapa se iría a 900px de alto. */
+    max-inline-size: 19rem;
+    block-size: auto;
+    margin-inline: auto;
+  }
+
+  /* ------------------------------------------------------------ demanda */
+  /* Una debajo de la otra, como en la pieza del cliente, y separadas por un
+     filete: filetes y no tarjetas, que es como separa la pieza. */
+  .demanda {
+    display: grid;
+    align-content: start;
+    gap: clamp(1.1rem, 2.4vw, 1.5rem);
+  }
+
+  .demanda__bloque + .demanda__bloque {
+    padding-block-start: clamp(1.1rem, 2.4vw, 1.5rem);
+    border-block-start: 1px solid var(--linea);
+  }
+
+  .demanda__rotulo {
+    font-family: 'Montserrat', var(--sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--tinta-3);
+  }
+
+  /* La flecha y el más van como contenido generado: son signos de la pieza,
+     no palabras, y así no se copian junto con el texto ni hay que colgarles
+     un aria-hidden a cada uno. */
+  .demanda__concepto {
+    margin-block-start: clamp(0.9rem, 2vw, 1.25rem);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: var(--tinta-2);
+  }
+
+  .demanda__concepto::before {
+    content: '→';
+    margin-inline-end: 0.45em;
+    color: var(--acento);
+  }
+
+  .demanda__cifra {
+    display: flex;
+    align-items: baseline;
+    margin-block-start: 0.4rem;
+    font-family: 'Montserrat', var(--sans);
+    font-size: clamp(1.625rem, 1.15rem + 1.5vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--acento);
+  }
+
+  /* `inline-block` no es cosmético: mientras cuenta, el contador le fija el
+     ancho que el número va a ocupar al terminar, para que la fila no se
+     sacuda cuando pasa de un dígito a cinco. Y `min-width` no se le aplica
+     a un elemento en línea. */
+  .demanda__n {
+    display: inline-block;
+  }
+
+  /* La barra en liviano: separa sin competir con las cifras. */
+  .demanda__barra {
+    font-weight: 300;
+  }
+
+  .demanda__oficios {
+    display: grid;
+    gap: 0.55rem;
+    list-style: none;
+    padding: 0;
+    margin-block-start: clamp(0.9rem, 2vw, 1.25rem);
+  }
+
+  .demanda__oficios li {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: var(--tinta-2);
+  }
+
+  .demanda__oficios li::before {
+    content: '+';
+    margin-inline-end: 0.5em;
+    font-weight: 620;
+    color: var(--acento);
   }
 
   .proposito__accion {

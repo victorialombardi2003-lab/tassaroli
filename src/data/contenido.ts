@@ -500,10 +500,49 @@ export const espacios = [
 ];
 
 export const proposito = {
-  cita: 'Mendoza necesita 23.000 personas formadas para 2030.',
+  /* La frase va partida en dos porque así está en la pieza del cliente: el
+     dato en gris y liviano, y el remate en azul y sólido. No es decoración
+     —el corte es lo que hace que el ojo termine en «para 2030», que es el
+     plazo—, así que vive en el contenido y no en una clase del CSS. */
+  cita: {
+    liviano: 'Mendoza necesita 23.000',
+    fuerte: 'personas formadas para 2030.',
+  },
   titulo: 'Un propósito transformador',
   cuerpo:
     'Transformar talento en desarrollo productivo sostenible. El Centro Tecnológico, a través de un modelo Público-Privado, conectará educación, investigación, tecnología e industria para formar las capacidades que demanda el futuro, impulsando la innovación, la empleabilidad y el crecimiento económico de la región.',
+};
+
+/**
+ * La demanda de empleo que el proyecto viene a atender.
+ *
+ * Las cifras son las del cliente, transcriptas tal cual: dos sectores con su
+ * empleo directo e indirecto estimado, y los oficios que más se piden. No se
+ * redondearon ni se recalcularon.
+ *
+ * Cada número va por separado y no como un solo texto «2.484/5.699» porque
+ * en la página se cuentan de cero, y para eso cada uno tiene que ser su
+ * propio elemento.
+ */
+export const demanda = {
+  sectores: [
+    {
+      nombre: 'Minería',
+      bajada: 'Demanda total estimada',
+      concepto: 'Empleo Directo/Indirecto',
+      directo: '2.484',
+      indirecto: '5.699',
+    },
+    {
+      nombre: 'Petróleo',
+      bajada: 'Demanda total estimada',
+      concepto: 'Empleo Directo/Indirecto',
+      directo: '5.000',
+      indirecto: '10.000',
+    },
+  ],
+  rotulo: 'Algunos sectores de alta demanda',
+  oficios: ['Téc. electromecánicos / mecánico', 'Soldadores calificados', 'Operarios especializados'],
 };
 
 /* --------------------------------------------------------- documentación */
