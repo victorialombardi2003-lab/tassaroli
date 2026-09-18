@@ -221,6 +221,13 @@ export const ubicacion = {
     detalle: 'Terreno de 9,7 ha · Plano de mensura N° 17-87897-7',
   },
   nota: 'Perímetro según plano de mensura N° 17-87897-7. Los puntos indican la implantación prevista de cada pieza; FCAI y UNCuyo son los lotes vecinos.',
+  /* Cierra la sección del mapa. Va después del plano y no antes a propósito:
+     recién habiendo visto el terreno y los lotes vecinos, decir que no se
+     parte de cero tiene con qué respaldarse. */
+  cierre: {
+    titular: 'No partimos de cero. Escalamos un modelo probado.',
+    cuerpo: `El actual Centro de Formación ya desarrolla experiencias de formación práctica vinculadas a necesidades reales de empresas. El nuevo Centro Tecnológico permitirá ampliar esa capacidad, incorporar nuevas tecnologías, multiplicar especialidades y sumar investigación e innovación aplicada.`,
+  },
   /* Las piezas del predio, en el orden en que se leen en la lista. El
      primero es el edificio del anteproyecto y va distinto: más grande, azul y
      con latido, porque es de lo que habla el sitio; los otros cuatro son el

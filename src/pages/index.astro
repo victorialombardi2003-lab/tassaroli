@@ -231,6 +231,16 @@ import {
         <span>{ubicacion.epigrafe}</span>
       </figcaption>
     </figure>
+
+    {/* La afirmación que cierra la sección. Lleva la regla azul al costado,
+        que es como el sitio marca lo que se lee como afirmación y no como un
+        párrafo más —la misma que abre la carta de la presidenta. */}
+    <div class="calle">
+      <div class="ubicacion__cierre revela-linea">
+        <p class="ubicacion__titular">{ubicacion.cierre.titular}</p>
+        <p class="cuerpo">{ubicacion.cierre.cuerpo}</p>
+      </div>
+    </div>
   </section>
 
   {/* ----------------------------------------------------------- implantación */}
@@ -868,6 +878,33 @@ import {
 
   .ubicacion__cuerpo {
     margin: 0;
+  }
+
+  /* El cierre de la sección: una afirmación y su desarrollo, con la regla azul
+     al costado. La medida se topa bastante antes que el ancho de la calle —el
+     mapa ocupa todo, y después de una pieza a sangre el texto necesita volver
+     a una columna de lectura para que se lea como una conclusión y no como un
+     pie de foto largo. */
+  .ubicacion__cierre {
+    max-width: min(62rem, 100%);
+    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    border-inline-start: 2px solid var(--acento);
+    padding-inline-start: clamp(1.1rem, 2.5vw, 1.75rem);
+  }
+
+  /* Más grande que el cuerpo y más chico que un título: es una afirmación
+     dentro de la sección, no el encabezado de otra. */
+  .ubicacion__titular {
+    font-size: clamp(1.1875rem, 1rem + 1.1vw, 1.75rem);
+    font-weight: 620;
+    line-height: 1.22;
+    letter-spacing: -0.022em;
+    color: var(--tinta);
+    text-wrap: balance;
+  }
+
+  .ubicacion__cierre .cuerpo {
+    margin-block-start: clamp(0.75rem, 1.6vw, 1.1rem);
   }
 
   .ubicacion__figura {
