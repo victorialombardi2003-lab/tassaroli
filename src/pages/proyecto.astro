@@ -219,7 +219,14 @@ const lista = espacios.map((e, i) => ({
             </div>
 
             <div class="calle espacio__par">
-              <p class="cuerpo espacio__cuerpo revela-linea">{e.cuerpo}</p>
+              {/* El titular, si el espacio lo tiene, y el cuerpo partido en
+                  párrafos por los renglones en blanco del dato. */}
+              <div class="espacio__texto revela-linea">
+                {'titular' in e && e.titular && <p class="espacio__titular">{e.titular}</p>}
+                {e.cuerpo
+                  .split(/\n\s*\n/)
+                  .map((parrafo) => <p class="cuerpo espacio__cuerpo">{parrafo}</p>)}
+              </div>
 
               {vistas.length > 0 && (
                 <div class="revela">
@@ -416,6 +423,25 @@ const lista = espacios.map((e, i) => ({
   .espacio {
     position: relative;
     padding-block-start: clamp(3rem, 7vw, 5.5rem);
+  }
+
+  /* Más peso que el cuerpo y bastante menos que el titular sobre el video: lo
+     que el espacio propone, no un segundo encabezado compitiendo con el
+     primero, que está a dos centímetros de acá. */
+  .espacio__titular {
+    margin: 0 0 clamp(0.75rem, 1.6vw, 1.1rem);
+    font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.25rem);
+    font-weight: 620;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--tinta);
+    text-wrap: balance;
+  }
+
+  /* Entre párrafos, aire; el primero no lo necesita porque ya lo separa el
+     titular o el borde de la columna. */
+  .espacio__cuerpo + .espacio__cuerpo {
+    margin-block-start: clamp(0.75rem, 1.6vw, 1.1rem);
   }
 
   .espacio__cuerpo {

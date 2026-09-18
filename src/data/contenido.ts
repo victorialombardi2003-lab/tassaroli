@@ -370,8 +370,15 @@ export const espacios = [
     nodo: 'Taller',
     clip: 'taller',
     titulo: 'Taller',
+    /* `titular` es opcional y por ahora sólo lo lleva el taller: abre el texto
+       con lo que el espacio propone, no con lo que es. El titular grande sobre
+       el video sigue siendo el nombre corto, igual que en los otros once. */
+    titular: 'Taller de aprendizaje dual e inmersivo',
+    /* Los párrafos se separan con un renglón en blanco. La página parte el
+       cuerpo por ahí, así que un espacio puede tener uno o varios sin que
+       haya que cambiarle la forma al dato. */
     cuerpo:
-      'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnología de fabricación avanzada y áreas de ensayo, articuladas en un espacio de doble altura que conecta aulas y áreas prácticas. Su resolución en estructura metálica liviana refuerza una arquitectura flexible, contemporánea y preparada para acompañar el crecimiento y la evolución tecnológica.',
+      'Un espacio tecnológico de vanguardia pensado para potenciar la formación y la innovación industrial. El taller integra equipamiento especializado, tecnologías de fabricación avanzada y áreas de ensayo, en un espacio de doble altura, flexible y evolutivo, que conecta aulas y áreas prácticas y busca recrear una industria por dentro.\n\nA través de la red de empresas que integran el Centro, se incorporarán tecnologías y equipamientos utilizados en el mundo productivo para desarrollar un modelo de aprendizaje dual e inmersivo, basado en «aprender haciendo». El objetivo es que los estudiantes adquieran las competencias y especializaciones que demanda la industria y egresen preparados para una rápida inserción laboral.',
     renders: [
       'esp-taller-01',
       'esp-taller-02',
