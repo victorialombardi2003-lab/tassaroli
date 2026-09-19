@@ -638,6 +638,13 @@ export const documentos: Documento[] = [
     bajada: 'Una descripción integral de los espacios, materiales, sistemas y criterios que conforman el proyecto.',
     titulo: 'Documento técnico descriptivo',
   },
+  {
+    slug: 'certificado-factibilidad',
+    lema: 'El aval del municipio',
+    bajada:
+      'La Municipalidad de San Rafael declara factible el proyecto en el terreno de calle Dalmasso y fija los indicadores urbanísticos que debe cumplir.',
+    titulo: 'Certificado de factibilidad municipal',
+  },
 ];
 
 export const planos = {
