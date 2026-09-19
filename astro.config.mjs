@@ -26,11 +26,24 @@ export default defineConfig({
      dominio y se acabó. */
   site: 'https://tassaroli.vercel.app',
   output: 'static',
-  /* El optimizador de Vercel sólo sirve los anchos que se declaran acá:
-     cualquier otro que pida el `srcset` lo ignora. Con la lista por defecto
-     el único ancho en común con el componente era 640, y los renders de
-     pantalla completa salían a 640px. Ver src/lib/anchos-imagen.mjs. */
-  adapter: vercel({ imageService: true, imagesConfig: { sizes: ANCHOS } }),
+  /* Sin `imageService`, que es lo que enciende el optimizador de Vercel.
+     Las variantes las genera Astro durante el build y quedan como archivos
+     estáticos en el CDN.
+
+     La razón es el plan: Vercel cobra el optimizador por transformación
+     —cada combinación de imagen, ancho y calidad cuenta una vez— y este
+     sitio puede pedir 594 combinaciones distintas, 87 imágenes por 6,7
+     anchos promedio. Generadas en el build, no cuentan ninguna.
+
+     Lo que cuesta: el build tarda unos 16 segundos más y deja unos 750
+     archivos de imagen. Nadie los descarga todos; cada visitante baja el
+     ancho que le toca.
+
+     `imagesConfig` queda igual porque no molesta y deja la puerta abierta:
+     si algún día se vuelve a encender el optimizador, los anchos que sirve
+     ya son los mismos que pide el componente. Ver src/lib/anchos-imagen.mjs
+     para por qué esas dos listas tienen que coincidir. */
+  adapter: vercel({ imagesConfig: { sizes: ANCHOS } }),
   security: {
     allowedDomains: dominiosVercel.map((hostname) => ({ protocol: 'https', hostname })),
   },
