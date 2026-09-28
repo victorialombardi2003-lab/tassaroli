@@ -474,7 +474,11 @@ export const espacios = [
     titulo: 'Sala de reuniones',
     cuerpo:
       'La Sala de reuniones se concibe como un espacio estratégico de encuentro, inspiración y toma de decisiones, suspendido sobre el parque y en permanente conexión con la naturaleza. El recorrido desde el hall genera una transición hacia un ambiente de mayor concentración y reflexión, culminando en un espacio donde el entorno se convierte en protagonista. La arquitectura busca desdibujar los límites entre interior y exterior, permitiendo que los árboles, la luz natural y el paso de las estaciones formen parte de la experiencia. Un espacio pensado para que las ideas, las decisiones y las estrategias de futuro se desarrollen en contacto directo con el entorno, potenciando una experiencia diferencial y un fuerte valor para la innovación y la visión a largo plazo.',
-    renders: ['esp-sala-reuniones'],
+    renders: [
+      'esp-sala-reuniones-01',
+      'esp-sala-reuniones-02',
+      'esp-sala-reuniones-03',
+    ],
     alt: 'Render de la sala de reuniones suspendida sobre el parque',
   },
   {
