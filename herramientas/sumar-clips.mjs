@@ -25,12 +25,19 @@ import sharp from 'sharp';
 const ORIGEN = 'WEB';
 const DESTINO = 'public/clips';
 
-/* 960px de ancho, no los 1280 del original: en la página el clip vive en una
-   columna de 44vw, así que ni en una pantalla de 2560 se muestra más grande
-   que eso. CRF 28 es el punto donde la imagen todavía aguanta sin que se vea
-   el bloque en las sombras —y las sombras son la mitad de estos renders—. */
-const ANCHO = 960;
-const CRF = 28;
+/* Ancho nativo del material del estudio. Antes esto era 960, con el argumento
+   de que el clip vivía en una columna de 44vw; dejó de ser cierto cuando el
+   recorrido pasó a encabezar el espacio a sangre y en 21:9 —a 1280 de ventana
+   el encabezado mide 1139px, y más en un monitor grande—, así que 960 se
+   estiraba.
+
+   El CRF sube de 28 a 32 en el mismo movimiento, y el resultado no es una
+   concesión sino una mejora por los dos lados: medido sobre cuatro clips,
+   1280 a CRF32 pesa un 8% menos que 960 a CRF28 y no se estira. A este
+   tamaño, y con imagen en movimiento, más píxeles rinden mejor que menos
+   píxeles más limpios. */
+const ANCHO = 1280;
+const CRF = 32;
 
 /* Qué clip va en cada espacio, y de qué pedazo.
  *
@@ -39,9 +46,11 @@ const CRF = 28;
  * así que los tres pedazos se marcan a mano: a los 11,5 s la cámara cruza el
  * umbral al pasillo y a los 20,5 s desemboca en el comedor.
  *
- * De los tres exteriores entra sólo el del parque con el espejo de agua, que
- * es el que más cuenta del conjunto. Los otros dos —la escultura contra la
- * fachada y la pérgola— quedan sin usar, disponibles si algún día se quieren.
+ * Cuando el estudio manda dos tomas del mismo espacio entra una sola, para
+ * que la serie mantenga un recorrido por espacio. Quedan sin usar, y a mano
+ * por si algún día se quieren: dos de los tres exteriores —la escultura
+ * contra la fachada y la pérgola—, «HUB IDI 2» y «INGRESO A AUDITORIO», que
+ * pasa la mitad de la toma en el foyer y no en la sala.
  */
 const CLIPS = [
   /* Se corta a los nueve segundos: en quince, el follaje del parque se lleva
@@ -62,7 +71,9 @@ const CLIPS = [
     archivo: 'espacios comunes.mp4',
     desde: 0.3,
   },
-  { espacio: 'Taller', salida: 'taller', archivo: 'Taller 2.mp4' },
+  /* Nueve segundos de los quince: era el recorrido más largo de la serie por
+     bastante, y el resto se lee a ese ritmo. */
+  { espacio: 'Taller', salida: 'taller', archivo: 'Taller 2.mp4', hasta: 9 },
   { espacio: 'Coworking', salida: 'coworking', archivo: 'CLIP Coworking.mp4' },
   {
     espacio: 'Circulaciones',
@@ -71,6 +82,13 @@ const CLIPS = [
     desde: 11.5,
     hasta: 20.5,
   },
+  { espacio: 'Aulas', salida: 'aulas', archivo: 'AULA.mp4' },
+  { espacio: 'HUB IDI', salida: 'hub-idi', archivo: 'HUB IDI.mp4' },
+  { espacio: 'Sala de reuniones', salida: 'sala-reuniones', archivo: 'SALA DE REUNIONES.mp4' },
+  /* Se queda con los últimos nueve segundos de los doce: la toma es un
+     paneo continuo y el final —la platea entera contra el ventanal— es el
+     que cierra. Nueve es además el largo del resto de los recorridos. */
+  { espacio: 'Auditorio', salida: 'auditorio', archivo: 'AUDITORIO.mp4', desde: 3.1 },
 ];
 
 const ff = (args) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' });

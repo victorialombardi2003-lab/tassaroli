@@ -396,6 +396,7 @@ export const espacios = [
   },
   {
     nodo: 'Aulas',
+    clip: 'aulas',
     titulo: 'Aulas',
     cuerpo:
       'El proyecto incorpora un sistema educativo innovador, con aulas especializadas diseñadas para responder a las nuevas demandas de la formación tecnológica e industrial. En planta baja se ubican espacios destinados a laboratorio, neumática, sensores, programación y simulación de robots, junto con aulas taller. En planta alta, cuatro aulas complementan el programa educativo, conformando un entorno flexible y contemporáneo. La conexión visual con el taller a través de la doble altura y la estructura metálica liviana refuerzan la integración entre aprendizaje, tecnología y práctica.',
@@ -431,6 +432,7 @@ export const espacios = [
   },
   {
     nodo: 'HUB IDI',
+    clip: 'hub-idi',
     titulo: 'HUB IDI',
     cuerpo:
       'El espacio de IDI se concibe como un laboratorio de innovación y desarrollo orientado a transformar desafíos industriales en soluciones concretas. Bajo el concepto “Del Problema al Prototipo”, el área integra diseño, experimentación y validación, manteniendo una conexión visual directa con el taller. Esta relación permite seguir el recorrido completo de una idea: desde su concepción y desarrollo hasta su materialización, generando un entorno donde la innovación se transforma en tecnología aplicada.',
@@ -459,6 +461,7 @@ export const espacios = [
   },
   {
     nodo: 'Auditorio',
+    clip: 'auditorio',
     titulo: 'Auditorio',
     cuerpo:
       'Auditorio para 150 a 200 personas, con gradas suaves que garantizan excelente visibilidad y una sensación de cercanía con el expositor. Su configuración busca una experiencia dinámica e inmersiva, inspirada en el formato TED Conference, promoviendo una relación más directa y participativa entre el público y el expositor. Las fachadas laterales vidriadas presentan dos tratamientos: una con vista abierta e inmersiva hacia el parque, integrando el paisaje al salón; y otra con malla metálica microperforada de diseño orgánico, que aporta control solar, identidad arquitectónica y filtrado de luz.',
@@ -467,6 +470,7 @@ export const espacios = [
   },
   {
     nodo: 'Sala de reuniones',
+    clip: 'sala-reuniones',
     titulo: 'Sala de reuniones',
     cuerpo:
       'La Sala de reuniones se concibe como un espacio estratégico de encuentro, inspiración y toma de decisiones, suspendido sobre el parque y en permanente conexión con la naturaleza. El recorrido desde el hall genera una transición hacia un ambiente de mayor concentración y reflexión, culminando en un espacio donde el entorno se convierte en protagonista. La arquitectura busca desdibujar los límites entre interior y exterior, permitiendo que los árboles, la luz natural y el paso de las estaciones formen parte de la experiencia. Un espacio pensado para que las ideas, las decisiones y las estrategias de futuro se desarrollen en contacto directo con el entorno, potenciando una experiencia diferencial y un fuerte valor para la innovación y la visión a largo plazo.',
